@@ -1,6 +1,7 @@
 package com.logisticapp.emuladortelnet
 
 import android.os.Bundle
+import android.text.Html
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ScrollView
@@ -119,9 +120,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Observar saída do terminal
-        viewModel.terminalOutput.observe(this) { output ->
-            terminalOutput.text = output
+        // Observar saída do terminal (com estilos ANSI)
+        viewModel.terminalOutputStyled.observe(this) { htmlOutput ->
+            try {
+                terminalOutput.text = Html.fromHtml(htmlOutput, Html.FROM_HTML_MODE_LEGACY)
+            } catch (e: Exception) {
+                // Fallback para plain text
+                terminalOutput.text = htmlOutput
+            }
             // Auto-scroll para baixo
             scrollView.post {
                 scrollView.fullScroll(ScrollView.FOCUS_DOWN)

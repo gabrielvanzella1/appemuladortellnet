@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.logisticapp.emuladortelnet.data.ConnectionState
 import com.logisticapp.emuladortelnet.data.TelnetConnection
 import com.logisticapp.emuladortelnet.network.TelnetClient
+import com.logisticapp.emuladortelnet.terminal.ANSIParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -21,13 +22,20 @@ class TelnetViewModel : ViewModel() {
     // Cliente Telnet
     private val telnetClient = TelnetClient()
 
+    // ANSI Parser
+    private val ansiParser = ANSIParser()
+
     // Estado da conexão
     private val _connectionState = MutableLiveData(ConnectionState.DISCONNECTED)
     val connectionState: LiveData<ConnectionState> = _connectionState
 
-    // Mensagens do terminal
+    // Mensagens do terminal (plain text)
     private val _terminalOutput = MutableLiveData("")
     val terminalOutput: LiveData<String> = _terminalOutput
+
+    // Mensagens do terminal (com estilos ANSI processados)
+    private val _terminalOutputStyled = MutableLiveData("")
+    val terminalOutputStyled: LiveData<String> = _terminalOutputStyled
 
     // Conexão atual
     private val _currentConnection = MutableLiveData<TelnetConnection?>(null)
@@ -167,10 +175,24 @@ class TelnetViewModel : ViewModel() {
 
     /**
      * Adicionar texto ao terminal (thread-safe)
+     * Processa ANSI escape sequences
      */
     private fun addTerminalOutput(text: String) {
         val current = _terminalOutput.value ?: ""
-        _terminalOutput.postValue(current + text)
+        val newText = current + text
+
+        // Atualizar plain text
+        _terminalOutput.postValue(newText)
+
+        // Processar ANSI e atualizar styled
+        try {
+            val styledSegments = ansiParser.parse(newText)
+            val htmlOutput = ansiParser.toHtmlSpan(styledSegments)
+            _terminalOutputStyled.postValue(htmlOutput)
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao processar ANSI")
+            _terminalOutputStyled.postValue(newText)
+        }
     }
 
     /**
