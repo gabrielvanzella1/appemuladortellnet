@@ -1,0 +1,56 @@
+# Gradle
+.gradle/
+build/
+*.apk
+*.aab
+*.aar
+
+# Android Studio
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+.classpath
+.project
+.settings/
+
+# Local environment
+local.properties
+.env
+
+# Gradle Daemon
+.gradle/daemon/
+
+# Build cache
+.buildcache/
+
+# Android Emulator
+.android/
+emulator/
+avd/
+
+# IDE
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+
+# OS
+Thumbs.db
+.DS_Store
+*.swp
+*~
+
+# Temporary files
+*.log
+*.tmp
+*.bak
+
+# Node (se usado)
+node_modules/
+npm-debug.log
+
+# Python (se usado)
+__pycache__/
+*.py[cod]
+*$py.class

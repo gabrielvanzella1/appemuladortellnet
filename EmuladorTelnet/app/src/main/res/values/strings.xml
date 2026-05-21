@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Emulador Telnet</string>
+    <string name="app_version">1.0.0</string>
+    
+    <!-- Main Activity -->
+    <string name="title_activity_main">Emulador Telnet</string>
+    <string name="button_connect">Conectar</string>
+    <string name="button_disconnect">Desconectar</string>
+    <string name="hint_host">Host/IP</string>
+    <string name="hint_port">Porta</string>
+    
+    <!-- Connection Status -->
+    <string name="status_connected">Conectado</string>
+    <string name="status_disconnected">Desconectado</string>
+    <string name="status_connecting">Conectando...</string>
+    <string name="status_error">Erro na conexão</string>
+    
+    <!-- License -->
+    <string name="license_title">Informações de Licença</string>
+    <string name="license_valid">Licença Válida</string>
+    <string name="license_invalid">Licença Inválida</string>
+</resources>
