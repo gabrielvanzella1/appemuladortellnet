@@ -252,20 +252,20 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     /**
      * Salvar conexão atual no banco de dados
      */
-    fun saveCurrentConnection(name: String) {
+    fun saveCurrentConnection(name: String, host: String, port: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            val host = _currentConnection.value?.host ?: return@launch
-            val port = _currentConnection.value?.port ?: 23
-            
             val savedConnection = SavedConnection(
                 name = name,
                 host = host,
-                port = port.toInt()
+                port = port
             )
             
             val result = repository.saveConnection(savedConnection)
             if (result > 0) {
-                addTerminalOutput("Conexão '$name' salva com sucesso!\n")
+                addTerminalOutput("Conexão '$name' ($host:$port) salva com sucesso!\n")
+                Timber.d("Conexão salva: $name - $host:$port")
+            } else {
+                addTerminalOutput("Erro ao salvar conexão.\n")
             }
         }
     }

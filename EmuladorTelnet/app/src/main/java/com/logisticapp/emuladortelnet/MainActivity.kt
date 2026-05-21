@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var repository: TelnetRepository
     private lateinit var connectionAdapter: ArrayAdapter<String>
     private var savedConnectionsList = emptyList<SavedConnection>()
+    private var isSpinnerInitializing = true  // Flag para ignorar primeira seleção
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,10 +84,22 @@ class MainActivity : AppCompatActivity() {
         // Saved connections spinner
         binding.savedConnectionsSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                Timber.d("Spinner: onItemSelected position=$position, isInitializing=$isSpinnerInitializing, listSize=${savedConnectionsList.size}")
+                
+                // Ignorar primeira seleção automática do Android
+                if (isSpinnerInitializing) {
+                    isSpinnerInitializing = false
+                    return
+                }
+                
                 if (position > 0 && position <= savedConnectionsList.size) {
                     val connection = savedConnectionsList[position - 1]
+                    Timber.d("Selecionado: ${connection.name} - ${connection.host}:${connection.port}")
                     binding.hostInput.setText(connection.host)
                     binding.portInput.setText(connection.port.toString())
+                    binding.statusText.text = "Selecionado: ${connection.name}"
+                } else if (position == 0) {
+                    Timber.d("Selecionado: placeholder (nenhuma ação)")
                 }
             }
 
@@ -96,10 +109,19 @@ class MainActivity : AppCompatActivity() {
         // Save connection button
         binding.saveConnectionButton.setOnClickListener {
             val host = binding.hostInput.text.toString().trim()
+            val portStr = binding.portInput.text.toString().trim()
+            
             if (host.isEmpty()) {
                 binding.statusText.text = "Por favor, insira um host para salvar"
                 return@setOnClickListener
             }
+            
+            if (portStr.isEmpty()) {
+                binding.statusText.text = "Por favor, insira uma porta"
+                return@setOnClickListener
+            }
+            
+            val port = portStr.toIntOrNull() ?: 23
             
             // Dialog para pedir nome da conexão
             val dialog = android.app.AlertDialog.Builder(this)
@@ -113,8 +135,9 @@ class MainActivity : AppCompatActivity() {
                     val nameInput = (dialog as android.app.AlertDialog).findViewById<android.widget.EditText>(android.R.id.edit)
                     val name = nameInput?.text.toString().trim()
                     if (name.isNotEmpty()) {
-                        viewModel.saveCurrentConnection(name)
-                        binding.statusText.text = "Conexão '$name' salva!"
+                        viewModel.saveCurrentConnection(name, host, port)
+                        binding.statusText.text = "Conexão '$name' ($host:$port) salva!"
+                        Timber.d("Salvando: $name - $host:$port")
                     }
                 }
                 .setNegativeButton("Cancelar", null)
@@ -136,6 +159,7 @@ class MainActivity : AppCompatActivity() {
                 viewModel.sendCommand(command)
                 binding.commandInput.text.clear()
                 viewModel.resetInputHistory()
+                hideKeyboard()  // Esconder teclado após enviar
             }
         }
 
@@ -149,6 +173,7 @@ class MainActivity : AppCompatActivity() {
                     viewModel.sendCommand(command)
                     binding.commandInput.text.clear()
                     viewModel.resetInputHistory()
+                    hideKeyboard()  // Esconder teclado após enviar
                 }
                 return@setOnEditorActionListener true
             }
@@ -188,6 +213,10 @@ class MainActivity : AppCompatActivity() {
                 savedConnectionsList = connections
                 val names = mutableListOf("Selecionar conexão...")
                 names.addAll(connections.map { "${it.name} (${it.host}:${it.port})" })
+                
+                // Reset flag antes de atualizar adapter (para ignorar seleção automática)
+                isSpinnerInitializing = true
+                
                 connectionAdapter.clear()
                 connectionAdapter.addAll(names)
                 connectionAdapter.notifyDataSetChanged()
