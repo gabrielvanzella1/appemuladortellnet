@@ -2,44 +2,29 @@ package com.logisticapp.emuladortelnet
 
 import android.os.Bundle
 import android.text.Html
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ScrollView
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.logisticapp.emuladortelnet.data.ConnectionState
+import com.logisticapp.emuladortelnet.databinding.ActivityMainBinding
 import com.logisticapp.emuladortelnet.ui.TelnetViewModel
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: TelnetViewModel
-    private lateinit var hostInput: EditText
-    private lateinit var portInput: EditText
-    private lateinit var connectButton: Button
-    private lateinit var disconnectButton: Button
-    private lateinit var terminalOutput: TextView
-    private lateinit var statusText: TextView
-    private lateinit var scrollView: ScrollView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        
+        // ViewBinding
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         // Inicializar ViewModel
         viewModel = ViewModelProvider(this).get(TelnetViewModel::class.java)
 
-        // Encontrar views
-        hostInput = findViewById(R.id.hostInput)
-        portInput = findViewById(R.id.portInput)
-        connectButton = findViewById(R.id.connectButton)
-        disconnectButton = findViewById(R.id.disconnectButton)
-        terminalOutput = findViewById(R.id.terminalOutput)
-        statusText = findViewById(R.id.statusText)
-        scrollView = findViewById(R.id.scrollView)
-
         // Definir valores padrão
-        portInput.setText("23")
+        binding.portInput.setText("23")
 
         // Setup listeners
         setupListeners()
@@ -49,31 +34,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        connectButton.setOnClickListener {
-            val host = hostInput.text.toString().trim()
-            val port = portInput.text.toString().trim()
+        binding.connectButton.setOnClickListener {
+            val host = binding.hostInput.text.toString().trim()
+            val port = binding.portInput.text.toString().trim()
 
             if (host.isEmpty()) {
-                statusText.text = "Por favor, insira um host"
+                binding.statusText.text = "Por favor, insira um host"
                 return@setOnClickListener
             }
 
             if (port.isEmpty()) {
-                statusText.text = "Por favor, insira uma porta"
+                binding.statusText.text = "Por favor, insira uma porta"
                 return@setOnClickListener
             }
 
             viewModel.connect(host, port)
         }
 
-        disconnectButton.setOnClickListener {
+        binding.disconnectButton.setOnClickListener {
             viewModel.disconnect()
         }
 
-        terminalOutput.setOnClickListener {
+        binding.terminalOutput.setOnClickListener {
             // Scroll para baixo quando clicar no terminal
-            scrollView.post {
-                scrollView.fullScroll(ScrollView.FOCUS_DOWN)
+            binding.scrollView.post {
+                binding.scrollView.fullScroll(android.widget.ScrollView.FOCUS_DOWN)
             }
         }
     }
@@ -83,39 +68,39 @@ class MainActivity : AppCompatActivity() {
         viewModel.connectionState.observe(this) { state ->
             when (state) {
                 ConnectionState.DISCONNECTED -> {
-                    statusText.text = getString(R.string.status_disconnected)
-                    statusText.setTextColor(getColor(android.R.color.darker_gray))
-                    connectButton.isEnabled = true
-                    disconnectButton.isEnabled = false
-                    hostInput.isEnabled = true
-                    portInput.isEnabled = true
+                    binding.statusText.text = getString(R.string.status_disconnected)
+                    binding.statusText.setTextColor(getColor(android.R.color.darker_gray))
+                    binding.connectButton.isEnabled = true
+                    binding.disconnectButton.isEnabled = false
+                    binding.hostInput.isEnabled = true
+                    binding.portInput.isEnabled = true
                 }
 
                 ConnectionState.CONNECTING -> {
-                    statusText.text = getString(R.string.status_connecting)
-                    statusText.setTextColor(getColor(android.R.color.holo_orange_dark))
-                    connectButton.isEnabled = false
-                    disconnectButton.isEnabled = false
-                    hostInput.isEnabled = false
-                    portInput.isEnabled = false
+                    binding.statusText.text = getString(R.string.status_connecting)
+                    binding.statusText.setTextColor(getColor(android.R.color.holo_orange_dark))
+                    binding.connectButton.isEnabled = false
+                    binding.disconnectButton.isEnabled = false
+                    binding.hostInput.isEnabled = false
+                    binding.portInput.isEnabled = false
                 }
 
                 ConnectionState.CONNECTED -> {
-                    statusText.text = getString(R.string.status_connected)
-                    statusText.setTextColor(getColor(android.R.color.holo_green_dark))
-                    connectButton.isEnabled = false
-                    disconnectButton.isEnabled = true
-                    hostInput.isEnabled = false
-                    portInput.isEnabled = false
+                    binding.statusText.text = getString(R.string.status_connected)
+                    binding.statusText.setTextColor(getColor(android.R.color.holo_green_dark))
+                    binding.connectButton.isEnabled = false
+                    binding.disconnectButton.isEnabled = true
+                    binding.hostInput.isEnabled = false
+                    binding.portInput.isEnabled = false
                 }
 
                 ConnectionState.ERROR -> {
-                    statusText.text = getString(R.string.status_error)
-                    statusText.setTextColor(getColor(android.R.color.holo_red_dark))
-                    connectButton.isEnabled = true
-                    disconnectButton.isEnabled = false
-                    hostInput.isEnabled = true
-                    portInput.isEnabled = true
+                    binding.statusText.text = getString(R.string.status_error)
+                    binding.statusText.setTextColor(getColor(android.R.color.holo_red_dark))
+                    binding.connectButton.isEnabled = true
+                    binding.disconnectButton.isEnabled = false
+                    binding.hostInput.isEnabled = true
+                    binding.portInput.isEnabled = true
                 }
             }
         }
@@ -123,14 +108,14 @@ class MainActivity : AppCompatActivity() {
         // Observar saída do terminal (com estilos ANSI)
         viewModel.terminalOutputStyled.observe(this) { htmlOutput ->
             try {
-                terminalOutput.text = Html.fromHtml(htmlOutput, Html.FROM_HTML_MODE_LEGACY)
+                binding.terminalOutput.text = Html.fromHtml(htmlOutput, Html.FROM_HTML_MODE_LEGACY)
             } catch (e: Exception) {
                 // Fallback para plain text
-                terminalOutput.text = htmlOutput
+                binding.terminalOutput.text = htmlOutput
             }
             // Auto-scroll para baixo
-            scrollView.post {
-                scrollView.fullScroll(ScrollView.FOCUS_DOWN)
+            binding.scrollView.post {
+                binding.scrollView.fullScroll(android.widget.ScrollView.FOCUS_DOWN)
             }
         }
     }

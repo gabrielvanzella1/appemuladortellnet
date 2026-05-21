@@ -188,6 +188,8 @@ class TelnetViewModel : ViewModel() {
         try {
             val styledSegments = ansiParser.parse(newText)
             val htmlOutput = ansiParser.toHtmlSpan(styledSegments)
+            Timber.d("ANSI parsed: ${styledSegments.size} segments")
+            Timber.d("HTML output: ${htmlOutput.take(100)}...")
             _terminalOutputStyled.postValue(htmlOutput)
         } catch (e: Exception) {
             Timber.e(e, "Erro ao processar ANSI")
