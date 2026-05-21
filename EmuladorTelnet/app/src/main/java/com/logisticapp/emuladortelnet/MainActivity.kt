@@ -2,20 +2,28 @@ package com.logisticapp.emuladortelnet
 
 import android.os.Bundle
 import android.text.Html
+import android.widget.ArrayAdapter
+import android.widget.AdapterView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.logisticapp.emuladortelnet.data.ConnectionState
 import com.logisticapp.emuladortelnet.database.AppDatabase
+import com.logisticapp.emuladortelnet.database.SavedConnection
 import com.logisticapp.emuladortelnet.database.TelnetRepository
 import com.logisticapp.emuladortelnet.databinding.ActivityMainBinding
 import com.logisticapp.emuladortelnet.ui.TelnetViewModel
 import com.logisticapp.emuladortelnet.ui.TelnetViewModelFactory
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: TelnetViewModel
     private lateinit var repository: TelnetRepository
+    private lateinit var connectionAdapter: ArrayAdapter<String>
+    private var savedConnectionsList = emptyList<SavedConnection>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +40,15 @@ class MainActivity : AppCompatActivity() {
 
         // Definir valores padrão
         binding.portInput.setText("23")
+
+        // Setup Spinner adapter
+        connectionAdapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            mutableListOf("Selecionar conexão...")
+        )
+        connectionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.savedConnectionsSpinner.adapter = connectionAdapter
 
         // Setup listeners
         setupListeners()
@@ -60,6 +77,48 @@ class MainActivity : AppCompatActivity() {
 
         binding.disconnectButton.setOnClickListener {
             viewModel.disconnect()
+        }
+
+        // Saved connections spinner
+        binding.savedConnectionsSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                if (position > 0 && position <= savedConnectionsList.size) {
+                    val connection = savedConnectionsList[position - 1]
+                    binding.hostInput.setText(connection.host)
+                    binding.portInput.setText(connection.port.toString())
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        // Save connection button
+        binding.saveConnectionButton.setOnClickListener {
+            val host = binding.hostInput.text.toString().trim()
+            if (host.isEmpty()) {
+                binding.statusText.text = "Por favor, insira um host para salvar"
+                return@setOnClickListener
+            }
+            
+            // Dialog para pedir nome da conexão
+            val dialog = android.app.AlertDialog.Builder(this)
+                .setTitle("Salvar Conexão")
+                .setMessage("Nome da conexão:")
+                .setView(android.widget.EditText(this).apply {
+                    id = android.R.id.edit
+                    hint = "ex: Servidor Prod"
+                })
+                .setPositiveButton("Salvar") { dialog, _ ->
+                    val nameInput = (dialog as android.app.AlertDialog).findViewById<android.widget.EditText>(android.R.id.edit)
+                    val name = nameInput?.text.toString().trim()
+                    if (name.isNotEmpty()) {
+                        viewModel.saveCurrentConnection(name)
+                        binding.statusText.text = "Conexão '$name' salva!"
+                    }
+                }
+                .setNegativeButton("Cancelar", null)
+                .create()
+            dialog.show()
         }
 
         binding.terminalOutput.setOnClickListener {
@@ -122,6 +181,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun observeViewModel() {
+        // Observar conexões salvas
+        lifecycleScope.launch {
+            viewModel.savedConnections.collect { connections ->
+                savedConnectionsList = connections
+                val names = mutableListOf("Selecionar conexão...")
+                names.addAll(connections.map { "${it.name} (${it.host}:${it.port})" })
+                connectionAdapter.clear()
+                connectionAdapter.addAll(names)
+                connectionAdapter.notifyDataSetChanged()
+                Timber.d("Conexões salvas atualizadas: ${connections.size}")
+            }
+        }
+
         // Observar estado de conexão
         viewModel.connectionState.observe(this) { state ->
             when (state) {

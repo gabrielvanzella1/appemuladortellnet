@@ -7,8 +7,10 @@
     <string name="title_activity_main">Emulador Telnet</string>
     <string name="button_connect">Conectar</string>
     <string name="button_disconnect">Desconectar</string>
+    <string name="button_save_connection">Salvar</string>
     <string name="hint_host">Host/IP</string>
     <string name="hint_port">Porta</string>
+    <string name="spinner_saved_connections">Selecionar conexão salva...</string>
     
     <!-- Connection Status -->
     <string name="status_connected">Conectado</string>
