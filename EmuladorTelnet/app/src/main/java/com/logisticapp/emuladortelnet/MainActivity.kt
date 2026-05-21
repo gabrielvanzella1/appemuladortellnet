@@ -2,6 +2,7 @@ package com.logisticapp.emuladortelnet
 
 import android.os.Bundle
 import android.text.Html
+import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.AdapterView
 import androidx.appcompat.app.AppCompatActivity
@@ -206,6 +207,7 @@ class MainActivity : AppCompatActivity() {
                     binding.portInput.isEnabled = true
                     binding.commandInput.isEnabled = false
                     binding.sendButton.isEnabled = false
+                    showKeyboard(binding.hostInput)  // Mostrar teclado quando desconecta
                 }
 
                 ConnectionState.CONNECTING -> {
@@ -228,6 +230,8 @@ class MainActivity : AppCompatActivity() {
                     binding.portInput.isEnabled = false
                     binding.commandInput.isEnabled = true
                     binding.sendButton.isEnabled = true
+                    hideKeyboard()  // Esconder teclado quando conecta
+                    binding.commandInput.requestFocus()  // Focar no input de comando
                 }
 
                 ConnectionState.ERROR -> {
@@ -256,5 +260,22 @@ class MainActivity : AppCompatActivity() {
                 binding.scrollView.fullScroll(android.widget.ScrollView.FOCUS_DOWN)
             }
         }
+    }
+
+    /**
+     * Esconder teclado virtual
+     */
+    private fun hideKeyboard() {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(binding.root.windowToken, 0)
+    }
+
+    /**
+     * Mostrar teclado virtual
+     */
+    private fun showKeyboard(view: android.view.View) {
+        view.requestFocus()
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
     }
 }
