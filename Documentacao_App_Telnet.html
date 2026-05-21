@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação - Emulador Telnet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1f4788 0%, #2e5090 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .header .meta {
+            margin-top: 20px;
+            font-size: 0.95em;
+            opacity: 0.8;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .toc {
+            background: #f9f9f9;
+            border-left: 4px solid #2e5090;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+        
+        .toc h2 {
+            color: #2e5090;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .toc ul {
+            list-style: none;
+        }
+        
+        .toc li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .toc li:last-child {
+            border-bottom: none;
+        }
+        
+        .toc a {
+            color: #2e5090;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        
+        h2 {
+            color: #1f4788;
+            margin: 35px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+            font-size: 1.8em;
+        }
+        
+        h3 {
+            color: #2e5090;
+            margin: 20px 0 10px 0;
+            font-size: 1.3em;
+        }
+        
+        p {
+            margin-bottom: 12px;
+            text-align: justify;
+            line-height: 1.8;
+        }
+        
+        ul, ol {
+            margin: 12px 0 12px 30px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+        
+        .feature-box {
+            background: #f0f6ff;
+            border-left: 4px solid #3d6ba8;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        th {
+            background: #2e5090;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        tr:hover {
+            background: #f0f6ff;
+        }
+        
+        .status-completed {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .status-development {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .status-backlog {
+            color: #95a5a6;
+            font-weight: bold;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .badge-tech {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .badge-feature {
+            background: #f3e5f5;
+            color: #6a1b9a;
+        }
+        
+        .page-break {
+            page-break-after: always;
+            margin: 40px 0;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 40px;
+        }
+        
+        .footer {
+            background: #f9f9f9;
+            border-top: 2px solid #e0e0e0;
+            padding: 30px;
+            margin-top: 50px;
+            text-align: center;
+            color: #666;
+        }
+        
+        .contact-info {
+            background: #f0f6ff;
+            border: 1px solid #b3d9ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .contact-info p {
+            margin: 8px 0;
+        }
+        
+        a {
+            color: #2e5090;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .highlight {
+            background: #fffbea;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            
+            .page-break {
+                page-break-after: always;
+            }
+            
+            h2 {
+                page-break-before: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>📱 EMULADOR TELNET</h1>
+            <p>Aplicativo Android Enterprise</p>
+            <div class="meta">
+                <p><strong>Versão:</strong> 1.0.0</p>
+                <p><strong>Data:</strong> 21 de Maio de 2026</p>
+            </div>
+        </div>
+        
+        <!-- CONTEÚDO PRINCIPAL -->
+        <div class="content">
+            
+            <!-- ÍNDICE -->
+            <div class="toc">
+                <h2>📋 ÍNDICE</h2>
+                <ul>
+                    <li><a href="#secao1">1. Visão Geral do Projeto</a></li>
+                    <li><a href="#secao2">2. Funcionalidades Implementadas</a></li>
+                    <li><a href="#secao3">3. Funcionalidades em Desenvolvimento</a></li>
+                    <li><a href="#secao4">4. Especificações Técnicas</a></li>
+                    <li><a href="#secao5">5. Segurança e Licenciamento</a></li>
+                    <li><a href="#secao6">6. Autenticação (Login/Cadastro)</a></li>
+                    <li><a href="#secao7">7. Cadastro de Empresa</a></li>
+                    <li><a href="#secao8">8. Roadmap Futuro</a></li>
+                </ul>
+            </div>
+            
+            <div class="page-break"></div>
+            
+            <!-- SEÇÃO 1 -->
+            <h2 id="secao1">1. VISÃO GERAL DO PROJETO</h2>
+            
+            <p>
+                <strong>Objetivo:</strong> Emulador Telnet avançado para Android, permitindo conexões a servidores Telnet remotos com suporte a cores ANSI, histórico de comandos, persistência de dados e licenciamento enterprise.
+            </p>
+            
+            <p>
+                <strong>Público-alvo:</strong> Profissionais de TI, administradores de sistemas, desenvolvedores e entusiastas de tecnologia retrô.
+            </p>
+            
+            <p>
+                <strong>Plataforma:</strong> Android 7.0+ (API 24), com interface nativa Kotlin + Android Jetpack.
+            </p>
+            
+            <div class="feature-box">
+                <strong>🎯 Diferenciais:</strong>
+                <ul>
+                    <li>Protocolo Telnet RFC 854 com suporte completo</li>
+                    <li>Cores ANSI/VT100 em tempo real</li>
+                    <li>Histórico inteligente de comandos</li>
+                    <li>Licenciamento com device fingerprinting SHA-256</li>
+                    <li>Banco de dados local robusto (Room v2)</li>
+                    <li>Interface otimizada para mobile</li>
+                </ul>
+            </div>
+            
+            <div class="page-break"></div>
+            
+            <!-- SEÇÃO 2 -->
+            <h2 id="secao2">2. FUNCIONALIDADES IMPLEMENTADAS ✅</h2>
+            
+            <h3>2.1 - Cliente Telnet (RFC 854)</h3>
+            <div class="feature-box">
+                <ul>
+                    <li>Socket TCP real com suporte completo ao protocolo Telnet RFC 854</li>
+                    <li>Negociação de opções (WILL, WONT, DO, DON'T)</li>
+                    <li>Leitura não-bloqueante com BufferedReader.ready()</li>
+                    <li>Tratamento automático de conexões e desconexões</li>
+                    <li>Suporte a diferentes portas (padrão 23)</li>
+                    <li>Timeout configurável para conexões</li>
+                </ul>
+            </div>
+            
+            <h3>2.2 - Terminal com Cores ANSI/VT100</h3>
+            <div class="feature-box">
+                <ul>
+                    <li>Parser completo de sequências ANSI (\\x1b[...m)</li>
+                    <li>Suporte a 16 cores básicas (30-37, 90-97)</li>
+                    <li>Cores de background (40-47)</li>
+                    <li>Estilos: bold, italic, underline, reverse</li>
+                    <li>Renderização em HTML com WebView</li>
+                    <li>Performance otimizada para grandes volumes de texto</li>
+                </ul>
+            </div>
+            
+            <h3>2.3 - Histórico de Comandos</h3>
+            <div class="feature-box">
+                <ul>
+                    <li>Navegação com setas ↑ (anteriormente) e ↓ (próximo)</li>
+                    <li>Armazenamento em memória (máx 100 comandos)</li>
+                    <li>InputHistoryManager para controle</li>
+                    <li>Retenção durante sessão ativa</li>
+                    <li>Limpeza automática ao desconectar</li>
+                </ul>
+            </div>
+            
+            <h3>2.4 - Banco de Dados (Room v2)</h3>
+            <div class="feature-box">
+                <ul>
+                    <li>Persistência local com SQLite</li>
+                    <li><strong>Entidades:</strong> SavedConnection, CommandHistory, SessionLog, AppPreference, LicenseInfo</li>
+                    <li>Migrações automáticas com fallbackToDestructiveMigration</li>
+                    <li>Operações assíncronas com Coroutines (Dispatcher.IO)</li>
+                    <li>Foreign keys e constraints</li>
+                    <li>DAOs com operações CRUD completas</li>
+                </ul>
+            </div>
+            
+            <h3>2.5 - Conexões Salvas</h3>
+            <div class="feature-box">
+                <ul>
+                    <li>Spinner dropdown com lista de hosts salvos</li>
+                    <li>Auto-preenchimento de host/porta ao selecionar</li>
+                    <li>Salvar novas conexões com nome customizável</li>
+                    <li>Favoritos e histórico de último acesso</li>
+                    <li>Edição de conexões existentes</li>
+                    <li>Exclusão de conexões com confirmação</li>
+                </ul>
+            </div>
+            
+            <h3>2.6 - Licenciamento Enterprise</h3>
+            <div class="feature-box">
+                <ul>
+                    <li>Device Fingerprinting com SHA-256 (impossível falsificar)</li>
+                    <li>Licenças TRIAL (30 dias) e PREMIUM (1 ano)</li>
+                    <li>Validação por device vinculado</li>
+                    <li>Menu 📜 Licença com dialog customizado</li>
+                    <li>Armazenamento seguro em banco de dados</li>
+                    <li>Expiração automática com validação</li>
+                </ul>
+            </div>
+            
+            <h3>2.7 - Controle de Teclado Virtual</h3>
+            <div class="feature-box">
+                <ul>
+                    <li>Auto-ocultar teclado ao conectar ao servidor</li>
+                    <li>Auto-mostrar teclado ao desconectar</li>
+                    <li>Ocultar após envio de comando</li>
+                    <li>Melhor visualização do terminal</li>
+                    <li>Controle via InputMethodManager</li>
+                </ul>
+            </div>
+            
+            <div class="page-break"></div>
+            
+            <!-- SEÇÃO 3 -->
+            <h2 id="secao3">3. FUNCIONALIDADES EM DESENVOLVIMENTO 🚀</h2>
+            
+            <h3>3.1 - Autenticação (LOGIN)</h3>
+            <div class="feature-box">
+                <p><strong>Status:</strong> <span class="status-development">Planejado para Phase 7</span></p>
+                <p><strong>Descrição:</strong> Sistema de login com autenticação por usuário e senha.</p>
+                <p><strong>Features:</strong></p>
+                <ul>
+                    <li>Tela de login com email/senha</li>
+                    <li>Backend Firebase Authentication (ou servidor custom)</li>
+                    <li>Recuperação de senha por email</li>
+                    <li>Armazenamento seguro de tokens (EncryptedSharedPreferences)</li>
+                    <li>Logout com limpeza de sessão</li>
+                    <li>Validação de email real via confirmação</li>
+                </ul>
+            </div>
+            
+            <h3>3.2 - Cadastro de Usuário</h3>
+            <div class="feature-box">
+                <p><strong>Status:</strong> <span class="status-development">Planejado para Phase 7</span></p>
+                <p><strong>Descrição:</strong> Registro de novos usuários na plataforma.</p>
+                <p><strong>Campos:</strong></p>
+                <ul>
+                    <li>Nome completo</li>
+                    <li>Email (único, validado)</li>
+                    <li>Senha (mínimo 8 caracteres, com regras de força)</li>
+                    <li>Telefone (opcional)</li>
+                    <li>CPF/CNPJ</li>
+                    <li>Aceitar termos de serviço</li>
+                </ul>
+            </div>
+            
+            <h3>3.3 - Cadastro de Empresa</h3>
+            <div class="feature-box">
+                <p><strong>Status:</strong> <span class="status-development">Planejado para Phase 8</span></p>
+                <p><strong>Descrição:</strong> Registro de empresas para planos Premium.</p>
+                <p><strong>Campos:</strong></p>
+                <ul>
+                    <li>Razão social</li>
+                    <li>CNPJ (validado, único)</li>
+                    <li>Inscrição estadual</li>
+                    <li>Endereço completo (rua, número, cidade, CEP)</li>
+                    <li>Telefone comercial</li>
+                    <li>Email corporativo</li>
+                    <li>Website (opcional)</li>
+                    <li>Logo (upload de imagem)</li>
+                    <li>Plano (TRIAL, PREMIUM, ENTERPRISE)</li>
+                </ul>
+            </div>
+            
+            <h3>3.4 - Copy/Paste no Terminal</h3>
+            <div class="feature-box">
+                <p><strong>Status:</strong> <span class="status-development">Próximo na fila</span></p>
+                <ul>
+                    <li>Selecionar texto da tela</li>
+                    <li>Copiar para clipboard</li>
+                    <li>Colar comandos do clipboard</li>
+                </ul>
+            </div>
+            
+            <h3>3.5 - Suporte SSH</h3>
+            <div class="feature-box">
+                <p><strong>Status:</strong> <span class="status-development">Em roadmap</span></p>
+                <ul>
+                    <li>Cliente SSH integrado</li>
+                    <li>Autenticação por chave privada (RSA/ED25519)</li>
+                    <li>Autenticação por senha SSH</li>
+                    <li>Gerenciador de chaves locais</li>
+                </ul>
+            </div>
+            
+            <h3>3.6 - Temas UI</h3>
+            <div class="feature-box">
+                <p><strong>Status:</strong> <span class="status-development">Em roadmap</span></p>
+                <ul>
+                    <li>Dark Mode / Light Mode</li>
+                    <li>Customização de cores do terminal</li>
+                    <li>Seleção de fonte e tamanho</li>
+                </ul>
+            </div>
+            
+            <div class="page-break"></div>
+            
+            <!-- SEÇÃO 4 -->
+            <h2 id="secao4">4. ESPECIFICAÇÕES TÉCNICAS</h2>
+            
+            <h3>Stack Técnico</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Componente</th>
+                            <th>Tecnologia</th>
+                            <th>Versão</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Linguagem Principal</td>
+                            <td>Kotlin</td>
+                            <td>1.8.10</td>
+                        </tr>
+                        <tr>
+                            <td>Java Runtime</td>
+                            <td>OpenJDK (Amazon Corretto)</td>
+                            <td>11</td>
+                        </tr>
+                        <tr>
+                            <td>Android SDK Target</td>
+                            <td>Android 14</td>
+                            <td>API 34</td>
+                        </tr>
+                        <tr>
+                            <td>Android SDK Mín.</td>
+                            <td>Android 7.0</td>
+                            <td>API 24</td>
+                        </tr>
+                        <tr>
+                            <td>Build System</td>
+                            <td>Gradle</td>
+                            <td>8.6</td>
+                        </tr>
+                        <tr>
+                            <td>Android Gradle Plugin</td>
+                            <td>AGP</td>
+                            <td>7.4.2</td>
+                        </tr>
+                        <tr>
+                            <td>Arquitetura</td>
+                            <td>MVVM + Repository Pattern</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>UI Framework</td>
+                            <td>Android Jetpack</td>
+                            <td>Moderna</td>
+                        </tr>
+                        <tr>
+                            <td>Database ORM</td>
+                            <td>Room</td>
+                            <td>2.5.2</td>
+                        </tr>
+                        <tr>
+                            <td>Async Programming</td>
+                            <td>Kotlin Coroutines</td>
+                            <td>1.7.1</td>
+                        </tr>
+                        <tr>
+                            <td>Networking</td>
+                            <td>Java Socket (RFC 854)</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>UI Binding</td>
+                            <td>ViewBinding</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3>Arquitetura de Camadas</h3>
+            <div class="feature-box">
+                <ul>
+                    <li><strong>UI Layer:</strong> MainActivity, LicenseDialog, WebView para terminal</li>
+                    <li><strong>ViewModel Layer:</strong> TelnetViewModel com LiveData/Flow</li>
+                    <li><strong>Repository Layer:</strong> TelnetRepository abstrai operações BD</li>
+                    <li><strong>Database Layer:</strong> Room com entities e DAOs</li>
+                    <li><strong>Network Layer:</strong> TelnetClient (TCP Socket)</li>
+                    <li><strong>Utility Layer:</strong> ANSIParser, InputHistoryManager, LicenseManager</li>
+                </ul>
+            </div>
+            
+            <h3>Permissões Android</h3>
+            <div class="feature-box">
+                <ul>
+                    <li><span class="badge badge-tech">android.permission.INTERNET</span> - Conexões Telnet/SSH</li>
+                    <li><span class="badge badge-tech">android.permission.WRITE_EXTERNAL_STORAGE</span> - Salvar logs (opcional)</li>
+                </ul>
+            </div>
+            
+            <div class="page-break"></div>
+            
+            <!-- SEÇÃO 5 -->
+            <h2 id="secao5">5. SEGURANÇA E LICENCIAMENTO</h2>
+            
+            <h3>5.1 - Device Fingerprinting</h3>
+            <div class="feature-box">
+                <ul>
+                    <li><strong>Método:</strong> SHA-256 hash de hardware único</li>
+                    <li><strong>Componentes:</strong> ANDROID_ID + Model + Manufacturer + Serial + Fingerprint</li>
+                    <li><strong>Segurança:</strong> Impossível falsificar sem mudança física do hardware</li>
+                    <li><strong>Formato:</strong> 32 caracteres hexadecimais</li>
+                    <li><strong>Colisão:</strong> Praticamente impossível (SHA-256)</li>
+                </ul>
+            </div>
+            
+            <h3>5.2 - Modelos de Licença</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Duração</th>
+                            <th>Renovação</th>
+                            <th>Uso</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>TRIAL</strong></td>
+                            <td>30 dias</td>
+                            <td>Única vez</td>
+                            <td>Teste completo do app</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PREMIUM</strong></td>
+                            <td>1 ano</td>
+                            <td>Anual</td>
+                            <td>Uso comercial/profissional</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ENTERPRISE</strong></td>
+                            <td>Ilimitado</td>
+                            <td>-</td>
+                            <td>Corporativo multi-device</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3>5.3 - Validação de Licença</h3>
+            <div class="feature-box">
+                <ul>
+                    <li>Verifica device fingerprint na ativação</li>
+                    <li>Valida data de expiração em tempo real</li>
+                    <li>Armazenamento seguro em banco local (criptografia futuro)</li>
+                    <li>Sincronização com servidor (fase 10)</li>
+                    <li>Detecção de modificações não autorizadas</li>
+                </ul>
+            </div>
+            
+            <h3>5.4 - Proteção de Dados</h3>
+            <div class="feature-box">
+                <ul>
+                    <li>Senhas não armazenadas localmente</li>
+                    <li>Histórico de comandos criptografado (fase 10)</li>
+                    <li>Conexões via HTTPS/TLS 1.2+ (futuro)</li>
+                    <li>Certificação SSL/TLS obrigatória em SSH</li>
+                    <li>EncryptedSharedPreferences para dados sensíveis</li>
+                    <li>Rate limiting de tentativas de login</li>
+                </ul>
+            </div>
+            
+            <div class="page-break"></div>
+            
+            <!-- SEÇÃO 6 -->
+            <h2 id="secao6">6. AUTENTICAÇÃO (LOGIN/CADASTRO)</h2>
+            
+            <h3>6.1 - Fluxo de Login</h3>
+            <div class="feature-box">
+                <p><strong>Tela de Login:</strong></p>
+                <ol>
+                    <li>Usuário insere email e senha</li>
+                    <li>Validação local (email válido, senha não vazia)</li>
+                    <li>Envio para servidor (HTTPS POST com TLS 1.2+)</li>
+                    <li>Servidor retorna token JWT ou erro 401/403</li>
+                    <li>Token armazenado localmente (EncryptedSharedPreferences)</li>
+                    <li>Redirecionamento para MainActivity</li>
+                    <li>Sessão persiste até logout ou expiração</li>
+                </ol>
+            </div>
+            
+            <h3>6.2 - Fluxo de Cadastro de Usuário</h3>
+            <div class="feature-box">
+                <p><strong>Tela de Registro (Multi-step):</strong></p>
+                <ol>
+                    <li>Usuário preenche formulário (nome, email, senha)</li>
+                    <li>Validação de força de senha (8+ chars, uppercase, números, símbolos)</li>
+                    <li>Verificação de email único (HTTPS POST)</li>
+                    <li>Envio de confirmação por email com token</li>
+                    <li>Usuário clica link no email (expira em 24h)</li>
+                    <li>Confirmação de email concluída</li>
+                    <li>Redirecionamento para login</li>
+                    <li>Login + redirect para app</li>
+                </ol>
+            </div>
+            
+            <h3>6.3 - Recuperação de Senha</h3>
+            <div class="feature-box">
+                <ul>
+                    <li>Tela "Esqueci a senha?" acessível do login</li>
+                    <li>Usuário insere email cadastrado</li>
+                    <li>Verificação de existência do usuário</li>
+                    <li>Email com link de reset enviado</li>
+                    <li>Token com expiração de 1 hora</li>
+                    <li>Tela para inserir nova senha</li>
+                    <li>Confirmação via email</li>
+                    <li>Redirecionamento para login</li>
+                </ul>
+            </div>
+            
+            <h3>6.4 - Segurança de Senhas</h3>
+            <div class="feature-box">
+                <ul>
+                    <li><strong>Mínimo 8 caracteres</strong></li>
+                    <li><strong>Obrigatório:</strong> 1 maiúscula, 1 minúscula, 1 número, 1 símbolo</li>
+                    <li><strong>Hashing:</strong> bcrypt+salt no servidor (nunca plaintext)</li>
+                    <li><strong>Transmissão:</strong> HTTPS TLS 1.2+</li>
+                    <li><strong>Rate limiting:</strong> Máx 5 tentativas falhadas / 5 minutos</li>
+                    <li><strong>2FA:</strong> Suporte futuro (SMS/Google Authenticator)</li>
+                </ul>
+            </div>
+            
+            <div class="page-break"></div>
+            
+            <!-- SEÇÃO 7 -->
+            <h2 id="secao7">7. CADASTRO DE EMPRESA</h2>
+            
+            <h3>7.1 - Requisitos de Cadastro</h3>
+            <div class="feature-box">
+                <ul>
+                    <li><strong>Usuário:</strong> Deve estar logado</li>
+                    <li><strong>Permissão:</strong> Apenas usuário com role 'ADMIN' ou 'OWNER'</li>
+                    <li><strong>CNPJ:</strong> Validado contra banco de dados (único)</li>
+                    <li><strong>Confirmação:</strong> Email de verificação da empresa</li>
+                    <li><strong>Plano:</strong> Seleção obrigatória (TRIAL/PREMIUM)</li>
+                </ul>
+            </div>
+            
+            <h3>7.2 - Fluxo de Cadastro Empresarial</h3>
+            
+            <p><strong>Passo 1 - Dados Básicos:</strong></p>
+            <div class="feature-box">
+                <ul>
+                    <li>Razão social (obrigatório, máx 255 chars)</li>
+                    <li>CNPJ (validação automática de formato e DV)</li>
+                    <li>Inscrição estadual (opcional)</li>
+                    <li>Classificação (Indústria, Comércio, Serviços, etc)</li>
+                </ul>
+            </div>
+            
+            <p><strong>Passo 2 - Contato:</strong></p>
+            <div class="feature-box">
+                <ul>
+                    <li>Email corporativo (validado)</li>
+                    <li>Telefone (formato internacional +55)</li>
+                    <li>Website (opcional, validação de URL)</li>
+                </ul>
+            </div>
+            
+            <p><strong>Passo 3 - Endereço:</strong></p>
+            <div class="feature-box">
+                <ul>
+                    <li>Rua e número (obrigatório)</li>
+                    <li>Complemento (opcional)</li>
+                    <li>CEP (auto-preenche cidade/estado via ViaCEP)</li>
+                    <li>Cidade e estado</li>
+                    <li>País (padrão Brasil)</li>
+                </ul>
+            </div>
+            
+            <p><strong>Passo 4 - Documentos:</strong></p>
+            <div class="feature-box">
+                <ul>
+                    <li>Upload de logo (PNG/JPG, máx 5MB)</li>
+                    <li>Dimensões mín 200x200px, recomendado 512x512px</li>
+                    <li>Descrição da empresa (até 500 caracteres)</li>
+                </ul>
+            </div>
+            
+            <p><strong>Passo 5 - Plano e Pagamento:</strong></p>
+            <div class="feature-box">
+                <ul>
+                    <li>Seleção de plano (TRIAL 30d, PREMIUM 1 ano)</li>
+                    <li>Método de pagamento (Cartão, PIX, Boleto)</li>
+                    <li>Resumo com valores e taxas</li>
+                    <li>Aceitar termos de serviço</li>
+                    <li>Confirmação de criação</li>
+                </ul>
+            </div>
+            
+            <h3>7.3 - Validações</h3>
+            <div class="feature-box">
+                <ul>
+                    <li><strong>CNPJ:</strong> Validação via algoritmo de dígito verificador</li>
+                    <li><strong>CEP:</strong> Consulta API de endereços (ViaCEP/Postmon)</li>
+                    <li><strong>Email:</strong> Validação de domínio corporativo + envio de confirmação</li>
+                    <li><strong>Telefone:</strong> Formato internacional (+55 11 XXXXX-XXXX)</li>
+                    <li><strong>Logo:</strong> Validação de tipo de arquivo, tamanho, dimensões</li>
+                    <li><strong>Unicidade:</strong> Verificação de CNPJ duplicado no BD</li>
+                </ul>
+            </div>
+            
+            <h3>7.4 - Após Cadastro</h3>
+            <div class="feature-box">
+                <ul>
+                    <li>Email de confirmação com código de verificação</li>
+                    <li>Usuário criador vira OWNER da empresa</li>
+                    <li>Pode adicionar outros usuários (ADMIN, USER, VIEWER)</li>
+                    <li>Ativa licença TRIAL (30 dias) ou PREMIUM (1 ano)</li>
+                    <li>Acesso ao painel administrativo</li>
+                    <li>Visibilidade em API de empresas (listagem)</li>
+                </ul>
+            </div>
+            
+            <div class="page-break"></div>
+            
+            <!-- SEÇÃO 8 -->
+            <h2 id="secao8">8. ROADMAP FUTURO</h2>
+            
+            <h3>Fases de Desenvolvimento</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Phase</th>
+                            <th>Funcionalidade</th>
+                            <th>Status</th>
+                            <th>Prioridade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1-4</td>
+                            <td>Client Telnet + Histórico</td>
+                            <td><span class="status-completed">✅ Concluído</span></td>
+                            <td>CRÍTICA</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Database + Conexões Salvas</td>
+                            <td><span class="status-completed">✅ Concluído</span></td>
+                            <td>CRÍTICA</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>Licenciamento Enterprise</td>
+                            <td><span class="status-completed">✅ Concluído</span></td>
+                            <td>CRÍTICA</td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>Autenticação (Login/Cadastro)</td>
+                            <td><span class="status-development">🚀 Em planejamento</span></td>
+                            <td>ALTA</td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td>Gestão de Empresas</td>
+                            <td><span class="status-development">🚀 Em planejamento</span></td>
+                            <td>ALTA</td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td>Copy/Paste Terminal</td>
+                            <td><span class="status-backlog">📋 Backlog</span></td>
+                            <td>MÉDIA</td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td>SSH Support</td>
+                            <td><span class="status-backlog">📋 Backlog</span></td>
+                            <td>MÉDIA</td>
+                        </tr>
+                        <tr>
+                            <td>11</td>
+                            <td>UI Themes (Dark/Light)</td>
+                            <td><span class="status-backlog">📋 Backlog</span></td>
+                            <td>BAIXA</td>
+                        </tr>
+                        <tr>
+                            <td>12</td>
+                            <td>Admin Dashboard Web</td>
+                            <td><span class="status-backlog">📋 Backlog</span></td>
+                            <td>ALTA</td>
+                        </tr>
+                        <tr>
+                            <td>13</td>
+                            <td>Analytics & Logs</td>
+                            <td><span class="status-backlog">📋 Backlog</span></td>
+                            <td>MÉDIA</td>
+                        </tr>
+                        <tr>
+                            <td>14</td>
+                            <td>Multi-language (i18n)</td>
+                            <td><span class="status-backlog">📋 Backlog</span></td>
+                            <td>BAIXA</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3>Próximos 3 Meses (Q3 2026)</h3>
+            <div class="feature-box">
+                <ul>
+                    <li>✅ Implementação de autenticação com Firebase/Auth0</li>
+                    <li>✅ Sistema de gestão de usuários e empresas</li>
+                    <li>✅ Backend API (Node.js + Express ou Python/Django)</li>
+                    <li>✅ Dashboard administrativo web</li>
+                    <li>✅ Testes de segurança e penetração</li>
+                    <li>✅ Publicação na Google Play Store</li>
+                </ul>
+            </div>
+            
+            <h3>Próximos 6 Meses (Q4 2026)</h3>
+            <div class="feature-box">
+                <ul>
+                    <li>Copy/Paste melhorado no terminal</li>
+                    <li>Suporte a SSH (OpenSSH compatible)</li>
+                    <li>Temas de cores customizáveis</li>
+                    <li>Autenticação 2FA (SMS/Google Authenticator)</li>
+                    <li>Logs de auditoria detalhados</li>
+                    <li>Criptografia de histórico de comandos</li>
+                </ul>
+            </div>
+            
+            <h3>Próximos 12 Meses (2027)</h3>
+            <div class="feature-box">
+                <ul>
+                    <li>Aplicativo para iOS</li>
+                    <li>Cliente web (PWA)</li>
+                    <li>Suporte a múltiplas linguagens</li>
+                    <li>Integração com LDAP/Active Directory</li>
+                    <li>API pública para integrações</li>
+                    <li>Machine Learning para detecção de anomalias</li>
+                </ul>
+            </div>
+            
+            <div class="page-break"></div>
+            
+            <!-- CONCLUSÃO -->
+            <h2>CONCLUSÃO</h2>
+            
+            <p>
+                O <span class="highlight">Emulador Telnet</span> é um aplicativo Android robusto e profissional que combina funcionalidades clássicas de terminal com segurança moderna e licenciamento enterprise. Com a arquitetura MVVM e uso de Room Database, o app oferece performance, confiabilidade e escalabilidade para usuários exigentes.
+            </p>
+            
+            <p>
+                As próximas fases focam em <span class="highlight">autenticação, gestão de usuários/empresas e um ecosistema completo de plataforma</span>, mantendo o foco em segurança, escalabilidade e experiência do usuário.
+            </p>
+            
+            <p>
+                Com a conclusão da Phase 6 (Licenciamento Enterprise), o app está preparado para publição na Google Play Store e pronto para receber usuários pagos e empresas.
+            </p>
+            
+            <!-- FOOTER COM CONTATO -->
+            <div class="footer">
+                <div class="contact-info">
+                    <p><strong>📧 Informações de Contato e Suporte</strong></p>
+                    <p>
+                        <strong>GitHub Repository:</strong> 
+                        <a href="https://github.com/gabrielvanzella1/appemuladortellnet" target="_blank">
+                            https://github.com/gabrielvanzella1/appemuladortellnet
+                        </a>
+                    </p>
+                    <p><strong>Desenvolvedor:</strong> Gabriel Vanzella</p>
+                    <p><strong>Email de Suporte:</strong> suporte@appemuladortellnet.com</p>
+                    <p><strong>Versão do Documento:</strong> 1.0.0</p>
+                    <p><strong>Data:</strong> 21 de Maio de 2026</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
