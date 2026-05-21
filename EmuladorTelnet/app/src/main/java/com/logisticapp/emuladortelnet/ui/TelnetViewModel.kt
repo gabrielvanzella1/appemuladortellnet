@@ -8,6 +8,7 @@ import com.logisticapp.emuladortelnet.data.ConnectionState
 import com.logisticapp.emuladortelnet.data.TelnetConnection
 import com.logisticapp.emuladortelnet.network.TelnetClient
 import com.logisticapp.emuladortelnet.terminal.ANSIParser
+import com.logisticapp.emuladortelnet.terminal.InputHistoryManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -24,6 +25,9 @@ class TelnetViewModel : ViewModel() {
 
     // ANSI Parser
     private val ansiParser = ANSIParser()
+
+    // Input History Manager
+    private val inputHistory = InputHistoryManager()
 
     // Estado da conexão
     private val _connectionState = MutableLiveData(ConnectionState.DISCONNECTED)
@@ -153,6 +157,9 @@ class TelnetViewModel : ViewModel() {
      */
     fun sendCommand(command: String) {
         if (_connectionState.value == ConnectionState.CONNECTED) {
+            // Adicionar ao histórico
+            inputHistory.add(command)
+            
             viewModelScope.launch(Dispatchers.IO) {
                 try {
                     addTerminalOutput("> $command\n")
@@ -171,6 +178,27 @@ class TelnetViewModel : ViewModel() {
         } else {
             addTerminalOutput("Erro: Não conectado ao servidor.\n")
         }
+    }
+
+    /**
+     * Obter comando anterior do histórico (seta ↑)
+     */
+    fun getPreviousCommand(): String? {
+        return inputHistory.getPrevious()
+    }
+
+    /**
+     * Obter próximo comando do histórico (seta ↓)
+     */
+    fun getNextCommand(): String? {
+        return inputHistory.getNext()
+    }
+
+    /**
+     * Reset do histórico (novo input começou)
+     */
+    fun resetInputHistory() {
+        inputHistory.reset()
     }
 
     /**

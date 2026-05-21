@@ -61,6 +61,57 @@ class MainActivity : AppCompatActivity() {
                 binding.scrollView.fullScroll(android.widget.ScrollView.FOCUS_DOWN)
             }
         }
+
+        // Send button
+        binding.sendButton.setOnClickListener {
+            val command = binding.commandInput.text.toString()
+            if (command.isNotEmpty()) {
+                viewModel.sendCommand(command)
+                binding.commandInput.text.clear()
+                viewModel.resetInputHistory()
+            }
+        }
+
+        // Command input - Enter key
+        binding.commandInput.setOnEditorActionListener { _, actionId, event ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEND ||
+                (event?.keyCode == android.view.KeyEvent.KEYCODE_ENTER && event.action == android.view.KeyEvent.ACTION_DOWN)) {
+                
+                val command = binding.commandInput.text.toString()
+                if (command.isNotEmpty()) {
+                    viewModel.sendCommand(command)
+                    binding.commandInput.text.clear()
+                    viewModel.resetInputHistory()
+                }
+                return@setOnEditorActionListener true
+            }
+            false
+        }
+
+        // Command input - Arrow keys for history
+        binding.commandInput.setOnKeyListener { _, keyCode, event ->
+            if (event.action == android.view.KeyEvent.ACTION_DOWN) {
+                when (keyCode) {
+                    android.view.KeyEvent.KEYCODE_DPAD_UP -> {
+                        val prevCommand = viewModel.getPreviousCommand()
+                        if (prevCommand != null) {
+                            binding.commandInput.setText(prevCommand)
+                            binding.commandInput.setSelection(prevCommand.length)
+                        }
+                        return@setOnKeyListener true
+                    }
+                    android.view.KeyEvent.KEYCODE_DPAD_DOWN -> {
+                        val nextCommand = viewModel.getNextCommand()
+                        binding.commandInput.setText(nextCommand ?: "")
+                        if (nextCommand != null) {
+                            binding.commandInput.setSelection(nextCommand.length)
+                        }
+                        return@setOnKeyListener true
+                    }
+                }
+            }
+            false
+        }
     }
 
     private fun observeViewModel() {
@@ -74,6 +125,8 @@ class MainActivity : AppCompatActivity() {
                     binding.disconnectButton.isEnabled = false
                     binding.hostInput.isEnabled = true
                     binding.portInput.isEnabled = true
+                    binding.commandInput.isEnabled = false
+                    binding.sendButton.isEnabled = false
                 }
 
                 ConnectionState.CONNECTING -> {
@@ -83,6 +136,8 @@ class MainActivity : AppCompatActivity() {
                     binding.disconnectButton.isEnabled = false
                     binding.hostInput.isEnabled = false
                     binding.portInput.isEnabled = false
+                    binding.commandInput.isEnabled = false
+                    binding.sendButton.isEnabled = false
                 }
 
                 ConnectionState.CONNECTED -> {
@@ -92,6 +147,8 @@ class MainActivity : AppCompatActivity() {
                     binding.disconnectButton.isEnabled = true
                     binding.hostInput.isEnabled = false
                     binding.portInput.isEnabled = false
+                    binding.commandInput.isEnabled = true
+                    binding.sendButton.isEnabled = true
                 }
 
                 ConnectionState.ERROR -> {
@@ -101,6 +158,8 @@ class MainActivity : AppCompatActivity() {
                     binding.disconnectButton.isEnabled = false
                     binding.hostInput.isEnabled = true
                     binding.portInput.isEnabled = true
+                    binding.commandInput.isEnabled = false
+                    binding.sendButton.isEnabled = false
                 }
             }
         }

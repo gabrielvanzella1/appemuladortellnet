@@ -77,4 +77,35 @@
             android:textColor="#00FF00" />
     </ScrollView>
 
+    <!-- Command Input -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <EditText
+            android:id="@+id/commandInput"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:hint="Digitar comando..."
+            android:inputType="text"
+            android:padding="8dp"
+            android:background="#1a1a1a"
+            android:textColor="#00FF00"
+            android:textColorHint="#666666"
+            android:fontFamily="monospace"
+            android:imeOptions="actionSend"
+            android:enabled="false" />
+
+        <Button
+            android:id="@+id/sendButton"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="ENVIAR"
+            android:layout_marginStart="8dp"
+            android:enabled="false" />
+    </LinearLayout>
+
 </LinearLayout>
