@@ -143,6 +143,48 @@ class TelnetRepository(private val database: AppDatabase) {
             defaultValue
         }
     }
+
+    // License operations
+    suspend fun saveLicense(licenseInfo: LicenseInfo): Long {
+        return try {
+            database.licenseDao().insert(licenseInfo).also {
+                Timber.d("Licença salva: ${licenseInfo.licenseType}")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao salvar licença")
+            -1L
+        }
+    }
+
+    suspend fun getLicense(): LicenseInfo? {
+        return try {
+            database.licenseDao().getLicense()
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao buscar licença")
+            null
+        }
+    }
+
+    fun getLicenseFlow(): Flow<LicenseInfo?> {
+        return database.licenseDao().getLicenseFlow()
+    }
+
+    suspend fun updateLicenseValidity(isValid: Boolean) {
+        try {
+            database.licenseDao().updateValidityStatus(isValid)
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao atualizar validação de licença")
+        }
+    }
+
+    suspend fun deleteLicense() {
+        try {
+            database.licenseDao().deleteLicense()
+            Timber.d("Licença deletada")
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao deletar licença")
+        }
+    }
     
     companion object {
         private var instance: TelnetRepository? = null

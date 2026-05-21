@@ -124,3 +124,29 @@ interface AppPreferenceDao {
     @Query("INSERT OR REPLACE INTO preferences (key, value) VALUES (:key, :value)")
     suspend fun setPreference(key: String, value: String)
 }
+
+/**
+ * DAO para LicenseInfo
+ */
+@Dao
+interface LicenseDao {
+    
+    @Insert
+    suspend fun insert(license: LicenseInfo): Long
+    
+    @Update
+    suspend fun update(license: LicenseInfo)
+    
+    @Query("SELECT * FROM license_info WHERE id = 1")
+    suspend fun getLicense(): LicenseInfo?
+    
+    @Query("SELECT * FROM license_info WHERE id = 1")
+    fun getLicenseFlow(): Flow<LicenseInfo?>
+    
+    @Query("UPDATE license_info SET isValid = :isValid WHERE id = 1")
+    suspend fun updateValidityStatus(isValid: Boolean)
+    
+    @Query("DELETE FROM license_info WHERE id = 1")
+    suspend fun deleteLicense()
+}
+

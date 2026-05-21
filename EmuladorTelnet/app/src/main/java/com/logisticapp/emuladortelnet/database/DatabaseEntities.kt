@@ -74,3 +74,20 @@ data class AppPreference(
     val key: String,
     val value: String
 )
+
+/**
+ * Informações de Licença
+ */
+@Entity(tableName = "license_info")
+data class LicenseInfo(
+    @PrimaryKey
+    val id: Int = 1,  // Sempre 1 (uma única licença por app)
+    val licenseKey: String,     // Chave de licença
+    val licenseType: String,    // TRIAL ou PREMIUM
+    val deviceFingerprint: String,  // Fingerprint do device
+    val createdAt: Long = System.currentTimeMillis(),
+    val expiryTimestamp: Long,  // Timestamp de expiração
+    val isValid: Boolean = true,
+    val activationDate: Long = System.currentTimeMillis()
+)
+

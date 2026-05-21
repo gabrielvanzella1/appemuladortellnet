@@ -2,6 +2,8 @@ package com.logisticapp.emuladortelnet
 
 import android.os.Bundle
 import android.text.Html
+import android.view.Menu
+import android.view.MenuItem
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.AdapterView
@@ -10,9 +12,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.logisticapp.emuladortelnet.data.ConnectionState
 import com.logisticapp.emuladortelnet.database.AppDatabase
+import com.logisticapp.emuladortelnet.database.LicenseInfo
 import com.logisticapp.emuladortelnet.database.SavedConnection
 import com.logisticapp.emuladortelnet.database.TelnetRepository
 import com.logisticapp.emuladortelnet.databinding.ActivityMainBinding
+import com.logisticapp.emuladortelnet.license.LicenseManager
+import com.logisticapp.emuladortelnet.ui.LicenseDialog
 import com.logisticapp.emuladortelnet.ui.TelnetViewModel
 import com.logisticapp.emuladortelnet.ui.TelnetViewModelFactory
 import kotlinx.coroutines.launch
@@ -24,8 +29,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: TelnetViewModel
     private lateinit var repository: TelnetRepository
     private lateinit var connectionAdapter: ArrayAdapter<String>
+    private lateinit var licenseManager: LicenseManager
     private var savedConnectionsList = emptyList<SavedConnection>()
     private var isSpinnerInitializing = true  // Flag para ignorar primeira seleção
+    private var currentLicenseKey: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +46,16 @@ class MainActivity : AppCompatActivity() {
         repository = TelnetRepository.getInstance(database)
         val factory = TelnetViewModelFactory(repository)
         viewModel = ViewModelProvider(this, factory).get(TelnetViewModel::class.java)
+
+        // Inicializar LicenseManager
+        licenseManager = LicenseManager(this)
+        
+        // Carregar licença do banco
+        lifecycleScope.launch {
+            val license = repository.getLicense()
+            currentLicenseKey = license?.licenseKey
+            Timber.d("Licença carregada: ${currentLicenseKey?.take(20)}")
+        }
 
         // Definir valores padrão
         binding.portInput.setText("23")
@@ -288,6 +305,88 @@ class MainActivity : AppCompatActivity() {
             binding.scrollView.post {
                 binding.scrollView.fullScroll(android.widget.ScrollView.FOCUS_DOWN)
             }
+        }
+    }
+
+    /**
+     * Criar menu options
+     */
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menu?.add(Menu.NONE, 1, Menu.NONE, "📜 Licença")
+        return true
+    }
+
+    /**
+     * Tratar cliques no menu
+     */
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            1 -> {
+                showLicenseDialog()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    /**
+     * Mostrar diálogo de licença
+     */
+    private fun showLicenseDialog() {
+        val dialog = LicenseDialog(this)
+        dialog.show(currentLicenseKey, 
+            onGenerateTrial = { generateTrialLicense() },
+            onGeneratePremium = { generatePremiumLicense() }
+        )
+    }
+
+    /**
+     * Gerar licença de teste (30 dias)
+     */
+    private fun generateTrialLicense() {
+        val trialKey = licenseManager.generateTrialLicense()
+        currentLicenseKey = trialKey
+        
+        val parts = trialKey.split("-")
+        val expiryTimestamp = parts.getOrNull(2)?.toLong() ?: 0L
+        
+        val licenseInfo = LicenseInfo(
+            licenseKey = trialKey,
+            licenseType = "TRIAL",
+            deviceFingerprint = licenseManager.generateDeviceFingerprint(),
+            expiryTimestamp = expiryTimestamp,
+            isValid = true
+        )
+        
+        lifecycleScope.launch {
+            repository.saveLicense(licenseInfo)
+            binding.statusText.text = "✅ Licença TRIAL ativada (30 dias)"
+            Timber.d("Licença TRIAL gerada: ${trialKey.take(20)}")
+        }
+    }
+
+    /**
+     * Gerar licença premium (1 ano)
+     */
+    private fun generatePremiumLicense() {
+        val premiumKey = licenseManager.generatePremiumLicense()
+        currentLicenseKey = premiumKey
+        
+        val parts = premiumKey.split("-")
+        val expiryTimestamp = parts.getOrNull(2)?.toLong() ?: 0L
+        
+        val licenseInfo = LicenseInfo(
+            licenseKey = premiumKey,
+            licenseType = "PREMIUM",
+            deviceFingerprint = licenseManager.generateDeviceFingerprint(),
+            expiryTimestamp = expiryTimestamp,
+            isValid = true
+        )
+        
+        lifecycleScope.launch {
+            repository.saveLicense(licenseInfo)
+            binding.statusText.text = "✅ Licença PREMIUM ativada (1 ano)"
+            Timber.d("Licença PREMIUM gerada: ${premiumKey.take(20)}")
         }
     }
 
