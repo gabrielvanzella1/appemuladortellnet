@@ -5,13 +5,17 @@ import android.text.Html
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.logisticapp.emuladortelnet.data.ConnectionState
+import com.logisticapp.emuladortelnet.database.AppDatabase
+import com.logisticapp.emuladortelnet.database.TelnetRepository
 import com.logisticapp.emuladortelnet.databinding.ActivityMainBinding
 import com.logisticapp.emuladortelnet.ui.TelnetViewModel
+import com.logisticapp.emuladortelnet.ui.TelnetViewModelFactory
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: TelnetViewModel
+    private lateinit var repository: TelnetRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,8 +24,11 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Inicializar ViewModel
-        viewModel = ViewModelProvider(this).get(TelnetViewModel::class.java)
+        // Inicializar Repository e ViewModel com Factory
+        val database = AppDatabase.getInstance(this)
+        repository = TelnetRepository.getInstance(database)
+        val factory = TelnetViewModelFactory(repository)
+        viewModel = ViewModelProvider(this, factory).get(TelnetViewModel::class.java)
 
         // Definir valores padrão
         binding.portInput.setText("23")

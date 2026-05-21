@@ -3,14 +3,18 @@ package com.logisticapp.emuladortelnet.ui
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.logisticapp.emuladortelnet.data.ConnectionState
 import com.logisticapp.emuladortelnet.data.TelnetConnection
+import com.logisticapp.emuladortelnet.database.SavedConnection
+import com.logisticapp.emuladortelnet.database.TelnetRepository
 import com.logisticapp.emuladortelnet.network.TelnetClient
 import com.logisticapp.emuladortelnet.terminal.ANSIParser
 import com.logisticapp.emuladortelnet.terminal.InputHistoryManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -18,7 +22,7 @@ import timber.log.Timber
 /**
  * ViewModel para gerenciar estado da conexão Telnet
  */
-class TelnetViewModel : ViewModel() {
+class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
 
     // Cliente Telnet
     private val telnetClient = TelnetClient()
@@ -48,6 +52,12 @@ class TelnetViewModel : ViewModel() {
     // Histórico de conexões
     private val _connectionHistory = MutableLiveData<List<TelnetConnection>>(emptyList())
     val connectionHistory: LiveData<List<TelnetConnection>> = _connectionHistory
+    
+    // Conexões salvas do banco de dados
+    val savedConnections: Flow<List<SavedConnection>> = repository.getAllConnections()
+    
+    // ID da sessão atual
+    private var currentSessionId: Long = -1L
 
     /**
      * Conectar a um servidor Telnet (TCP Socket Real)
@@ -74,6 +84,9 @@ class TelnetViewModel : ViewModel() {
                         port = portInt
                     )
                     _currentConnection.postValue(connection)
+
+                    // Iniciar sessão no banco de dados
+                    startSession(host, portInt)
 
                     // Iniciar leitura de dados em background
                     startReadingData()
@@ -137,6 +150,9 @@ class TelnetViewModel : ViewModel() {
                 val disconnectResult = telnetClient.disconnect()
 
                 if (disconnectResult.isSuccess) {
+                    // Encerrar sessão no banco de dados
+                    endCurrentSession("User disconnect")
+                    
                     _connectionState.postValue(ConnectionState.DISCONNECTED)
                     addTerminalOutput("Desconectado.\n")
                     _currentConnection.postValue(null)
@@ -146,6 +162,7 @@ class TelnetViewModel : ViewModel() {
 
             } catch (e: Exception) {
                 Timber.e(e, "Erro ao desconectar")
+                endCurrentSession("Error: ${e.message}")
                 _connectionState.postValue(ConnectionState.DISCONNECTED)
                 addTerminalOutput("Erro ao desconectar: ${e.message}\n")
             }
@@ -233,6 +250,69 @@ class TelnetViewModel : ViewModel() {
     }
 
     /**
+     * Salvar conexão atual no banco de dados
+     */
+    fun saveCurrentConnection(name: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val host = _currentConnection.value?.host ?: return@launch
+            val port = _currentConnection.value?.port ?: 23
+            
+            val savedConnection = SavedConnection(
+                name = name,
+                host = host,
+                port = port.toInt()
+            )
+            
+            val result = repository.saveConnection(savedConnection)
+            if (result > 0) {
+                addTerminalOutput("Conexão '$name' salva com sucesso!\n")
+            }
+        }
+    }
+
+    /**
+     * Conectar a uma conexão salva
+     */
+    fun connectToSaved(connection: SavedConnection) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.updateLastUsed(connection.id)
+            connect(connection.host, connection.port.toString())
+        }
+    }
+
+    /**
+     * Iniciar nova sessão no banco de dados
+     */
+    fun startSession(host: String, port: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            currentSessionId = repository.startSession(0, host, port)
+        }
+    }
+
+    /**
+     * Encerrar sessão no banco de dados
+     */
+    fun endCurrentSession(reason: String = "User disconnect") {
+        if (currentSessionId > 0) {
+            viewModelScope.launch(Dispatchers.IO) {
+                repository.endSession(currentSessionId.toInt(), reason)
+                currentSessionId = -1L
+            }
+        }
+    }
+
+    /**
+     * Salvar comando no histórico
+     */
+    fun saveCommandToHistory(command: String) {
+        if (currentSessionId > 0) {
+            viewModelScope.launch(Dispatchers.IO) {
+                repository.saveCommand(currentSessionId.toInt(), command)
+            }
+        }
+    }
+
+    /**
      * Cleanup ao destruir ViewModel
      */
     override fun onCleared() {
@@ -240,5 +320,18 @@ class TelnetViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             telnetClient.disconnect()
         }
+    }
+}
+
+/**
+ * Factory para criar TelnetViewModel com Repository injetado
+ */
+class TelnetViewModelFactory(private val repository: TelnetRepository) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(TelnetViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return TelnetViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
