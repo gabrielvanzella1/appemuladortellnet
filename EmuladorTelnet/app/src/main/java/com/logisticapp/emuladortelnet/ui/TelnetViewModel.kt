@@ -6,12 +6,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.logisticapp.emuladortelnet.data.ConnectionState
 import com.logisticapp.emuladortelnet.data.TelnetConnection
+import com.logisticapp.emuladortelnet.network.TelnetClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 /**
  * ViewModel para gerenciar estado da conexão Telnet
  */
 class TelnetViewModel : ViewModel() {
+
+    // Cliente Telnet
+    private val telnetClient = TelnetClient()
 
     // Estado da conexão
     private val _connectionState = MutableLiveData(ConnectionState.DISCONNECTED)
@@ -30,31 +38,80 @@ class TelnetViewModel : ViewModel() {
     val connectionHistory: LiveData<List<TelnetConnection>> = _connectionHistory
 
     /**
-     * Conectar a um servidor Telnet
+     * Conectar a um servidor Telnet (TCP Socket Real)
      */
     fun connect(host: String, port: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                _connectionState.value = ConnectionState.CONNECTING
-                _terminalOutput.value = "Conectando a $host:$port...\n"
+                _connectionState.postValue(ConnectionState.CONNECTING)
+                addTerminalOutput("Conectando a $host:$port...\n")
 
-                // TODO: Implementar conexão real
-                Thread.sleep(1000)
+                val portInt = port.toIntOrNull() ?: 23
 
-                _connectionState.value = ConnectionState.CONNECTED
-                _terminalOutput.value = "${_terminalOutput.value}Conectado com sucesso!\n"
+                // Conectar via TCP
+                val connectResult = telnetClient.connect(host, portInt)
 
-                // Guardar conexão no histórico
-                val connection = TelnetConnection(
-                    name = host,
-                    host = host,
-                    port = port.toIntOrNull() ?: 23
-                )
-                _currentConnection.value = connection
+                if (connectResult.isSuccess) {
+                    _connectionState.postValue(ConnectionState.CONNECTED)
+                    addTerminalOutput("Conectado com sucesso!\n\n")
+
+                    // Guardar conexão
+                    val connection = TelnetConnection(
+                        name = host,
+                        host = host,
+                        port = portInt
+                    )
+                    _currentConnection.postValue(connection)
+
+                    // Iniciar leitura de dados em background
+                    startReadingData()
+
+                } else {
+                    _connectionState.postValue(ConnectionState.ERROR)
+                    addTerminalOutput("Erro ao conectar: ${connectResult.exceptionOrNull()?.message}\n")
+                }
 
             } catch (e: Exception) {
-                _connectionState.value = ConnectionState.ERROR
-                _terminalOutput.value = "${_terminalOutput.value}Erro: ${e.message}\n"
+                Timber.e(e, "Erro ao conectar")
+                _connectionState.postValue(ConnectionState.ERROR)
+                addTerminalOutput("Erro: ${e.message}\n")
+            }
+        }
+    }
+
+    /**
+     * Iniciar leitura contínua de dados
+     */
+    private fun startReadingData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            while (isActive && telnetClient.isConnectedStatus()) {
+                try {
+                    val readResult = telnetClient.readAvailable()
+
+                    if (readResult.isSuccess) {
+                        val lines = readResult.getOrNull() ?: emptyList()
+                        for (line in lines) {
+                            addTerminalOutput("$line\n")
+                        }
+                    } else {
+                        // Erro na leitura
+                        val error = readResult.exceptionOrNull()?.message ?: "Desconectado"
+                        Timber.w("Erro ao ler dados: $error")
+
+                        if (!telnetClient.isConnectedStatus()) {
+                            _connectionState.postValue(ConnectionState.DISCONNECTED)
+                            addTerminalOutput("Conexão perdida.\n")
+                            break
+                        }
+                    }
+
+                    // Aguardar um pouco antes de tentar ler novamente
+                    delay(500)
+
+                } catch (e: Exception) {
+                    Timber.e(e, "Exceção ao ler dados")
+                    break
+                }
             }
         }
     }
@@ -63,13 +120,22 @@ class TelnetViewModel : ViewModel() {
      * Desconectar do servidor
      */
     fun disconnect() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                _connectionState.value = ConnectionState.DISCONNECTED
-                _terminalOutput.value = "${_terminalOutput.value}Desconectado.\n"
-                _currentConnection.value = null
+                val disconnectResult = telnetClient.disconnect()
+
+                if (disconnectResult.isSuccess) {
+                    _connectionState.postValue(ConnectionState.DISCONNECTED)
+                    addTerminalOutput("Desconectado.\n")
+                    _currentConnection.postValue(null)
+                } else {
+                    addTerminalOutput("Erro ao desconectar: ${disconnectResult.exceptionOrNull()?.message}\n")
+                }
+
             } catch (e: Exception) {
-                _terminalOutput.value = "${_terminalOutput.value}Erro ao desconectar: ${e.message}\n"
+                Timber.e(e, "Erro ao desconectar")
+                _connectionState.postValue(ConnectionState.DISCONNECTED)
+                addTerminalOutput("Erro ao desconectar: ${e.message}\n")
             }
         }
     }
@@ -79,15 +145,32 @@ class TelnetViewModel : ViewModel() {
      */
     fun sendCommand(command: String) {
         if (_connectionState.value == ConnectionState.CONNECTED) {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    _terminalOutput.value = "${_terminalOutput.value}> $command\n"
-                    // TODO: Implementar envio real
+                    addTerminalOutput("> $command\n")
+
+                    val sendResult = telnetClient.sendCommand(command)
+
+                    if (sendResult.isFailure) {
+                        addTerminalOutput("Erro ao enviar: ${sendResult.exceptionOrNull()?.message}\n")
+                    }
+
                 } catch (e: Exception) {
-                    _terminalOutput.value = "${_terminalOutput.value}Erro ao enviar comando: ${e.message}\n"
+                    Timber.e(e, "Erro ao enviar comando")
+                    addTerminalOutput("Erro ao enviar comando: ${e.message}\n")
                 }
             }
+        } else {
+            addTerminalOutput("Erro: Não conectado ao servidor.\n")
         }
+    }
+
+    /**
+     * Adicionar texto ao terminal (thread-safe)
+     */
+    private fun addTerminalOutput(text: String) {
+        val current = _terminalOutput.value ?: ""
+        _terminalOutput.postValue(current + text)
     }
 
     /**
@@ -95,5 +178,15 @@ class TelnetViewModel : ViewModel() {
      */
     fun clearTerminal() {
         _terminalOutput.value = ""
+    }
+
+    /**
+     * Cleanup ao destruir ViewModel
+     */
+    override fun onCleared() {
+        super.onCleared()
+        viewModelScope.launch(Dispatchers.IO) {
+            telnetClient.disconnect()
+        }
     }
 }
