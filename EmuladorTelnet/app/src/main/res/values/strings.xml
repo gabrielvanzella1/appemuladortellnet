@@ -8,8 +8,10 @@
     <string name="button_connect">Conectar</string>
     <string name="button_disconnect">Desconectar</string>
     <string name="button_save_connection">Salvar</string>
+    <string name="button_send">ENVIAR</string>
     <string name="hint_host">Host/IP</string>
     <string name="hint_port">Porta</string>
+    <string name="hint_command">Digitar comando...</string>
     <string name="spinner_saved_connections">Selecionar conexão salva...</string>
     
     <!-- Connection Status -->

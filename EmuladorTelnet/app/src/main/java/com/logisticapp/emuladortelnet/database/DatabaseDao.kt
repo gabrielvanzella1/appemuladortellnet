@@ -150,3 +150,37 @@ interface LicenseDao {
     suspend fun deleteLicense()
 }
 
+/**
+ * DAO para User (Autenticação)
+ */
+@Dao
+interface UserDao {
+    
+    @Insert
+    suspend fun insert(user: User): Long
+    
+    @Update
+    suspend fun update(user: User)
+    
+    @Delete
+    suspend fun delete(user: User)
+    
+    @Query("SELECT * FROM users WHERE email = :email")
+    suspend fun getUserByEmail(email: String): User?
+    
+    @Query("SELECT * FROM users WHERE id = :id")
+    suspend fun getUserById(id: Int): User?
+    
+    @Query("SELECT * FROM users WHERE isActive = 1")
+    fun getAllActiveUsers(): Flow<List<User>>
+    
+    @Query("UPDATE users SET lastLogin = :timestamp WHERE id = :id")
+    suspend fun updateLastLogin(id: Int, timestamp: Long = System.currentTimeMillis())
+    
+    @Query("UPDATE users SET passwordHash = :passwordHash, updatedAt = :timestamp WHERE id = :id")
+    suspend fun updatePassword(id: Int, passwordHash: String, timestamp: Long = System.currentTimeMillis())
+    
+    @Query("DELETE FROM users WHERE id = :id")
+    suspend fun deleteById(id: Int)
+}
+

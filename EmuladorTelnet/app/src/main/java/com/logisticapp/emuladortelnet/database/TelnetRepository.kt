@@ -185,6 +185,86 @@ class TelnetRepository(private val database: AppDatabase) {
             Timber.e(e, "Erro ao deletar licença")
         }
     }
+
+    // User operations (Autenticação)
+    suspend fun registerUser(email: String, password: String, fullName: String = ""): Long {
+        return try {
+            val user = User(
+                email = email,
+                passwordHash = com.logisticapp.emuladortelnet.utils.PasswordUtils.hashPassword(password),
+                fullName = fullName
+            )
+            database.userDao().insert(user).also {
+                Timber.d("Usuário registrado: $email")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao registrar usuário")
+            -1L
+        }
+    }
+
+    suspend fun authenticateUser(email: String, password: String): User? {
+        return try {
+            val user = database.userDao().getUserByEmail(email)
+            if (user != null && user.isActive) {
+                if (com.logisticapp.emuladortelnet.utils.PasswordUtils.verifyPassword(password, user.passwordHash)) {
+                    // Atualizar último login
+                    database.userDao().updateLastLogin(user.id)
+                    Timber.d("Autenticação bem-sucedida: $email")
+                    user
+                } else {
+                    Timber.w("Falha de autenticação: senha incorreta para $email")
+                    null
+                }
+            } else {
+                Timber.w("Usuário não encontrado ou inativo: $email")
+                null
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao autenticar usuário")
+            null
+        }
+    }
+
+    suspend fun getUserByEmail(email: String): User? {
+        return try {
+            database.userDao().getUserByEmail(email)
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao buscar usuário")
+            null
+        }
+    }
+
+    suspend fun getUserById(id: Int): User? {
+        return try {
+            database.userDao().getUserById(id)
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao buscar usuário por ID")
+            null
+        }
+    }
+
+    suspend fun updateUserPassword(userId: Int, newPassword: String) {
+        try {
+            val hashedPassword = com.logisticapp.emuladortelnet.utils.PasswordUtils.hashPassword(newPassword)
+            database.userDao().updatePassword(userId, hashedPassword)
+            Timber.d("Senha do usuário atualizada: $userId")
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao atualizar senha do usuário")
+        }
+    }
+
+    suspend fun createTestUser() {
+        try {
+            // Verificar se já existe
+            if (database.userDao().getUserByEmail("teste@auticode.com.br") == null) {
+                registerUser("teste@auticode.com.br", "Teste@123", "Usuário Teste")
+                Timber.d("Usuário de teste criado")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao criar usuário de teste")
+        }
+    }
     
     companion object {
         private var instance: TelnetRepository? = null

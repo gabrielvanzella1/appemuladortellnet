@@ -91,3 +91,19 @@ data class LicenseInfo(
     val activationDate: Long = System.currentTimeMillis()
 )
 
+/**
+ * Usuário para autenticação do app
+ */
+@Entity(tableName = "users")
+data class User(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val email: String,          // Email único do usuário
+    val passwordHash: String,   // Senha hasheada (SHA-256)
+    val fullName: String = "",  // Nome completo (opcional)
+    val isActive: Boolean = true,  // Se o usuário está ativo
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val lastLogin: Long = 0L    // Última data de login
+)
+

@@ -7,9 +7,11 @@ import android.view.MenuItem
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.AdapterView
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.logisticapp.emuladortelnet.auth.AuthManager
 import com.logisticapp.emuladortelnet.data.ConnectionState
 import com.logisticapp.emuladortelnet.database.AppDatabase
 import com.logisticapp.emuladortelnet.database.LicenseInfo
@@ -30,12 +32,24 @@ class MainActivity : AppCompatActivity() {
     private lateinit var repository: TelnetRepository
     private lateinit var connectionAdapter: ArrayAdapter<String>
     private lateinit var licenseManager: LicenseManager
+    private lateinit var authManager: AuthManager
     private var savedConnectionsList = emptyList<SavedConnection>()
     private var isSpinnerInitializing = true  // Flag para ignorar primeira seleção
     private var currentLicenseKey: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Verificar se usuário está autenticado
+        authManager = AuthManager(this)
+        if (!authManager.isLoggedIn()) {
+            Timber.d("Usuário não autenticado, redirecionando para Login")
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
+        
+        Timber.d("Usuário autenticado: ${authManager.getUserEmail()}")
         
         // ViewBinding
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -221,6 +235,36 @@ class MainActivity : AppCompatActivity() {
             }
             false
         }
+
+        // Control Keys - ENTER (Green)
+        binding.keyEnter.setOnClickListener {
+            viewModel.sendCommand("\r\n")
+            Timber.d("Botão ENTER pressionado")
+        }
+
+        // Control Keys - ESC (Yellow)
+        binding.keyEsc.setOnClickListener {
+            viewModel.sendCommand("\u001B")  // ESC character
+            Timber.d("Botão ESC pressionado")
+        }
+
+        // Control Keys - X (Blue)
+        binding.keyX.setOnClickListener {
+            viewModel.sendCommand("X")
+            Timber.d("Botão X pressionado")
+        }
+
+        // Control Keys - Y (Blue)
+        binding.keyY.setOnClickListener {
+            viewModel.sendCommand("Y")
+            Timber.d("Botão Y pressionado")
+        }
+
+        // Control Keys - Z (Blue)
+        binding.keyZ.setOnClickListener {
+            viewModel.sendCommand("Z")
+            Timber.d("Botão Z pressionado")
+        }
     }
 
     private fun observeViewModel() {
@@ -253,6 +297,13 @@ class MainActivity : AppCompatActivity() {
                     binding.portInput.isEnabled = true
                     binding.commandInput.isEnabled = false
                     binding.sendButton.isEnabled = false
+                    
+                    // Mostrar painel de controles
+                    binding.controlPanel.visibility = android.view.View.VISIBLE
+                    
+                    // Esconder botões de controle
+                    binding.controlKeysBar.visibility = android.view.View.GONE
+                    
                     showKeyboard(binding.hostInput)  // Mostrar teclado quando desconecta
                 }
 
@@ -265,6 +316,9 @@ class MainActivity : AppCompatActivity() {
                     binding.portInput.isEnabled = false
                     binding.commandInput.isEnabled = false
                     binding.sendButton.isEnabled = false
+                    
+                    // Esconder botões de controle enquanto conecta
+                    binding.controlKeysBar.visibility = android.view.View.GONE
                 }
 
                 ConnectionState.CONNECTED -> {
@@ -276,6 +330,18 @@ class MainActivity : AppCompatActivity() {
                     binding.portInput.isEnabled = false
                     binding.commandInput.isEnabled = true
                     binding.sendButton.isEnabled = true
+                    
+                    // Esconder painel de controles - Terminal em FULLSCREEN!
+                    binding.controlPanel.visibility = android.view.View.GONE
+                    
+                    // Mostrar botões de controle
+                    binding.controlKeysBar.visibility = android.view.View.VISIBLE
+                    binding.keyEnter.isEnabled = true
+                    binding.keyEsc.isEnabled = true
+                    binding.keyX.isEnabled = true
+                    binding.keyY.isEnabled = true
+                    binding.keyZ.isEnabled = true
+                    
                     hideKeyboard()  // Esconder teclado quando conecta
                     binding.commandInput.requestFocus()  // Focar no input de comando
                 }
@@ -289,6 +355,12 @@ class MainActivity : AppCompatActivity() {
                     binding.portInput.isEnabled = true
                     binding.commandInput.isEnabled = false
                     binding.sendButton.isEnabled = false
+                    
+                    // Mostrar painel de controles em caso de erro
+                    binding.controlPanel.visibility = android.view.View.VISIBLE
+                    
+                    // Esconder botões de controle em caso de erro
+                    binding.controlKeysBar.visibility = android.view.View.GONE
                 }
             }
         }
@@ -312,7 +384,7 @@ class MainActivity : AppCompatActivity() {
      * Criar menu options
      */
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menu?.add(Menu.NONE, 1, Menu.NONE, "📜 Licença")
+        menuInflater.inflate(R.menu.menu_main, menu)
         return true
     }
 
@@ -321,12 +393,30 @@ class MainActivity : AppCompatActivity() {
      */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            1 -> {
-                showLicenseDialog()
+            R.id.menu_logout -> {
+                logout()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+    
+    /**
+     * Fazer logout do usuário
+     */
+    private fun logout() {
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Logout")
+            .setMessage("Deseja sair da aplicação?")
+            .setPositiveButton("Sim") { _, _ ->
+                viewModel.disconnect()  // Desconectar telnet se conectado
+                authManager.logout()
+                startActivity(Intent(this, LoginActivity::class.java))
+                finish()
+                Timber.d("Usuário fez logout")
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     /**

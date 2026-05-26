@@ -14,9 +14,10 @@ import androidx.room.RoomDatabase
         CommandHistory::class,
         SessionLog::class,
         AppPreference::class,
-        LicenseInfo::class
+        LicenseInfo::class,
+        User::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -26,6 +27,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun sessionLogDao(): SessionLogDao
     abstract fun appPreferenceDao(): AppPreferenceDao
     abstract fun licenseDao(): LicenseDao
+    abstract fun userDao(): UserDao
     
     companion object {
         private var instance: AppDatabase? = null
