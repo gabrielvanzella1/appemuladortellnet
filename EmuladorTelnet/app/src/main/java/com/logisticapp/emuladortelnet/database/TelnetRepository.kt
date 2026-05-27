@@ -1,278 +1,139 @@
 package com.logisticapp.emuladortelnet.database
 
+import android.content.Context
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
 
-/**
- * Repository para abstrair acesso ao banco de dados
- */
-class TelnetRepository(private val database: AppDatabase) {
-    
-    // SavedConnection operations
+class TelnetRepository(private val context: Context) {
+
+    private val prefs = context.getSharedPreferences("telnet_hosts", Context.MODE_PRIVATE)
+    private val gson = Gson()
+
+    private val _connections = MutableStateFlow<List<SavedConnection>>(emptyList())
+
+    init {
+        _connections.value = loadConnectionsFromPrefs()
+        Timber.d("TelnetRepository: ${_connections.value.size} hosts carregados")
+    }
+
+    // ------------------------------------------------------------------
+    // Hosts / Conexoes
+    // ------------------------------------------------------------------
+
+    fun getAllConnections(): Flow<List<SavedConnection>> = _connections.asStateFlow()
+
     suspend fun saveConnection(connection: SavedConnection): Long {
-        return try {
-            database.savedConnectionDao().insert(connection).also {
-                Timber.d("Conexão salva: ${connection.name}")
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao salvar conexão")
-            -1L
-        }
+        val list = _connections.value.toMutableList()
+        val newId = (list.maxOfOrNull { it.id } ?: 0) + 1
+        val toSave = connection.copy(id = newId, createdAt = System.currentTimeMillis())
+        list.add(toSave)
+        persistAndEmit(list)
+        Timber.d("Host salvo: ${toSave.name} (id=$newId)")
+        return newId.toLong()
     }
-    
+
     suspend fun updateConnection(connection: SavedConnection) {
-        try {
-            database.savedConnectionDao().update(connection)
-            Timber.d("Conexão atualizada: ${connection.name}")
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao atualizar conexão")
+        val list = _connections.value.toMutableList()
+        val idx = list.indexOfFirst { it.id == connection.id }
+        if (idx >= 0) {
+            list[idx] = connection
+            persistAndEmit(list)
+            Timber.d("Host atualizado: ${connection.name}")
         }
     }
-    
+
     suspend fun deleteConnection(id: Int) {
-        try {
-            database.savedConnectionDao().deleteById(id)
-            Timber.d("Conexão deletada: $id")
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao deletar conexão")
-        }
+        val list = _connections.value.filter { it.id != id }.toMutableList()
+        persistAndEmit(list)
+        Timber.d("Host removido: id=$id")
     }
-    
-    fun getAllConnections(): Flow<List<SavedConnection>> {
-        return database.savedConnectionDao().getAllConnections()
-    }
-    
-    fun getFavoriteConnections(): Flow<List<SavedConnection>> {
-        return database.savedConnectionDao().getFavoriteConnections()
-    }
-    
-    suspend fun getConnectionById(id: Int): SavedConnection? {
-        return database.savedConnectionDao().getConnectionById(id)
-    }
-    
+
+    suspend fun getConnectionById(id: Int): SavedConnection? =
+        _connections.value.firstOrNull { it.id == id }
+
     suspend fun updateLastUsed(connectionId: Int) {
-        database.savedConnectionDao().updateLastUsed(connectionId)
-    }
-    
-    // CommandHistory operations
-    suspend fun saveCommand(sessionId: Int, command: String, response: String = "") {
-        try {
-            val history = CommandHistory(
-                sessionId = sessionId,
-                command = command,
-                response = response.take(500)  // Limitar resposta a 500 chars
-            )
-            database.commandHistoryDao().insert(history)
-            Timber.d("Comando salvo: $command")
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao salvar comando")
+        val list = _connections.value.toMutableList()
+        val idx = list.indexOfFirst { it.id == connectionId }
+        if (idx >= 0) {
+            list[idx] = list[idx].copy(lastUsed = System.currentTimeMillis())
+            persistAndEmit(list)
         }
     }
-    
-    suspend fun getCommandsBySession(sessionId: Int): List<CommandHistory> {
+
+    fun getFavoriteConnections(): Flow<List<SavedConnection>> =
+        MutableStateFlow(_connections.value.filter { it.isFavorite }).asStateFlow()
+
+    // ------------------------------------------------------------------
+    // Persistencia interna
+    // ------------------------------------------------------------------
+
+    private fun persistAndEmit(list: List<SavedConnection>) {
+        val json = gson.toJson(list)
+        prefs.edit().putString("connections", json).apply()
+        _connections.value = list
+    }
+
+    private fun loadConnectionsFromPrefs(): List<SavedConnection> {
+        val json = prefs.getString("connections", null) ?: return emptyList()
         return try {
-            database.commandHistoryDao().getCommandsBySession(sessionId)
+            val type = object : TypeToken<List<SavedConnection>>() {}.type
+            gson.fromJson(json, type) ?: emptyList()
         } catch (e: Exception) {
-            Timber.e(e, "Erro ao buscar comandos")
+            Timber.e(e, "Erro ao carregar hosts")
             emptyList()
         }
     }
-    
-    suspend fun getRecentCommands(limit: Int = 50): List<CommandHistory> {
-        return try {
-            database.commandHistoryDao().getRecentCommands(limit)
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao buscar comandos recentes")
-            emptyList()
-        }
-    }
-    
-    // SessionLog operations
-    suspend fun startSession(connectionId: Int, host: String, port: Int): Long {
-        return try {
-            val session = SessionLog(
-                connectionId = connectionId,
-                host = host,
-                port = port
-            )
-            database.sessionLogDao().insert(session).also {
-                Timber.d("Sessão iniciada: $host:$port")
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao iniciar sessão")
-            -1L
-        }
-    }
-    
-    suspend fun endSession(sessionId: Int, reason: String = "") {
-        try {
-            database.sessionLogDao().closeSession(sessionId, reason = reason)
-            Timber.d("Sessão encerrada: $sessionId - $reason")
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao encerrar sessão")
-        }
-    }
-    
-    fun getAllSessions(): Flow<List<SessionLog>> {
-        return database.sessionLogDao().getAllSessions()
-    }
-    
-    suspend fun getSessionsByConnection(connectionId: Int): List<SessionLog> {
-        return try {
-            database.sessionLogDao().getSessionsByConnection(connectionId)
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao buscar sessões")
-            emptyList()
-        }
-    }
-    
-    // Preferences operations
+
+    // ------------------------------------------------------------------
+    // Preferences gerais
+    // ------------------------------------------------------------------
+
     suspend fun setPreference(key: String, value: String) {
-        try {
-            database.appPreferenceDao().setPreference(key, value)
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao salvar preferência")
-        }
-    }
-    
-    suspend fun getPreference(key: String, defaultValue: String = ""): String {
-        return try {
-            database.appPreferenceDao().getPreferenceValue(key) ?: defaultValue
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao buscar preferência")
-            defaultValue
-        }
+        prefs.edit().putString(key, value).apply()
     }
 
-    // License operations
-    suspend fun saveLicense(licenseInfo: LicenseInfo): Long {
-        return try {
-            database.licenseDao().insert(licenseInfo).also {
-                Timber.d("Licença salva: ${licenseInfo.licenseType}")
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao salvar licença")
-            -1L
-        }
+    suspend fun getPreference(key: String, defaultValue: String = ""): String =
+        prefs.getString(key, defaultValue) ?: defaultValue
+
+    // ------------------------------------------------------------------
+    // Session log (stubs - sem persistencia por enquanto)
+    // ------------------------------------------------------------------
+
+    suspend fun startSession(connectionId: Int, host: String, port: Int): Long {
+        Timber.d("Sessao iniciada: $host:$port")
+        return System.currentTimeMillis()
     }
 
-    suspend fun getLicense(): LicenseInfo? {
-        return try {
-            database.licenseDao().getLicense()
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao buscar licença")
-            null
-        }
+    suspend fun endSession(sessionId: Int, reason: String = "") {
+        Timber.d("Sessao encerrada: $reason")
     }
 
-    fun getLicenseFlow(): Flow<LicenseInfo?> {
-        return database.licenseDao().getLicenseFlow()
+    suspend fun saveCommand(sessionId: Int, command: String, response: String = "") {
+        Timber.d("Comando: $command")
     }
 
-    suspend fun updateLicenseValidity(isValid: Boolean) {
-        try {
-            database.licenseDao().updateValidityStatus(isValid)
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao atualizar validação de licença")
-        }
-    }
+    // ------------------------------------------------------------------
+    // Auth stubs (modulo de login desabilitado)
+    // ------------------------------------------------------------------
 
-    suspend fun deleteLicense() {
-        try {
-            database.licenseDao().deleteLicense()
-            Timber.d("Licença deletada")
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao deletar licença")
-        }
-    }
+    suspend fun authenticateUser(email: String, password: String): User? = null
 
-    // User operations (Autenticação)
-    suspend fun registerUser(email: String, password: String, fullName: String = ""): Long {
-        return try {
-            val user = User(
-                email = email,
-                passwordHash = com.logisticapp.emuladortelnet.utils.PasswordUtils.hashPassword(password),
-                fullName = fullName
-            )
-            database.userDao().insert(user).also {
-                Timber.d("Usuário registrado: $email")
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao registrar usuário")
-            -1L
-        }
-    }
+    suspend fun createTestUser() { Timber.d("createTestUser stub") }
 
-    suspend fun authenticateUser(email: String, password: String): User? {
-        return try {
-            val user = database.userDao().getUserByEmail(email)
-            if (user != null && user.isActive) {
-                if (com.logisticapp.emuladortelnet.utils.PasswordUtils.verifyPassword(password, user.passwordHash)) {
-                    // Atualizar último login
-                    database.userDao().updateLastLogin(user.id)
-                    Timber.d("Autenticação bem-sucedida: $email")
-                    user
-                } else {
-                    Timber.w("Falha de autenticação: senha incorreta para $email")
-                    null
-                }
-            } else {
-                Timber.w("Usuário não encontrado ou inativo: $email")
-                null
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao autenticar usuário")
-            null
-        }
-    }
+    // ------------------------------------------------------------------
+    // Singleton
+    // ------------------------------------------------------------------
 
-    suspend fun getUserByEmail(email: String): User? {
-        return try {
-            database.userDao().getUserByEmail(email)
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao buscar usuário")
-            null
-        }
-    }
-
-    suspend fun getUserById(id: Int): User? {
-        return try {
-            database.userDao().getUserById(id)
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao buscar usuário por ID")
-            null
-        }
-    }
-
-    suspend fun updateUserPassword(userId: Int, newPassword: String) {
-        try {
-            val hashedPassword = com.logisticapp.emuladortelnet.utils.PasswordUtils.hashPassword(newPassword)
-            database.userDao().updatePassword(userId, hashedPassword)
-            Timber.d("Senha do usuário atualizada: $userId")
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao atualizar senha do usuário")
-        }
-    }
-
-    suspend fun createTestUser() {
-        try {
-            // Verificar se já existe
-            if (database.userDao().getUserByEmail("teste@auticode.com.br") == null) {
-                registerUser("teste@auticode.com.br", "Teste@123", "Usuário Teste")
-                Timber.d("Usuário de teste criado")
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao criar usuário de teste")
-        }
-    }
-    
     companion object {
-        private var instance: TelnetRepository? = null
-        
-        fun getInstance(database: AppDatabase): TelnetRepository {
-            return instance ?: synchronized(this) {
-                instance ?: TelnetRepository(database).also { instance = it }
+        @Volatile private var instance: TelnetRepository? = null
+
+        fun getInstance(context: Context): TelnetRepository =
+            instance ?: synchronized(this) {
+                instance ?: TelnetRepository(context.applicationContext).also { instance = it }
             }
-        }
     }
 }

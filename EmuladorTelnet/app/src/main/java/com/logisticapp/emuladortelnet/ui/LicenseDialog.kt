@@ -16,7 +16,9 @@ class LicenseDialog(private val context: Context) {
 
     fun show(licenseKey: String?, onGenerateTrial: () -> Unit, onGeneratePremium: () -> Unit) {
         val licenseManager = LicenseManager(context)
-        val (isValid, validationMsg) = licenseManager.validateLicense(licenseKey)
+        val licenseInfo = licenseManager.getLicenseInfo()
+        val isValid = !licenseInfo.isExpired
+        val validationMsg = licenseInfo.message
 
         // Criar layout customizado
         val layout = LinearLayout(context).apply {

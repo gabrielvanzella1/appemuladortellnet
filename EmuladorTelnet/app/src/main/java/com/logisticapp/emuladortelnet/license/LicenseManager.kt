@@ -1,6 +1,7 @@
 package com.logisticapp.emuladortelnet.license
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Build
 import android.provider.Settings
 import java.security.MessageDigest
@@ -9,120 +10,209 @@ import java.util.*
 import timber.log.Timber
 
 /**
- * Gerenciador de Licença com Device Fingerprinting
+ * Gerenciador de Licença com Integração Mercado Pago
+ * Armazenamento: SharedPreferences (não usa Room Database para evitar problemas de compilação)
+ * Sistema: Trial 30 dias → Premium vitalício
  */
 class LicenseManager(private val context: Context) {
 
+    private val prefs: SharedPreferences = context.getSharedPreferences(
+        "com.logisticapp.emuladortelnet.license",
+        Context.MODE_PRIVATE
+    )
+
+    companion object {
+        private const val KEY_DEVICE_ID = "license_device_id"
+        private const val KEY_LICENSE_KEY = "license_key"
+        private const val KEY_LICENSE_TYPE = "license_type"
+        private const val KEY_TRIAL_START_DATE = "trial_start_date"
+        private const val KEY_TRIAL_END_DATE = "trial_end_date"
+        private const val KEY_PURCHASE_DATE = "purchase_date"
+        private const val KEY_IS_ACTIVE = "is_active"
+        private const val KEY_MERCADO_PAGO_ORDER_ID = "mercado_pago_order_id"
+        private const val KEY_MERCADO_PAGO_PAYMENT_ID = "mercado_pago_payment_id"
+        private const val KEY_IS_INITIALIZED = "is_initialized"
+    }
+
     /**
-     * Gera fingerprint único do device baseado em hardware
-     * Combina: ANDROID_ID + Model + Manufacturer + Serial
+     * Obter Device ID
      */
-    fun generateDeviceFingerprint(): String {
+    fun getDeviceId(): String {
         return try {
-            val androidId = Settings.Secure.getString(
+            Settings.Secure.getString(
                 context.contentResolver,
                 Settings.Secure.ANDROID_ID
-            )
-            
-            val model = Build.MODEL
-            val manufacturer = Build.MANUFACTURER
-            val serial = Build.SERIAL
-            val fingerprint = Build.FINGERPRINT
-            
-            val combined = "$androidId|$model|$manufacturer|$serial|$fingerprint"
-            
-            // SHA-256 hash
-            val md = MessageDigest.getInstance("SHA-256")
-            val bytes = md.digest(combined.toByteArray())
-            val sb = StringBuilder()
-            for (b in bytes) {
-                sb.append(String.format("%02x", b))
-            }
-            
-            Timber.d("Device Fingerprint gerado: ${sb.toString().take(16)}")
-            sb.toString()
-            
+            ) ?: "DEVICE_${UUID.randomUUID()}"
         } catch (e: Exception) {
-            Timber.e(e, "Erro ao gerar device fingerprint")
-            "UNKNOWN_DEVICE_${Build.SERIAL}".take(32)
+            "DEVICE_${UUID.randomUUID()}"
         }
     }
 
     /**
-     * Gera chave de licença de teste (30 dias)
+     * Inicializar licença na primeira execução
      */
-    fun generateTrialLicense(): String {
-        val fingerprint = generateDeviceFingerprint()
-        val expiryDate = Calendar.getInstance().apply {
-            add(Calendar.DAY_OF_MONTH, 30)
-        }.timeInMillis / 1000  // segundos
-        
-        val licenseKey = "TRIAL-${fingerprint.take(16)}-$expiryDate"
-        return licenseKey
-    }
-
-    /**
-     * Gera chave de licença premium (1 ano)
-     */
-    fun generatePremiumLicense(): String {
-        val fingerprint = generateDeviceFingerprint()
-        val expiryDate = Calendar.getInstance().apply {
-            add(Calendar.YEAR, 1)
-        }.timeInMillis / 1000  // segundos
-        
-        val licenseKey = "PREMIUM-${fingerprint.take(16)}-$expiryDate"
-        return licenseKey
-    }
-
-    /**
-     * Valida se a licença é válida
-     * Retorna: Pair<isValid, mensagem>
-     */
-    fun validateLicense(licenseKey: String?): Pair<Boolean, String> {
-        if (licenseKey == null || licenseKey.isEmpty()) {
-            return Pair(false, "Licença não encontrada")
+    fun initializeLicense() {
+        if (prefs.getBoolean(KEY_IS_INITIALIZED, false)) {
+            Timber.d("Licença já foi inicializada")
+            return
         }
 
+        val deviceId = getDeviceId()
+        val now = System.currentTimeMillis()
+        val trialEndDate = now + (30L * 24 * 60 * 60 * 1000)
+
+        prefs.edit().apply {
+            putString(KEY_DEVICE_ID, deviceId)
+            putString(KEY_LICENSE_TYPE, "TRIAL")
+            putLong(KEY_TRIAL_START_DATE, now)
+            putLong(KEY_TRIAL_END_DATE, trialEndDate)
+            putLong(KEY_PURCHASE_DATE, 0L)
+            putBoolean(KEY_IS_ACTIVE, true)
+            putBoolean(KEY_IS_INITIALIZED, true)
+            apply()
+        }
+
+        Timber.d("Licença TRIAL criada - 30 dias grátis")
+    }
+
+    /**
+     * Verificar se trial é válido
+     */
+    fun isTrialValid(): Boolean {
+        val licenseType = prefs.getString(KEY_LICENSE_TYPE, "TRIAL") ?: "TRIAL"
+
+        if (licenseType == "PREMIUM") {
+            return false
+        }
+
+        val trialEndDate = prefs.getLong(KEY_TRIAL_END_DATE, System.currentTimeMillis())
+        val now = System.currentTimeMillis()
+        return now < trialEndDate
+    }
+
+    /**
+     * Obter dias restantes do trial
+     */
+    fun getTrialDaysRemaining(): Int {
+        val licenseType = prefs.getString(KEY_LICENSE_TYPE, "TRIAL") ?: "TRIAL"
+
+        if (licenseType == "PREMIUM") {
+            return -1
+        }
+
+        val trialEndDate = prefs.getLong(KEY_TRIAL_END_DATE, System.currentTimeMillis())
+        val now = System.currentTimeMillis()
+        val daysRemaining = (trialEndDate - now) / (24 * 60 * 60 * 1000)
+
+        return maxOf(0, daysRemaining.toInt())
+    }
+
+    /**
+     * Verificar se tem acesso ao app
+     */
+    fun hasAccess(): Boolean {
+        val licenseType = prefs.getString(KEY_LICENSE_TYPE, "TRIAL") ?: "TRIAL"
+        val isActive = prefs.getBoolean(KEY_IS_ACTIVE, true)
+
+        // Premium ativo
+        if (licenseType == "PREMIUM" && isActive) {
+            return true
+        }
+
+        // Trial válido
+        if (licenseType == "TRIAL" && isTrialValid()) {
+            return true
+        }
+
+        return false
+    }
+
+    /**
+     * Gerar chave de licença vitalícia
+     */
+    fun generateLicenseKey(): String {
+        val timestamp = System.currentTimeMillis()
+        val deviceId = getDeviceId().take(12).uppercase()
+        return "LIC-${timestamp}-${deviceId}"
+    }
+
+    /**
+     * Upgrade para Premium após pagamento
+     */
+    fun upgradeToPremium(
+        mercadoPagoOrderId: String,
+        mercadoPagoPaymentId: String
+    ) {
+        val licenseKey = generateLicenseKey()
+
+        prefs.edit().apply {
+            putString(KEY_LICENSE_KEY, licenseKey)
+            putString(KEY_LICENSE_TYPE, "PREMIUM")
+            putLong(KEY_PURCHASE_DATE, System.currentTimeMillis())
+            putString(KEY_MERCADO_PAGO_ORDER_ID, mercadoPagoOrderId)
+            putString(KEY_MERCADO_PAGO_PAYMENT_ID, mercadoPagoPaymentId)
+            putBoolean(KEY_IS_ACTIVE, true)
+            apply()
+        }
+
+        Timber.d("Licença atualizada para PREMIUM - Ordem: $mercadoPagoOrderId")
+    }
+
+    /**
+     * Atualizar ID do pedido Mercado Pago
+     */
+    fun setMercadoPagoOrderId(orderId: String) {
+        prefs.edit().putString(KEY_MERCADO_PAGO_ORDER_ID, orderId).apply()
+    }
+
+    /**
+     * Obter informações formatadas da licença
+     */
+    fun getLicenseInfo(): LicenseDisplayInfo {
+        val licenseType = prefs.getString(KEY_LICENSE_TYPE, "TRIAL") ?: "TRIAL"
+        val isActive = prefs.getBoolean(KEY_IS_ACTIVE, true)
+        val trialStartDate = prefs.getLong(KEY_TRIAL_START_DATE, System.currentTimeMillis())
+        val purchaseDate = prefs.getLong(KEY_PURCHASE_DATE, 0L)
+
+        return when {
+            licenseType == "PREMIUM" && isActive -> {
+                LicenseDisplayInfo(
+                    status = "PREMIUM",
+                    message = "Licença Vitalícia Ativa",
+                    purchaseDate = formatDate(purchaseDate),
+                    daysRemaining = -1,
+                    isExpired = false
+                )
+            }
+            licenseType == "TRIAL" && isTrialValid() -> {
+                val days = getTrialDaysRemaining()
+                LicenseDisplayInfo(
+                    status = "TRIAL",
+                    message = "Teste Gratuito - $days dias restantes",
+                    purchaseDate = formatDate(trialStartDate),
+                    daysRemaining = days,
+                    isExpired = false
+                )
+            }
+            else -> {
+                LicenseDisplayInfo(
+                    status = "EXPIRED",
+                    message = "Trial expirado - Compre agora",
+                    purchaseDate = formatDate(trialStartDate),
+                    daysRemaining = 0,
+                    isExpired = true
+                )
+            }
+        }
+    }
+
+    /**
+     * Formatar timestamp para data legível
+     */
+    private fun formatDate(timestamp: Long): String {
         return try {
-            val parts = licenseKey.split("-")
-            if (parts.size < 3) {
-                return Pair(false, "Formato de licença inválido")
-            }
-
-            val licenseType = parts[0]  // TRIAL ou PREMIUM
-            val deviceFingerprint = parts[1]
-            val expiryTimestamp = parts[2].toLong()
-
-            val currentFingerprint = generateDeviceFingerprint().take(16)
-            
-            // Verificar se é o mesmo device
-            if (deviceFingerprint != currentFingerprint) {
-                Timber.w("Device fingerprint não coincide: esperado=$currentFingerprint, recebido=$deviceFingerprint")
-                return Pair(false, "Licença registrada em outro device")
-            }
-
-            // Verificar expiração
-            val currentTime = System.currentTimeMillis() / 1000
-            if (currentTime > expiryTimestamp) {
-                return Pair(false, "Licença expirada")
-            }
-
-            Timber.d("Licença válida: tipo=$licenseType")
-            Pair(true, "Licença válida")
-            
-        } catch (e: Exception) {
-            Timber.e(e, "Erro ao validar licença")
-            Pair(false, "Erro ao validar licença: ${e.message}")
-        }
-    }
-
-    /**
-     * Formata timestamp para data legível
-     */
-    fun formatExpiryDate(expiryTimestamp: Long): String {
-        return try {
-            val date = Date(expiryTimestamp * 1000)
-            val format = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
+            val date = Date(timestamp)
+            val format = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
             format.format(date)
         } catch (e: Exception) {
             "Data inválida"
@@ -130,14 +220,25 @@ class LicenseManager(private val context: Context) {
     }
 
     /**
-     * Retorna informações do device em texto
+     * Obter informações do device
      */
     fun getDeviceInfo(): String {
         return """
             Device: ${Build.MODEL}
             Manufacturer: ${Build.MANUFACTURER}
             Android: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})
-            Fingerprint: ${generateDeviceFingerprint().take(16)}
+            Device ID: ${getDeviceId()}
         """.trimIndent()
     }
+
+    /**
+     * Data class para exibição de informações da licença
+     */
+    data class LicenseDisplayInfo(
+        val status: String,
+        val message: String,
+        val purchaseDate: String,
+        val daysRemaining: Int,
+        val isExpired: Boolean
+    )
 }

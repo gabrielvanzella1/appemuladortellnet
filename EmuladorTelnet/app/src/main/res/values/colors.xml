@@ -1,51 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Auticode Brand Colors - Material Design 3 -->
-    <color name="primary">#23C781</color>
-    <color name="primary_dark">#1DA860</color>
-    <color name="primary_light">#4FD9A1</color>
-    <color name="secondary">#4FD9A1</color>
+    <!-- Auticode Brand Colors - Turquesa PANTONE 7715C -->
+    <color name="primary">#004550</color>
+    <color name="primary_dark">#002E38</color>
+    <color name="primary_light">#006678</color>
+    <color name="secondary">#006678</color>
     <color name="tertiary">#212121</color>
     <color name="background">#FFFFFF</color>
     <color name="surface">#F5F5F5</color>
     <color name="error">#B3261E</color>
-    
+
     <!-- Auticode Palette -->
-    <color name="auticode_green">#23C781</color>
-    <color name="auticode_green_dark">#1DA860</color>
-    <color name="auticode_green_light">#4FD9A1</color>
+    <color name="auticode_green">#004550</color>
+    <color name="auticode_green_dark">#002E38</color>
+    <color name="auticode_green_light">#006678</color>
     <color name="auticode_white">#FFFFFF</color>
     <color name="auticode_gray_light">#F5F5F5</color>
     <color name="auticode_gray">#E0E0E0</color>
     <color name="auticode_gray_dark">#757575</color>
     <color name="auticode_text">#212121</color>
-    
+
     <!-- Terminal Colors -->
     <color name="terminal_background">#FF0A0E27</color>
     <color name="terminal_foreground">#FF00FF00</color>
-    <color name="terminal_auticode">#FF23C781</color>
+    <color name="terminal_auticode">#FF004550</color>
     <color name="terminal_error">#FFFF0000</color>
     <color name="terminal_warning">#FFFFFF00</color>
     <color name="terminal_info">#FF00FFFF</color>
-    
+
+    <!-- UI Common Colors -->
+    <color name="primary_green">#004550</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="background_light">#F5F5F5</color>
+
     <!-- Status Colors -->
-    <color name="status_connected">#FF23C781</color>
+    <color name="status_connected">#FF004550</color>
     <color name="status_disconnected">#FF808080</color>
     <color name="status_connecting">#FFFF8800</color>
     <color name="status_error">#FFCC0000</color>
-    
+
     <!-- Text Colors -->
-    <color name="text_primary">#212121</color>
-    <color name="text_secondary">#757575</color>
     <color name="text_hint">#999999</color>
-    
+
     <!-- Neutral Colors -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="red_500">#FFF44336</color>
     <color name="gray_500">#FF9E9E9E</color>
     <color name="gray_700">#FF616161</color>
-    
+
     <!-- Control Buttons -->
     <color name="button_esc">#FFFFEB3b</color>
     <color name="button_blue">#FF2196F3</color>

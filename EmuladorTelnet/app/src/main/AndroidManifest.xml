@@ -2,13 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.logisticapp.emuladortelnet">
 
-    <!-- Permissões de Rede -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
-    <!-- Permissões de Armazenamento -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="false"
@@ -22,19 +17,44 @@
         android:usesCleartextTraffic="true"
         android:name=".EmuladorTelnetApplication">
 
+        <!-- 1. Licenca (launcher) -->
         <activity
-            android:name=".LoginActivity"
-            android:exported="true">
+            android:name=".LicenseActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="emuladortelnet" android:host="payment" />
+            </intent-filter>
         </activity>
 
+        <!-- 2. Lista de hosts -->
+        <activity
+            android:name=".HostsActivity"
+            android:exported="false" />
+
+        <!-- 3. Configuracao do host -->
+        <activity
+            android:name=".HostConfigActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- 4. Configuracoes avancadas do host -->
+        <activity
+            android:name=".HostAdvancedActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- 5. Terminal Telnet -->
         <activity
             android:name=".MainActivity"
-            android:exported="true">
-        </activity>
+            android:exported="false" />
 
     </application>
 

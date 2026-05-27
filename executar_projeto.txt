@@ -1,0 +1,8 @@
+# Fluxo completo: compila + instala + abre
+.\run.ps1
+
+# Só instala e abre (sem recompilar)
+.\run.ps1 -SkipBuild
+
+# Só abre o app (emulador e APK já prontos)
+.\run.ps1 -SkipBuild -SkipInstall

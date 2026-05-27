@@ -1,42 +1,32 @@
 package com.logisticapp.emuladortelnet.database
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import androidx.room.ForeignKey
+// Room dependencies removed - using SharedPreferences instead
 
 /**
  * Conexão Telnet salva para reutilização
  */
-@Entity(tableName = "saved_connections")
 data class SavedConnection(
-    @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val name: String,           // Nome da conexão (ex: "Servidor Principal")
-    val host: String,           // IP ou hostname
-    val port: Int = 23,         // Porta Telnet
-    val username: String = "",  // Username (opcional)
-    val password: String = "",  // Password (opcional)
+    val name: String,
+    val host: String,
+    val port: Int = 23,
+    val username: String = "",
+    val password: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val lastUsed: Long = System.currentTimeMillis(),
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    // Configuracoes avancadas
+    val encoding: String = "UTF-8",         // UTF-8 | ISO-8859-1 | CP850
+    val terminalType: String = "VT100",     // VT100 | VT220 | ANSI | XTERM
+    val timeoutSeconds: Int = 30,           // Timeout de conexao em segundos
+    val keepAlive: Boolean = true,          // Enviar keep-alive
+    val localEcho: Boolean = false          // Eco local de comandos
 )
 
 /**
  * Histórico de comandos por sessão
  */
-@Entity(
-    tableName = "command_history",
-    foreignKeys = [
-        ForeignKey(
-            entity = SessionLog::class,
-            parentColumns = ["id"],
-            childColumns = ["sessionId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ]
-)
 data class CommandHistory(
-    @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val sessionId: Int,         // Referência à sessão
     val command: String,        // Comando digitado
@@ -47,9 +37,7 @@ data class CommandHistory(
 /**
  * Log de sessão (quando conectou, quando desconectou)
  */
-@Entity(tableName = "session_logs")
 data class SessionLog(
-    @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val connectionId: Int,      // Qual conexão foi usada
     val host: String,           // Host conectado
@@ -68,42 +56,22 @@ data class SessionLog(
 /**
  * Preferências do app
  */
-@Entity(tableName = "preferences")
 data class AppPreference(
-    @PrimaryKey
     val key: String,
     val value: String
 )
 
 /**
- * Informações de Licença
- */
-@Entity(tableName = "license_info")
-data class LicenseInfo(
-    @PrimaryKey
-    val id: Int = 1,  // Sempre 1 (uma única licença por app)
-    val licenseKey: String,     // Chave de licença
-    val licenseType: String,    // TRIAL ou PREMIUM
-    val deviceFingerprint: String,  // Fingerprint do device
-    val createdAt: Long = System.currentTimeMillis(),
-    val expiryTimestamp: Long,  // Timestamp de expiração
-    val isValid: Boolean = true,
-    val activationDate: Long = System.currentTimeMillis()
-)
-
-/**
  * Usuário para autenticação do app
  */
-@Entity(tableName = "users")
 data class User(
-    @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val email: String,          // Email único do usuário
-    val passwordHash: String,   // Senha hasheada (SHA-256)
-    val fullName: String = "",  // Nome completo (opcional)
-    val isActive: Boolean = true,  // Se o usuário está ativo
+    val email: String,
+    val passwordHash: String,
+    val fullName: String = "",
+    val isActive: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val lastLogin: Long = 0L    // Última data de login
+    val lastLogin: Long = 0L
 )
 

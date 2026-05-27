@@ -3,10 +3,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background"
-    android:padding="0dp">
+    android:background="@color/background">
 
-    <!-- App Bar with Auticode Branding -->
+    <!-- AppBar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -16,138 +15,27 @@
         android:padding="12dp"
         android:elevation="8dp">
 
-        <!-- App Title + Status -->
         <TextView
-            android:id="@+id/title"
+            android:id="@+id/statusText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/title_activity_main"
+            android:text="@string/app_name"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/white" />
 
-        <!-- Connection Status -->
-        <TextView
-            android:id="@+id/statusText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/status_disconnected"
-            android:textSize="12sp"
-            android:textColor="@color/white" />
-    </LinearLayout>
-
-    <!-- Control Panel (Inputs + Buttons) -->
-    <LinearLayout
-        android:id="@+id/controlPanel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:visibility="visible">
-
-        <!-- Card for Inputs -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:layout_marginBottom="16dp"
-            android:background="@color/surface"
-            android:elevation="2dp">
-
-            <!-- Host Input -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/hint_host"
-                android:textColor="@color/primary"
-                android:textStyle="bold"
-                android:textSize="12sp"
-                android:layout_marginBottom="4dp" />
-
-            <EditText
-                android:id="@+id/hostInput"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:inputType="text"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_hint"
-                android:padding="8dp"
-                android:layout_marginBottom="12dp"
-                android:background="@color/white"
-                android:hint="@string/hint_host" />
-
-            <!-- Port Input -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/hint_port"
-                android:textColor="@color/primary"
-                android:textStyle="bold"
-                android:textSize="12sp"
-                android:layout_marginBottom="4dp" />
-
-            <EditText
-                android:id="@+id/portInput"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:inputType="number"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_hint"
-                android:text="23"
-                android:padding="8dp"
-                android:background="@color/white"
-                android:hint="@string/hint_port" />
-        </LinearLayout>
-
-        <!-- Saved Connections Spinner -->
-        <Spinner
-            android:id="@+id/savedConnectionsSpinner"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginBottom="12dp"
-            android:prompt="@string/spinner_saved_connections"
-            android:background="@drawable/spinner_background" />
-
-        <!-- Button Group -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginBottom="12dp">
-
-            <Button
-                android:id="@+id/connectButton"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:text="@string/button_connect"
-                android:textColor="@color/white"
-                android:background="@color/primary"
-                android:layout_marginEnd="6dp" />
-
-            <Button
-                android:id="@+id/disconnectButton"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:text="@string/button_disconnect"
-                android:enabled="false"
-                android:textColor="@color/white"
-                android:background="@color/primary_dark"
-                android:layout_marginStart="6dp" />
-        </LinearLayout>
-
-        <!-- Save Connection Button -->
         <Button
-            android:id="@+id/saveConnectionButton"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="@string/button_save_connection"
-            android:textColor="@color/primary"
-            android:background="@color/surface" />
+            android:id="@+id/disconnectButton"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="Desconectar"
+            android:textSize="11sp"
+            android:textColor="@color/white"
+            android:background="@color/primary_dark"
+            android:enabled="false"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp" />
     </LinearLayout>
 
     <!-- Terminal Output -->
@@ -156,7 +44,6 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="0dp"
         android:fillViewport="true">
 
         <TextView
@@ -170,17 +57,13 @@
             android:textColor="#00FF00" />
     </ScrollView>
 
-    <!-- Command Input Footer -->
+    <!-- Command Input -->
     <LinearLayout
-        android:id="@+id/commandFooter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="48dp"
         android:orientation="horizontal"
-        android:layout_marginTop="0dp"
         android:padding="4dp"
-        android:background="#000000"
-        android:visibility="visible">
+        android:background="#000000">
 
         <EditText
             android:id="@+id/commandInput"
@@ -212,7 +95,7 @@
             android:enabled="false" />
     </LinearLayout>
 
-    <!-- Control Keys Bar -->
+    <!-- Control Keys -->
     <LinearLayout
         android:id="@+id/controlKeysBar"
         android:layout_width="match_parent"
@@ -223,7 +106,6 @@
         android:gravity="center"
         android:visibility="gone">
 
-        <!-- ENTER Button - Green -->
         <Button
             android:id="@+id/keyEnter"
             android:layout_width="0dp"
@@ -235,7 +117,6 @@
             android:background="@color/primary"
             android:layout_margin="2dp" />
 
-        <!-- ESC Button - Yellow -->
         <Button
             android:id="@+id/keyEsc"
             android:layout_width="0dp"
@@ -247,7 +128,6 @@
             android:background="@color/button_esc"
             android:layout_margin="2dp" />
 
-        <!-- X Button - Blue -->
         <Button
             android:id="@+id/keyX"
             android:layout_width="0dp"
@@ -259,7 +139,6 @@
             android:background="@color/button_blue"
             android:layout_margin="2dp" />
 
-        <!-- Y Button - Blue -->
         <Button
             android:id="@+id/keyY"
             android:layout_width="0dp"
@@ -271,7 +150,6 @@
             android:background="@color/button_blue"
             android:layout_margin="2dp" />
 
-        <!-- Z Button - Blue -->
         <Button
             android:id="@+id/keyZ"
             android:layout_width="0dp"

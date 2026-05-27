@@ -12,7 +12,6 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.logisticapp.emuladortelnet.auth.AuthManager
-import com.logisticapp.emuladortelnet.database.AppDatabase
 import com.logisticapp.emuladortelnet.database.TelnetRepository
 import com.logisticapp.emuladortelnet.ui.LoginState
 import com.logisticapp.emuladortelnet.ui.LoginViewModel
@@ -42,8 +41,7 @@ class LoginActivity : AppCompatActivity() {
         errorMessage = findViewById(R.id.errorMessage)
 
         // Inicializar Repository e ViewModel
-        val database = AppDatabase.getInstance(this)
-        repository = TelnetRepository.getInstance(database)
+        repository = TelnetRepository.getInstance(this)
         val factory = LoginViewModelFactory(repository)
         viewModel = ViewModelProvider(this, factory).get(LoginViewModel::class.java)
 
