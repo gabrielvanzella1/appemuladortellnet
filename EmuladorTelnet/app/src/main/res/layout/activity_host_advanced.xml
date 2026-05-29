@@ -203,6 +203,118 @@
                     android:trackTint="@color/primary_light" />
             </LinearLayout>
 
+            <!-- ===== TECLAS RAPIDAS ===== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="TECLAS RAPIDAS"
+                android:textSize="11sp"
+                android:textColor="@color/text_secondary"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Configure os 3 botoes de atalho do terminal (Rotulo | Texto enviado)"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="12dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+                <EditText
+                    android:id="@+id/input_key1_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Rotulo"
+                    android:text="F1"
+                    android:inputType="text"
+                    android:background="@drawable/edit_text_bg"
+                    android:padding="10dp"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginEnd="6dp" />
+                <EditText
+                    android:id="@+id/input_key1_value"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    android:hint="Texto enviado ao terminal"
+                    android:inputType="text"
+                    android:background="@drawable/edit_text_bg"
+                    android:padding="10dp"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+                <EditText
+                    android:id="@+id/input_key2_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Rotulo"
+                    android:text="F2"
+                    android:inputType="text"
+                    android:background="@drawable/edit_text_bg"
+                    android:padding="10dp"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginEnd="6dp" />
+                <EditText
+                    android:id="@+id/input_key2_value"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    android:hint="Texto enviado ao terminal"
+                    android:inputType="text"
+                    android:background="@drawable/edit_text_bg"
+                    android:padding="10dp"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="24dp">
+                <EditText
+                    android:id="@+id/input_key3_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Rotulo"
+                    android:text="F3"
+                    android:inputType="text"
+                    android:background="@drawable/edit_text_bg"
+                    android:padding="10dp"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginEnd="6dp" />
+                <EditText
+                    android:id="@+id/input_key3_value"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    android:hint="Texto enviado ao terminal"
+                    android:inputType="text"
+                    android:background="@drawable/edit_text_bg"
+                    android:padding="10dp"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary" />
+            </LinearLayout>
+
             <Button
                 android:id="@+id/btn_save_advanced"
                 android:layout_width="match_parent"

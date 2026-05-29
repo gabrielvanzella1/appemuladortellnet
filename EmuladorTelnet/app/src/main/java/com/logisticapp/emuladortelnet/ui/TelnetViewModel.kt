@@ -10,10 +10,9 @@ import com.logisticapp.emuladortelnet.data.TelnetConnection
 import com.logisticapp.emuladortelnet.database.SavedConnection
 import com.logisticapp.emuladortelnet.database.TelnetRepository
 import com.logisticapp.emuladortelnet.network.TelnetClient
-import com.logisticapp.emuladortelnet.terminal.ANSIParser
+import com.logisticapp.emuladortelnet.terminal.TerminalEmulator
 import com.logisticapp.emuladortelnet.terminal.InputHistoryManager
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -27,8 +26,8 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     // Cliente Telnet
     private val telnetClient = TelnetClient()
 
-    // ANSI Parser
-    private val ansiParser = ANSIParser()
+    // Emulador de tela VT100 (grade 80x24)
+    private val emulator = TerminalEmulator()
 
     // Input History Manager
     private val inputHistory = InputHistoryManager()
@@ -105,36 +104,22 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     }
 
     /**
-     * Iniciar leitura contínua de dados
+     * Leitura bloqueante contínua — bloqueia em readData() até dados chegarem
      */
     private fun startReadingData() {
         viewModelScope.launch(Dispatchers.IO) {
             while (isActive && telnetClient.isConnectedStatus()) {
-                try {
-                    val readResult = telnetClient.readAvailable()
-
-                    if (readResult.isSuccess) {
-                        val lines = readResult.getOrNull() ?: emptyList()
-                        for (line in lines) {
-                            addTerminalOutput("$line\n")
-                        }
-                    } else {
-                        // Erro na leitura
-                        val error = readResult.exceptionOrNull()?.message ?: "Desconectado"
-                        Timber.w("Erro ao ler dados: $error")
-
-                        if (!telnetClient.isConnectedStatus()) {
-                            _connectionState.postValue(ConnectionState.DISCONNECTED)
-                            addTerminalOutput("Conexão perdida.\n")
-                            break
-                        }
+                val result = telnetClient.readData()
+                if (result.isSuccess) {
+                    val text = result.getOrNull() ?: ""
+                    if (text.isNotEmpty()) addTerminalOutput(text)
+                } else {
+                    val error = result.exceptionOrNull()?.message ?: "Desconectado"
+                    Timber.w("Leitura encerrada: $error")
+                    if (!telnetClient.isConnectedStatus()) {
+                        _connectionState.postValue(ConnectionState.DISCONNECTED)
+                        addTerminalOutput("\nConexao perdida.\n")
                     }
-
-                    // Aguardar um pouco antes de tentar ler novamente
-                    delay(500)
-
-                } catch (e: Exception) {
-                    Timber.e(e, "Exceção ao ler dados")
                     break
                 }
             }
@@ -179,17 +164,15 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
             
             viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    addTerminalOutput("> $command\n")
-
+                    // Sem echo local: num terminal de tela cheia o servidor ecoa e redesenha
                     val sendResult = telnetClient.sendCommand(command)
 
                     if (sendResult.isFailure) {
-                        addTerminalOutput("Erro ao enviar: ${sendResult.exceptionOrNull()?.message}\n")
+                        Timber.w("Erro ao enviar: ${sendResult.exceptionOrNull()?.message}")
                     }
 
                 } catch (e: Exception) {
                     Timber.e(e, "Erro ao enviar comando")
-                    addTerminalOutput("Erro ao enviar comando: ${e.message}\n")
                 }
             }
         } else {
@@ -219,34 +202,23 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     }
 
     /**
-     * Adicionar texto ao terminal (thread-safe)
-     * Processa ANSI escape sequences
+     * Alimenta o emulador de tela com o texto recebido e renderiza a grade inteira.
      */
     private fun addTerminalOutput(text: String) {
-        val current = _terminalOutput.value ?: ""
-        val newText = current + text
-
-        // Atualizar plain text
-        _terminalOutput.postValue(newText)
-
-        // Processar ANSI e atualizar styled
         try {
-            val styledSegments = ansiParser.parse(newText)
-            val htmlOutput = ansiParser.toHtmlSpan(styledSegments)
-            Timber.d("ANSI parsed: ${styledSegments.size} segments")
-            Timber.d("HTML output: ${htmlOutput.take(100)}...")
-            _terminalOutputStyled.postValue(htmlOutput)
+            emulator.feed(text)
+            _terminalOutputStyled.postValue(emulator.renderHtml())
         } catch (e: Exception) {
-            Timber.e(e, "Erro ao processar ANSI")
-            _terminalOutputStyled.postValue(newText)
+            Timber.e(e, "Erro ao processar tela")
         }
     }
 
     /**
-     * Limpar saída do terminal
+     * Limpar a tela do terminal
      */
     fun clearTerminal() {
-        _terminalOutput.value = ""
+        emulator.reset()
+        _terminalOutputStyled.postValue(emulator.renderHtml())
     }
 
     /**

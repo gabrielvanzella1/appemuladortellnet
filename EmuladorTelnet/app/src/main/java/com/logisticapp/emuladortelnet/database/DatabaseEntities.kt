@@ -20,7 +20,14 @@ data class SavedConnection(
     val terminalType: String = "VT100",     // VT100 | VT220 | ANSI | XTERM
     val timeoutSeconds: Int = 30,           // Timeout de conexao em segundos
     val keepAlive: Boolean = true,          // Enviar keep-alive
-    val localEcho: Boolean = false          // Eco local de comandos
+    val localEcho: Boolean = false,         // Eco local de comandos
+    // Teclas rapidas configuráveis
+    val customKey1Label: String = "F1",
+    val customKey1Value: String = "",
+    val customKey2Label: String = "F2",
+    val customKey2Value: String = "",
+    val customKey3Label: String = "F3",
+    val customKey3Value: String = ""
 )
 
 /**

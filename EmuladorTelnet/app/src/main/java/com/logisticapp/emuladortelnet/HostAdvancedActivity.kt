@@ -23,6 +23,12 @@ class HostAdvancedActivity : AppCompatActivity() {
     private lateinit var inputTimeout: EditText
     private lateinit var switchKeepalive: Switch
     private lateinit var switchLocalecho: Switch
+    private lateinit var inputKey1Label: EditText
+    private lateinit var inputKey1Value: EditText
+    private lateinit var inputKey2Label: EditText
+    private lateinit var inputKey2Value: EditText
+    private lateinit var inputKey3Label: EditText
+    private lateinit var inputKey3Value: EditText
     private lateinit var btnSave: Button
 
     private val terminalTypes = listOf("VT100", "VT220", "ANSI", "XTERM")
@@ -51,6 +57,12 @@ class HostAdvancedActivity : AppCompatActivity() {
         inputTimeout    = findViewById(R.id.input_timeout)
         switchKeepalive = findViewById(R.id.switch_keepalive)
         switchLocalecho = findViewById(R.id.switch_localecho)
+        inputKey1Label  = findViewById(R.id.input_key1_label)
+        inputKey1Value  = findViewById(R.id.input_key1_value)
+        inputKey2Label  = findViewById(R.id.input_key2_label)
+        inputKey2Value  = findViewById(R.id.input_key2_value)
+        inputKey3Label  = findViewById(R.id.input_key3_label)
+        inputKey3Value  = findViewById(R.id.input_key3_value)
         btnSave         = findViewById(R.id.btn_save_advanced)
 
         setupSpinners()
@@ -80,6 +92,12 @@ class HostAdvancedActivity : AppCompatActivity() {
                 inputTimeout.setText(host.timeoutSeconds.toString())
                 switchKeepalive.isChecked = host.keepAlive
                 switchLocalecho.isChecked = host.localEcho
+                inputKey1Label.setText(host.customKey1Label)
+                inputKey1Value.setText(host.customKey1Value)
+                inputKey2Label.setText(host.customKey2Label)
+                inputKey2Value.setText(host.customKey2Value)
+                inputKey3Label.setText(host.customKey3Label)
+                inputKey3Value.setText(host.customKey3Value)
 
                 val termIdx = terminalTypes.indexOf(host.terminalType).takeIf { it >= 0 } ?: 0
                 spinnerTerminal.setSelection(termIdx)
@@ -99,13 +117,19 @@ class HostAdvancedActivity : AppCompatActivity() {
         val timeout = inputTimeout.text.toString().toIntOrNull() ?: 30
 
         val updated = base.copy(
-            username      = inputUsername.text.toString().trim(),
-            password      = inputPassword.text.toString(),
-            terminalType  = terminalTypes[spinnerTerminal.selectedItemPosition],
-            encoding      = encodings[spinnerEncoding.selectedItemPosition],
-            timeoutSeconds = timeout,
-            keepAlive     = switchKeepalive.isChecked,
-            localEcho     = switchLocalecho.isChecked
+            username        = inputUsername.text.toString().trim(),
+            password        = inputPassword.text.toString(),
+            terminalType    = terminalTypes[spinnerTerminal.selectedItemPosition],
+            encoding        = encodings[spinnerEncoding.selectedItemPosition],
+            timeoutSeconds  = timeout,
+            keepAlive       = switchKeepalive.isChecked,
+            localEcho       = switchLocalecho.isChecked,
+            customKey1Label = inputKey1Label.text.toString().ifBlank { "F1" },
+            customKey1Value = inputKey1Value.text.toString(),
+            customKey2Label = inputKey2Label.text.toString().ifBlank { "F2" },
+            customKey2Value = inputKey2Value.text.toString(),
+            customKey3Label = inputKey3Label.text.toString().ifBlank { "F3" },
+            customKey3Value = inputKey3Value.text.toString()
         )
 
         lifecycleScope.launch {

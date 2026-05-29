@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.logisticapp.emuladortelnet.data.ConnectionState
+import com.logisticapp.emuladortelnet.database.SavedConnection
 import com.logisticapp.emuladortelnet.database.TelnetRepository
 import com.logisticapp.emuladortelnet.databinding.ActivityMainBinding
 import com.logisticapp.emuladortelnet.ui.TelnetViewModel
@@ -21,6 +22,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: TelnetViewModel
+    private lateinit var repository: TelnetRepository
     private var hasConnected = false
 
     companion object {
@@ -35,22 +37,49 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val repository = TelnetRepository.getInstance(this)
+        repository = TelnetRepository.getInstance(this)
         val factory = TelnetViewModelFactory(repository)
         viewModel = ViewModelProvider(this, factory).get(TelnetViewModel::class.java)
 
         setupListeners()
         observeViewModel()
 
-        // Conectar automaticamente usando os dados passados pela HostsActivity
-        val host = intent.getStringExtra(EXTRA_HOST) ?: ""
-        val port = intent.getIntExtra(EXTRA_PORT, 23)
-        val name = intent.getStringExtra(EXTRA_NAME) ?: host
+        val host   = intent.getStringExtra(EXTRA_HOST) ?: ""
+        val port   = intent.getIntExtra(EXTRA_PORT, 23)
+        val name   = intent.getStringExtra(EXTRA_NAME) ?: host
+        val hostId = intent.getIntExtra(EXTRA_HOST_ID, -1)
+
+        // Carregar teclas configuráveis antes de conectar
+        if (hostId > 0) {
+            lifecycleScope.launch {
+                val conn = repository.getConnectionById(hostId)
+                if (conn != null) configureCustomKeys(conn)
+            }
+        }
 
         if (host.isNotEmpty()) {
             binding.statusText.text = name
             viewModel.connect(host, port.toString())
             Timber.d("Auto-conectando: $name -> $host:$port")
+        }
+    }
+
+    private fun configureCustomKeys(conn: SavedConnection) {
+        binding.keyX.text = conn.customKey1Label.ifBlank { "F1" }
+        binding.keyY.text = conn.customKey2Label.ifBlank { "F2" }
+        binding.keyZ.text = conn.customKey3Label.ifBlank { "F3" }
+
+        binding.keyX.setOnClickListener {
+            val value = conn.customKey1Value
+            if (value.isNotEmpty()) viewModel.sendCommand(value)
+        }
+        binding.keyY.setOnClickListener {
+            val value = conn.customKey2Value
+            if (value.isNotEmpty()) viewModel.sendCommand(value)
+        }
+        binding.keyZ.setOnClickListener {
+            val value = conn.customKey3Value
+            if (value.isNotEmpty()) viewModel.sendCommand(value)
         }
     }
 
@@ -107,11 +136,14 @@ class MainActivity : AppCompatActivity() {
             false
         }
 
+        // Teclas fixas
         binding.keyEnter.setOnClickListener { viewModel.sendCommand("\r\n") }
         binding.keyEsc.setOnClickListener   { viewModel.sendCommand("") }
-        binding.keyX.setOnClickListener     { viewModel.sendCommand("X") }
-        binding.keyY.setOnClickListener     { viewModel.sendCommand("Y") }
-        binding.keyZ.setOnClickListener     { viewModel.sendCommand("Z") }
+
+        // Teclas X/Y/Z são configuradas em configureCustomKeys() — valores default abaixo
+        binding.keyX.setOnClickListener { viewModel.sendCommand("") }
+        binding.keyY.setOnClickListener { viewModel.sendCommand("") }
+        binding.keyZ.setOnClickListener { viewModel.sendCommand("") }
 
         binding.terminalOutput.setOnClickListener {
             binding.scrollView.post {
@@ -130,7 +162,6 @@ class MainActivity : AppCompatActivity() {
                     binding.commandInput.isEnabled = false
                     binding.sendButton.isEnabled = false
                     binding.controlKeysBar.visibility = android.view.View.GONE
-                    // Só volta para lista se já houve conexão (evita fechar antes de conectar)
                     if (hasConnected) finish()
                 }
                 ConnectionState.CONNECTING -> {
