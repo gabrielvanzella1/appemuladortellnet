@@ -4,8 +4,13 @@ import android.os.Bundle
 import android.text.Html
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -13,6 +18,7 @@ import com.logisticapp.emuladortelnet.data.ConnectionState
 import com.logisticapp.emuladortelnet.database.SavedConnection
 import com.logisticapp.emuladortelnet.database.TelnetRepository
 import com.logisticapp.emuladortelnet.databinding.ActivityMainBinding
+import com.logisticapp.emuladortelnet.settings.AppSettings
 import com.logisticapp.emuladortelnet.ui.TelnetViewModel
 import com.logisticapp.emuladortelnet.ui.TelnetViewModelFactory
 import kotlinx.coroutines.launch
@@ -23,7 +29,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: TelnetViewModel
     private lateinit var repository: TelnetRepository
+    private lateinit var settings: AppSettings
     private var hasConnected = false
+    private var manualDisconnect = false
+
+    // Dados da conexao atual (para reconexao automatica)
+    private var currentHost = ""
+    private var currentPort = 23
+    private var currentName = ""
+
+    // Receiver para detectar bloqueio de tela
+    private var screenOffReceiver: BroadcastReceiver? = null
 
     companion object {
         const val EXTRA_HOST    = "extra_host"
@@ -34,8 +50,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        settings = AppSettings.get(this)
+        settings.applyOrientation(this)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Nunca bloquear a tela quando conectado
+        if (settings.keepScreenOn) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
 
         repository = TelnetRepository.getInstance(this)
         val factory = TelnetViewModelFactory(repository)
@@ -43,11 +66,12 @@ class MainActivity : AppCompatActivity() {
 
         setupListeners()
         observeViewModel()
+        registerScreenOffReceiver()
 
-        val host   = intent.getStringExtra(EXTRA_HOST) ?: ""
-        val port   = intent.getIntExtra(EXTRA_PORT, 23)
-        val name   = intent.getStringExtra(EXTRA_NAME) ?: host
-        val hostId = intent.getIntExtra(EXTRA_HOST_ID, -1)
+        currentHost = intent.getStringExtra(EXTRA_HOST) ?: ""
+        currentPort = intent.getIntExtra(EXTRA_PORT, 23)
+        currentName = intent.getStringExtra(EXTRA_NAME) ?: currentHost
+        val hostId  = intent.getIntExtra(EXTRA_HOST_ID, -1)
 
         // Carregar teclas configuráveis antes de conectar
         if (hostId > 0) {
@@ -57,11 +81,29 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        if (host.isNotEmpty()) {
-            binding.statusText.text = name
-            viewModel.connect(host, port.toString())
-            Timber.d("Auto-conectando: $name -> $host:$port")
+        if (currentHost.isNotEmpty()) {
+            binding.statusText.text = currentName
+            viewModel.connect(currentHost, currentPort.toString())
+            Timber.d("Auto-conectando: $currentName -> $currentHost:$currentPort")
         }
+    }
+
+    private fun registerScreenOffReceiver() {
+        screenOffReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action == Intent.ACTION_SCREEN_OFF && settings.disconnectOnLock) {
+                    Timber.d("Tela bloqueada -> desconectando")
+                    manualDisconnect = true
+                    viewModel.disconnect()
+                }
+            }
+        }
+        registerReceiver(screenOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        screenOffReceiver?.let { runCatching { unregisterReceiver(it) } }
     }
 
     private fun configureCustomKeys(conn: SavedConnection) {
@@ -85,6 +127,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         binding.disconnectButton.setOnClickListener {
+            manualDisconnect = true
             viewModel.disconnect()
         }
 
@@ -162,7 +205,15 @@ class MainActivity : AppCompatActivity() {
                     binding.commandInput.isEnabled = false
                     binding.sendButton.isEnabled = false
                     binding.controlKeysBar.visibility = android.view.View.GONE
-                    if (hasConnected) finish()
+                    if (hasConnected) {
+                        if (!manualDisconnect && settings.autoReconnect && currentHost.isNotEmpty()) {
+                            // Reconexao automatica apos conexao perdida
+                            Timber.d("Conexao perdida -> reconectando automaticamente")
+                            viewModel.connect(currentHost, currentPort.toString())
+                        } else {
+                            finish()
+                        }
+                    }
                 }
                 ConnectionState.CONNECTING -> {
                     binding.statusText.text = getString(R.string.status_connecting)
@@ -174,6 +225,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 ConnectionState.CONNECTED -> {
                     hasConnected = true
+                    manualDisconnect = false
                     binding.statusText.text = getString(R.string.status_connected)
                     binding.statusText.setTextColor(getColor(android.R.color.holo_green_dark))
                     binding.disconnectButton.isEnabled = true
@@ -185,8 +237,14 @@ class MainActivity : AppCompatActivity() {
                     binding.keyX.isEnabled = true
                     binding.keyY.isEnabled = true
                     binding.keyZ.isEnabled = true
+                    // Teclado ativado: mostra a barra de comando; desativado: so teclas de atalho
+                    if (settings.keyboardEnabled) {
+                        binding.inputBar.visibility = View.VISIBLE
+                        binding.commandInput.requestFocus()
+                    } else {
+                        binding.inputBar.visibility = View.GONE
+                    }
                     hideKeyboard()
-                    binding.commandInput.requestFocus()
                 }
                 ConnectionState.ERROR -> {
                     binding.statusText.text = getString(R.string.status_error)
@@ -228,6 +286,7 @@ class MainActivity : AppCompatActivity() {
             .setTitle("Sair")
             .setMessage("Deseja sair da aplicacao?")
             .setPositiveButton("Sim") { _, _ ->
+                manualDisconnect = true
                 viewModel.disconnect()
                 val intent = Intent(this, HostsActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP

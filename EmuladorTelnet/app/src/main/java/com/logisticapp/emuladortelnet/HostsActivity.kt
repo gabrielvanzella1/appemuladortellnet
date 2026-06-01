@@ -2,10 +2,15 @@ package com.logisticapp.emuladortelnet
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.PopupMenu
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -26,9 +31,36 @@ class HostsActivity : AppCompatActivity() {
 
     private lateinit var viewModel: HostsViewModel
     private lateinit var adapter: HostsAdapter
+    private var currentHosts: List<SavedConnection> = emptyList()
+
+    companion object {
+        // Garante a conexao automatica apenas uma vez por inicializacao do app
+        private var didAutoConnect = false
+    }
+
+    // Seletor de arquivo para importacao de sessoes (JSON)
+    private val importLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri == null) return@registerForActivityResult
+        try {
+            val json = contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+            if (json.isNullOrBlank()) {
+                toast("Arquivo vazio ou invalido")
+                return@registerForActivityResult
+            }
+            viewModel.importJson(json) { count ->
+                toast(if (count > 0) "$count sessao(oes) importada(s)" else "Nenhuma sessao valida no arquivo")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao importar")
+            toast("Erro ao ler o arquivo")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.logisticapp.emuladortelnet.settings.AppSettings.get(this).applyOrientation(this)
         setContentView(R.layout.activity_hosts)
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
@@ -44,6 +76,20 @@ class HostsActivity : AppCompatActivity() {
         findViewById<FloatingActionButton>(R.id.fab_add).setOnClickListener {
             openHostConfig(hostId = -1)
         }
+
+        maybeAutoConnect()
+    }
+
+    /** Conecta automaticamente na sessao mais recente, se a opcao estiver ligada (1x por inicializacao). */
+    private fun maybeAutoConnect() {
+        val settings = com.logisticapp.emuladortelnet.settings.AppSettings.get(this)
+        if (didAutoConnect || !settings.autoConnect) return
+        val hosts = viewModel.currentHosts()
+        if (hosts.isEmpty()) return
+        didAutoConnect = true
+        val target = hosts.maxByOrNull { it.lastUsed } ?: hosts.first()
+        Timber.d("Conexao automatica na inicializacao: ${target.name}")
+        connectToHost(target)
     }
 
     private fun setupRecyclerView() {
@@ -60,6 +106,7 @@ class HostsActivity : AppCompatActivity() {
     private fun observeHosts() {
         lifecycleScope.launch {
             viewModel.hosts.collect { hosts ->
+                currentHosts = hosts
                 adapter.submitList(hosts)
                 val empty = findViewById<View>(R.id.empty_state)
                 val recycler = findViewById<View>(R.id.hosts_recycler)
@@ -73,6 +120,142 @@ class HostsActivity : AppCompatActivity() {
                 Timber.d("Hosts atualizados: ${hosts.size}")
             }
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Menu geral da toolbar (3 pontos) — configuracoes gerais
+    // ------------------------------------------------------------------
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_sessions, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_settings -> { toast("Configurações: em breve"); true }
+            R.id.menu_new      -> { openHostConfig(hostId = -1); true }
+            R.id.menu_remove   -> { menuRemove(); true }
+            R.id.menu_rename   -> { menuRename(); true }
+            R.id.menu_help     -> { menuHelp(); true }
+            R.id.menu_import   -> { menuImport(); true }
+            R.id.menu_export   -> { menuExport(); true }
+            R.id.menu_templates -> { toast("Modelos: em breve"); true }
+            R.id.menu_options  -> { startActivity(Intent(this, GeneralOptionsActivity::class.java)); true }
+            R.id.menu_about    -> { menuAbout(); true }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    /** Mostra a lista de sessoes para o usuario escolher um alvo */
+    private fun pickSession(title: String, onPick: (SavedConnection) -> Unit) {
+        if (currentHosts.isEmpty()) {
+            toast("Nenhuma sessão cadastrada")
+            return
+        }
+        if (currentHosts.size == 1) {
+            onPick(currentHosts[0])
+            return
+        }
+        val names = currentHosts.map { it.name }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setItems(names) { _, which -> onPick(currentHosts[which]) }
+            .show()
+    }
+
+    private fun menuRemove() {
+        pickSession("Remover qual sessão?") { host -> confirmDelete(host) }
+    }
+
+    private fun menuRename() {
+        pickSession("Renomear qual sessão?") { host -> showRenameDialog(host) }
+    }
+
+    private fun showRenameDialog(host: SavedConnection) {
+        val input = EditText(this).apply {
+            setText(host.name)
+            setSelection(host.name.length)
+        }
+        val container = android.widget.FrameLayout(this).apply {
+            setPadding(48, 16, 48, 0)
+            addView(input)
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Renomear sessão")
+            .setView(container)
+            .setPositiveButton("Salvar") { _, _ ->
+                val novo = input.text.toString().trim()
+                if (novo.isEmpty()) {
+                    toast("Nome não pode ficar vazio")
+                } else {
+                    viewModel.renameHost(host, novo)
+                    toast("Renomeado para \"$novo\"")
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun menuExport() {
+        if (currentHosts.isEmpty()) {
+            toast("Nenhuma sessão para exportar")
+            return
+        }
+        val json = viewModel.exportJson()
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "application/json"
+            putExtra(Intent.EXTRA_SUBJECT, "sessoes_tellx.json")
+            putExtra(Intent.EXTRA_TEXT, json)
+        }
+        startActivity(Intent.createChooser(intent, "Exportar sessões"))
+    }
+
+    private fun menuImport() {
+        // Aceita qualquer arquivo de texto/json
+        try {
+            importLauncher.launch("*/*")
+        } catch (e: Exception) {
+            toast("Nenhum gerenciador de arquivos disponível")
+        }
+    }
+
+    private fun menuHelp() {
+        AlertDialog.Builder(this)
+            .setTitle("Ajuda")
+            .setMessage(
+                "TellX — Emulador Telnet\n\n" +
+                "• Toque em + para criar uma nova sessão (nome, IP e porta).\n" +
+                "• Toque numa sessão para editar seus dados.\n" +
+                "• Use os 3 pontinhos de cada sessão para Conectar, Editar, " +
+                "Configuração avançada ou Remover.\n" +
+                "• Este menu (3 pontos no topo) traz ações gerais: Novo, Remover, " +
+                "Renomear, Importação e Exportação de sessões.\n\n" +
+                "Na tela do terminal, use a barra inferior para enviar comandos e " +
+                "as teclas de atalho."
+            )
+            .setPositiveButton("Fechar", null)
+            .show()
+    }
+
+    private fun menuAbout() {
+        val version = try {
+            packageManager.getPackageInfo(packageName, 0).versionName
+        } catch (e: Exception) { "1.0.0" }
+        AlertDialog.Builder(this)
+            .setTitle("Sobre TellX")
+            .setMessage(
+                "TellX\nEmulador Telnet para ERP\n\n" +
+                "Versão $version\n\n" +
+                "Conecta a servidores Telnet (Protheus, AS/400 e outros) " +
+                "com emulação de tela VT100."
+            )
+            .setPositiveButton("Fechar", null)
+            .show()
+    }
+
+    private fun toast(msg: String) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 
     private fun showPopupMenu(host: SavedConnection, anchor: View) {

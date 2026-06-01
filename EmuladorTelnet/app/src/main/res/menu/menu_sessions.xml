@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/menu_settings"
+        android:title="Configurações"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_new"
+        android:title="Novo"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_remove"
+        android:title="Remover"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_rename"
+        android:title="Renomear"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_help"
+        android:title="Ajuda"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_import"
+        android:title="Importação"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_export"
+        android:title="Exportação"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_templates"
+        android:title="Modelos"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_options"
+        android:title="Opções gerais"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_about"
+        android:title="Sobre TellX"
+        app:showAsAction="never" />
+
+</menu>

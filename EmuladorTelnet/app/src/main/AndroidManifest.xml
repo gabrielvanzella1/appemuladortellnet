@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <application
         android:allowBackup="false"
@@ -50,6 +51,11 @@
             android:name=".HostAdvancedActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+
+        <!-- Opcoes gerais do app -->
+        <activity
+            android:name=".GeneralOptionsActivity"
+            android:exported="false" />
 
         <!-- 5. Terminal Telnet -->
         <activity

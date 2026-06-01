@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="Opções gerais"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/ic_arrow_back" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ===== ORIENTACAO DA TELA ===== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ORIENTAÇÃO DA TELA"
+                android:textSize="11sp"
+                android:textColor="@color/text_secondary"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="8dp" />
+
+            <RadioGroup
+                android:id="@+id/radio_orientation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="24dp">
+
+                <RadioButton
+                    android:id="@+id/radio_auto"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Automático"
+                    android:textSize="15sp"
+                    android:textColor="@color/text_primary"
+                    android:buttonTint="@color/primary"
+                    android:paddingStart="8dp" />
+
+                <RadioButton
+                    android:id="@+id/radio_portrait"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Retrato"
+                    android:textSize="15sp"
+                    android:textColor="@color/text_primary"
+                    android:buttonTint="@color/primary"
+                    android:paddingStart="8dp" />
+
+                <RadioButton
+                    android:id="@+id/radio_landscape"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Paisagem"
+                    android:textSize="15sp"
+                    android:textColor="@color/text_primary"
+                    android:buttonTint="@color/primary"
+                    android:paddingStart="8dp" />
+            </RadioGroup>
+
+            <!-- ===== CONEXAO ===== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="CONEXÃO"
+                android:textSize="11sp"
+                android:textColor="@color/text_secondary"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout style="@style/OptionRow">
+                <TextView style="@style/OptionLabel"
+                    android:text="Sessão de conexão automática na inicialização" />
+                <Switch
+                    android:id="@+id/switch_auto_connect"
+                    style="@style/OptionSwitch" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/OptionRow">
+                <TextView style="@style/OptionLabel"
+                    android:text="Reconectar automaticamente após conexão perdida" />
+                <Switch
+                    android:id="@+id/switch_auto_reconnect"
+                    style="@style/OptionSwitch" />
+            </LinearLayout>
+
+            <View style="@style/OptionDivider" />
+
+            <!-- ===== TELA ===== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="TELA"
+                android:textSize="11sp"
+                android:textColor="@color/text_secondary"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout style="@style/OptionRow">
+                <TextView style="@style/OptionLabel"
+                    android:text="Desconectar na tela de bloqueio" />
+                <Switch
+                    android:id="@+id/switch_disconnect_lock"
+                    style="@style/OptionSwitch" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/OptionRow">
+                <TextView style="@style/OptionLabel"
+                    android:text="Nunca bloquear a tela quando conectado" />
+                <Switch
+                    android:id="@+id/switch_keep_screen_on"
+                    style="@style/OptionSwitch" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/OptionRow">
+                <TextView style="@style/OptionLabel"
+                    android:text="Teclado ativado" />
+                <Switch
+                    android:id="@+id/switch_keyboard"
+                    style="@style/OptionSwitch" />
+            </LinearLayout>
+
+            <View style="@style/OptionDivider" />
+
+            <!-- ===== SISTEMA ===== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="SISTEMA"
+                android:textSize="11sp"
+                android:textColor="@color/text_secondary"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout style="@style/OptionRow">
+                <TextView style="@style/OptionLabel"
+                    android:text="Ignorar otimização de bateria" />
+                <Switch
+                    android:id="@+id/switch_ignore_battery"
+                    style="@style/OptionSwitch" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

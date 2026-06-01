@@ -12,9 +12,26 @@ class HostsViewModel(private val repository: TelnetRepository) : ViewModel() {
 
     val hosts: Flow<List<SavedConnection>> = repository.getAllConnections()
 
+    fun currentHosts(): List<SavedConnection> = repository.currentConnections()
+
     fun deleteHost(id: Int) {
         viewModelScope.launch {
             repository.deleteConnection(id)
+        }
+    }
+
+    fun renameHost(host: SavedConnection, newName: String) {
+        viewModelScope.launch {
+            repository.updateConnection(host.copy(name = newName))
+        }
+    }
+
+    fun exportJson(): String = repository.exportJson()
+
+    fun importJson(json: String, onResult: (Int) -> Unit) {
+        viewModelScope.launch {
+            val count = repository.importJson(json)
+            onResult(count)
         }
     }
 }

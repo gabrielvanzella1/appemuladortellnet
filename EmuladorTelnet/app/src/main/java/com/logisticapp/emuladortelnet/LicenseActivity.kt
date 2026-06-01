@@ -28,6 +28,7 @@ class LicenseActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.logisticapp.emuladortelnet.settings.AppSettings.get(this).applyOrientation(this)
         setContentView(R.layout.activity_license)
 
         initializeViews()

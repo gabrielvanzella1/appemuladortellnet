@@ -67,6 +67,33 @@ class TelnetRepository(private val context: Context) {
     fun getFavoriteConnections(): Flow<List<SavedConnection>> =
         MutableStateFlow(_connections.value.filter { it.isFavorite }).asStateFlow()
 
+    /** Lista atual (acesso sincrono) */
+    fun currentConnections(): List<SavedConnection> = _connections.value
+
+    /** Exporta todas as sessoes como JSON */
+    fun exportJson(): String = gson.toJson(_connections.value)
+
+    /** Importa sessoes de um JSON, atribuindo novos ids. Retorna quantas foram importadas. */
+    suspend fun importJson(json: String): Int {
+        val imported: List<SavedConnection> = try {
+            val type = object : TypeToken<List<SavedConnection>>() {}.type
+            gson.fromJson(json, type)
+        } catch (e: Exception) {
+            Timber.e(e, "JSON invalido na importacao")
+            null
+        } ?: return 0
+
+        val list = _connections.value.toMutableList()
+        var nextId = (list.maxOfOrNull { it.id } ?: 0) + 1
+        for (conn in imported) {
+            list.add(conn.copy(id = nextId))
+            nextId++
+        }
+        persistAndEmit(list)
+        Timber.d("Importadas ${imported.size} sessoes")
+        return imported.size
+    }
+
     // ------------------------------------------------------------------
     // Persistencia interna
     // ------------------------------------------------------------------
