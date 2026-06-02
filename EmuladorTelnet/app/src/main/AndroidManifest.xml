@@ -57,6 +57,21 @@
             android:name=".GeneralOptionsActivity"
             android:exported="false" />
 
+        <!-- Menu de Configuracoes (Comunicacao / Emulacao / Tela) -->
+        <activity
+            android:name=".ConfigMenuActivity"
+            android:exported="false" />
+
+        <!-- Configuracoes > Tela > Opcoes de tela -->
+        <activity
+            android:name=".ScreenOptionsActivity"
+            android:exported="false" />
+
+        <!-- Configuracoes > Tela > Cores da tela -->
+        <activity
+            android:name=".ScreenColorsActivity"
+            android:exported="false" />
+
         <!-- 5. Terminal Telnet -->
         <activity
             android:name=".MainActivity"

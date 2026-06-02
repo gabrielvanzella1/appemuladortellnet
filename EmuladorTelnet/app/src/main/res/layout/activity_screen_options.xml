@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="Opções de tela"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/ic_arrow_back" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="8dp"
+            android:paddingBottom="24dp">
+
+            <!-- Tamanho da fonte -->
+            <LinearLayout android:id="@+id/row_font_size" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Tamanho da fonte" />
+                <TextView android:id="@+id/val_font_size" style="@style/ConfigItemValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <!-- Nome da fonte -->
+            <LinearLayout android:id="@+id/row_font_name" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Nome da fonte" />
+                <TextView android:id="@+id/val_font_name" style="@style/ConfigItemValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <!-- Tipo de cursor -->
+            <LinearLayout android:id="@+id/row_cursor_type" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Tipo de cursor" />
+                <TextView android:id="@+id/val_cursor_type" style="@style/ConfigItemValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <!-- Cor do cursor -->
+            <LinearLayout android:id="@+id/row_cursor_color" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Cor do cursor" />
+                <TextView android:id="@+id/val_cursor_color" style="@style/ConfigItemValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <!-- Campos variáveis 3D -->
+            <LinearLayout android:id="@+id/row_fields_3d" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Campos variáveis 3D" />
+                <TextView android:id="@+id/val_fields_3d" style="@style/ConfigItemValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+
+            <View style="@style/OptionDivider" />
+
+            <!-- Cursor piscando (checkbox) -->
+            <LinearLayout android:id="@+id/row_cursor_blink" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Cursor piscando" />
+                <CheckBox android:id="@+id/check_cursor_blink"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:buttonTint="@color/primary" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <!-- Campos 3D de fundo branco (checkbox) -->
+            <LinearLayout android:id="@+id/row_fields_3d_white" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Campos 3D de fundo branco" />
+                <CheckBox android:id="@+id/check_fields_3d_white"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:buttonTint="@color/primary" />
+            </LinearLayout>
+
+            <View style="@style/OptionDivider" />
+
+            <!-- Mostrar barra de ferramentas -->
+            <LinearLayout android:id="@+id/row_show_toolbar" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Mostrar barra de ferramentas" />
+                <TextView android:id="@+id/val_show_toolbar" style="@style/ConfigItemValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <!-- Limitar visualização da tela (x,y) -->
+            <LinearLayout android:id="@+id/row_limit_view" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Limitar visualização da tela (x,y)" />
+                <TextView android:id="@+id/val_limit_view" style="@style/ConfigItemValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <!-- Toque duas vezes -->
+            <LinearLayout android:id="@+id/row_double_tap" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Toque duas vezes" />
+                <TextView android:id="@+id/val_double_tap" style="@style/ConfigItemValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

@@ -18,8 +18,17 @@ class TerminalEmulator(
     val cols: Int = 80
 ) {
 
-    private val defaultFg = Color.rgb(0, 255, 0)   // verde terminal
+    private var defaultFg = Color.rgb(0, 255, 0)   // verde terminal (configuravel)
     private val defaultBg = Color.BLACK
+
+    /** Define a cor padrao do texto (Primeiro plano). Deve ser chamado antes de conectar. */
+    fun setDefaultForeground(color: Int) {
+        defaultFg = color
+        curFg = color
+        for (r in 0 until rows) {
+            for (c in 0 until cols) fg[r][c] = color
+        }
+    }
 
     private val chars = Array(rows) { CharArray(cols) { ' ' } }
     private val fg    = Array(rows) { IntArray(cols) { defaultFg } }

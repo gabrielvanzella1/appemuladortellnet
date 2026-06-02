@@ -29,6 +29,11 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     // Emulador de tela VT100 (grade 80x24)
     private val emulator = TerminalEmulator()
 
+    /** Define a cor padrao do texto do terminal (Cores da tela > Primeiro plano). */
+    fun setForegroundColor(color: Int) {
+        emulator.setDefaultForeground(color)
+    }
+
     // Input History Manager
     private val inputHistory = InputHistoryManager()
 

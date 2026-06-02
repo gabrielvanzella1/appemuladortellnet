@@ -60,9 +60,21 @@ class MainActivity : AppCompatActivity() {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
 
+        // Tamanho da fonte do terminal (Opcoes de tela)
+        binding.terminalOutput.textSize = settings.fontSize.toFloat()
+
+        // Cores da tela
+        binding.terminalOutput.setBackgroundColor(settings.colorBackground)
+        binding.scrollView.setBackgroundColor(settings.colorBackground)
+        binding.statusText.setTextColor(settings.colorStatusForeground)
+        if (settings.colorStatusBackground != 0) {
+            binding.appBar.setBackgroundColor(settings.colorStatusBackground)
+        }
+
         repository = TelnetRepository.getInstance(this)
         val factory = TelnetViewModelFactory(repository)
         viewModel = ViewModelProvider(this, factory).get(TelnetViewModel::class.java)
+        viewModel.setForegroundColor(settings.colorForeground)
 
         setupListeners()
         observeViewModel()

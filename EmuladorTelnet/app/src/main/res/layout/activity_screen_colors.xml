@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="Cores da tela"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/ic_arrow_back" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="24dp">
+
+            <!-- ===== SELEÇÃO DE CORES ===== -->
+            <TextView style="@style/ConfigSection" android:text="Seleção de cores" />
+
+            <LinearLayout android:id="@+id/row_fg" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Primeiro plano" />
+                <View android:id="@+id/swatch_fg" style="@style/ConfigSwatch" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <LinearLayout android:id="@+id/row_bg" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Plano de fundo" />
+                <View android:id="@+id/swatch_bg" style="@style/ConfigSwatch" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <LinearLayout android:id="@+id/row_status_fg" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Status em primeiro plano" />
+                <View android:id="@+id/swatch_status_fg" style="@style/ConfigSwatch" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <LinearLayout android:id="@+id/row_status_bg" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Plano de fundo do status" />
+                <View android:id="@+id/swatch_status_bg" style="@style/ConfigSwatch" />
+            </LinearLayout>
+
+            <View style="@style/OptionDivider" />
+
+            <!-- ===== AJUSTE DE COR ===== -->
+            <TextView style="@style/ConfigSection" android:text="Ajuste de cor" />
+
+            <LinearLayout android:id="@+id/row_fg_dark" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Primeiro plano escuro" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <LinearLayout android:id="@+id/row_fg_bright" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Primeiro plano brilhante" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <LinearLayout android:id="@+id/row_adjust_bg" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Plano de fundo" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

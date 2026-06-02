@@ -133,7 +133,7 @@ class HostsActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.menu_settings -> { toast("Configurações: em breve"); true }
+            R.id.menu_settings -> { startActivity(Intent(this, ConfigMenuActivity::class.java)); true }
             R.id.menu_new      -> { openHostConfig(hostId = -1); true }
             R.id.menu_remove   -> { menuRemove(); true }
             R.id.menu_rename   -> { menuRename(); true }

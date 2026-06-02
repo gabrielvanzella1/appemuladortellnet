@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="Configurações"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/ic_arrow_back" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="24dp">
+
+            <!-- ===== COMUNICAÇÃO ===== -->
+            <TextView style="@style/ConfigSection" android:text="Comunicação" />
+
+            <LinearLayout android:id="@+id/config_telnet" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Telnet Opções" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <LinearLayout android:id="@+id/config_proxy" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Servidor proxy" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+
+            <!-- ===== EMULAÇÃO ===== -->
+            <TextView style="@style/ConfigSection" android:text="Emulação" />
+
+            <LinearLayout android:id="@+id/config_vt" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="VT Opções" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <LinearLayout android:id="@+id/config_transliteracao" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Transliteração" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <LinearLayout android:id="@+id/config_geral" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Geral" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+
+            <!-- ===== TELA ===== -->
+            <TextView style="@style/ConfigSection" android:text="Tela" />
+
+            <LinearLayout android:id="@+id/config_toolbar" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText"
+                    android:text="Configuração da barra de ferramentas" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <LinearLayout android:id="@+id/config_screen_options" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Opções de tela" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <LinearLayout android:id="@+id/config_screen_colors" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Cores da tela" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <LinearLayout android:id="@+id/config_vt_attr_map" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="VT Mapeamento de atributos" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+
+            <!-- ===== DISPOSITIVOS ===== -->
+            <TextView style="@style/ConfigSection" android:text="Dispositivos" />
+
+            <LinearLayout android:id="@+id/config_print" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Configuração de impressão" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <LinearLayout android:id="@+id/config_barcode" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText"
+                    android:text="Configuração do leitor de código de barras" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
