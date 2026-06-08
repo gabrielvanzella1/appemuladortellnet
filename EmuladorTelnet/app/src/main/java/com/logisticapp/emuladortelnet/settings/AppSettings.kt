@@ -3,12 +3,18 @@ package com.logisticapp.emuladortelnet.settings
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.logisticapp.emuladortelnet.toolbar.ToolbarButton
+import com.logisticapp.emuladortelnet.toolbar.ToolbarCatalog
 
 /**
  * Configuracoes gerais do app, persistidas em SharedPreferences.
  * Singleton acessado via AppSettings.get(context).
  */
 class AppSettings private constructor(context: Context) {
+
+    private val gson = Gson()
 
     private val prefs = context.applicationContext
         .getSharedPreferences("app_settings", Context.MODE_PRIVATE)
@@ -106,6 +112,35 @@ class AppSettings private constructor(context: Context) {
         get() = prefs.getInt(K_COLOR_STATUS_BG, 0)   // 0 = padrao
         set(v) { prefs.edit().putInt(K_COLOR_STATUS_BG, v).apply() }
 
+    // ----- Barras de ferramentas (4 barras de botoes) -----
+    var toolbars: List<List<ToolbarButton>>
+        get() {
+            val json = prefs.getString(K_TOOLBARS, null) ?: return ToolbarCatalog.defaultToolbars
+            return try {
+                val type = object : TypeToken<List<List<ToolbarButton>>>() {}.type
+                gson.fromJson<List<List<ToolbarButton>>>(json, type) ?: ToolbarCatalog.defaultToolbars
+            } catch (e: Exception) {
+                ToolbarCatalog.defaultToolbars
+            }
+        }
+        set(v) { prefs.edit().putString(K_TOOLBARS, gson.toJson(v)).apply() }
+
+    fun addButtonToBar(barIndex: Int, button: ToolbarButton) {
+        val bars = toolbars.map { it.toMutableList() }.toMutableList()
+        if (barIndex in bars.indices) {
+            bars[barIndex].add(button)
+            toolbars = bars
+        }
+    }
+
+    fun removeButton(barIndex: Int, buttonIndex: Int) {
+        val bars = toolbars.map { it.toMutableList() }.toMutableList()
+        if (barIndex in bars.indices && buttonIndex in bars[barIndex].indices) {
+            bars[barIndex].removeAt(buttonIndex)
+            toolbars = bars
+        }
+    }
+
     /** Aplica a orientacao escolhida na Activity informada. */
     fun applyOrientation(activity: Activity) {
         activity.requestedOrientation = when (orientation) {
@@ -145,6 +180,9 @@ class AppSettings private constructor(context: Context) {
         private const val K_COLOR_BG = "color_bg"
         private const val K_COLOR_STATUS_FG = "color_status_fg"
         private const val K_COLOR_STATUS_BG = "color_status_bg"
+
+        // Barras de ferramentas
+        private const val K_TOOLBARS = "toolbars"
 
         // Cores padrao (ARGB)
         const val DEFAULT_FG = 0xFF00FF00.toInt()        // verde

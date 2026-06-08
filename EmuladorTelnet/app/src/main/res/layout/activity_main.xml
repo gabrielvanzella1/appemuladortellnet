@@ -26,6 +26,16 @@
             android:textStyle="bold"
             android:textColor="@color/white" />
 
+        <ImageButton
+            android:id="@+id/keyboardToggle"
+            android:layout_width="40dp"
+            android:layout_height="34dp"
+            android:src="@drawable/ic_keyboard"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Mostrar/ocultar teclado"
+            android:layout_marginEnd="6dp"
+            android:visibility="gone" />
+
         <Button
             android:id="@+id/disconnectButton"
             android:layout_width="wrap_content"
@@ -107,71 +117,14 @@
             android:enabled="false" />
     </LinearLayout>
 
-    <!-- Control Keys -->
+    <!-- Barras de ferramentas (4 linhas geradas dinamicamente) -->
     <LinearLayout
         android:id="@+id/controlKeysBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:background="#000000"
-        android:padding="4dp"
-        android:gravity="center"
-        android:visibility="gone">
-
-        <Button
-            android:id="@+id/keyEnter"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:text="ENTER"
-            android:textSize="10sp"
-            android:textColor="@color/white"
-            android:background="@color/primary"
-            android:layout_margin="2dp" />
-
-        <Button
-            android:id="@+id/keyEsc"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:text="ESC"
-            android:textSize="10sp"
-            android:textColor="#000000"
-            android:background="@color/button_esc"
-            android:layout_margin="2dp" />
-
-        <Button
-            android:id="@+id/keyX"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:text="X"
-            android:textSize="10sp"
-            android:textColor="@color/white"
-            android:background="@color/button_blue"
-            android:layout_margin="2dp" />
-
-        <Button
-            android:id="@+id/keyY"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:text="Y"
-            android:textSize="10sp"
-            android:textColor="@color/white"
-            android:background="@color/button_blue"
-            android:layout_margin="2dp" />
-
-        <Button
-            android:id="@+id/keyZ"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:text="Z"
-            android:textSize="10sp"
-            android:textColor="@color/white"
-            android:background="@color/button_blue"
-            android:layout_margin="2dp" />
-    </LinearLayout>
+        android:padding="2dp"
+        android:visibility="gone" />
 
 </LinearLayout>

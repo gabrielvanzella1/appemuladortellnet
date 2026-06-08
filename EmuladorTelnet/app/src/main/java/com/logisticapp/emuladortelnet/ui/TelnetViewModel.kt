@@ -34,6 +34,14 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
         emulator.setDefaultForeground(color)
     }
 
+    /** Envia bytes brutos ao servidor (setas, Ctrl, Esc...) sem adicionar CRLF. */
+    fun sendRaw(bytes: ByteArray) {
+        if (_connectionState.value != ConnectionState.CONNECTED) return
+        viewModelScope.launch(Dispatchers.IO) {
+            telnetClient.sendRawBytes(bytes)
+        }
+    }
+
     // Input History Manager
     private val inputHistory = InputHistoryManager()
 

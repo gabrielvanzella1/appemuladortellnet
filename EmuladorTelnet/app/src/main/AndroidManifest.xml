@@ -72,6 +72,14 @@
             android:name=".ScreenColorsActivity"
             android:exported="false" />
 
+        <!-- Configuracoes > Tela > Configuracao da barra de ferramentas -->
+        <activity
+            android:name=".ToolbarConfigActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ToolbarAddActivity"
+            android:exported="false" />
+
         <!-- 5. Terminal Telnet -->
         <activity
             android:name=".MainActivity"

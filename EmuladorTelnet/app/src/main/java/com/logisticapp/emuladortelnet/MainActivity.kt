@@ -83,15 +83,6 @@ class MainActivity : AppCompatActivity() {
         currentHost = intent.getStringExtra(EXTRA_HOST) ?: ""
         currentPort = intent.getIntExtra(EXTRA_PORT, 23)
         currentName = intent.getStringExtra(EXTRA_NAME) ?: currentHost
-        val hostId  = intent.getIntExtra(EXTRA_HOST_ID, -1)
-
-        // Carregar teclas configuráveis antes de conectar
-        if (hostId > 0) {
-            lifecycleScope.launch {
-                val conn = repository.getConnectionById(hostId)
-                if (conn != null) configureCustomKeys(conn)
-            }
-        }
 
         if (currentHost.isNotEmpty()) {
             binding.statusText.text = currentName
@@ -116,25 +107,6 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         screenOffReceiver?.let { runCatching { unregisterReceiver(it) } }
-    }
-
-    private fun configureCustomKeys(conn: SavedConnection) {
-        binding.keyX.text = conn.customKey1Label.ifBlank { "F1" }
-        binding.keyY.text = conn.customKey2Label.ifBlank { "F2" }
-        binding.keyZ.text = conn.customKey3Label.ifBlank { "F3" }
-
-        binding.keyX.setOnClickListener {
-            val value = conn.customKey1Value
-            if (value.isNotEmpty()) viewModel.sendCommand(value)
-        }
-        binding.keyY.setOnClickListener {
-            val value = conn.customKey2Value
-            if (value.isNotEmpty()) viewModel.sendCommand(value)
-        }
-        binding.keyZ.setOnClickListener {
-            val value = conn.customKey3Value
-            if (value.isNotEmpty()) viewModel.sendCommand(value)
-        }
     }
 
     private fun setupListeners() {
@@ -191,14 +163,9 @@ class MainActivity : AppCompatActivity() {
             false
         }
 
-        // Teclas fixas
-        binding.keyEnter.setOnClickListener { viewModel.sendCommand("\r\n") }
-        binding.keyEsc.setOnClickListener   { viewModel.sendCommand("") }
 
-        // Teclas X/Y/Z são configuradas em configureCustomKeys() — valores default abaixo
-        binding.keyX.setOnClickListener { viewModel.sendCommand("") }
-        binding.keyY.setOnClickListener { viewModel.sendCommand("") }
-        binding.keyZ.setOnClickListener { viewModel.sendCommand("") }
+        // Botao de mostrar/ocultar teclado (ao lado de Desconectar)
+        binding.keyboardToggle.setOnClickListener { toggleKeyboard() }
 
         binding.terminalOutput.setOnClickListener {
             binding.scrollView.post {
@@ -217,6 +184,7 @@ class MainActivity : AppCompatActivity() {
                     binding.commandInput.isEnabled = false
                     binding.sendButton.isEnabled = false
                     binding.controlKeysBar.visibility = android.view.View.GONE
+                    binding.keyboardToggle.visibility = android.view.View.GONE
                     if (hasConnected) {
                         if (!manualDisconnect && settings.autoReconnect && currentHost.isNotEmpty()) {
                             // Reconexao automatica apos conexao perdida
@@ -244,11 +212,8 @@ class MainActivity : AppCompatActivity() {
                     binding.commandInput.isEnabled = true
                     binding.sendButton.isEnabled = true
                     binding.controlKeysBar.visibility = android.view.View.VISIBLE
-                    binding.keyEnter.isEnabled = true
-                    binding.keyEsc.isEnabled = true
-                    binding.keyX.isEnabled = true
-                    binding.keyY.isEnabled = true
-                    binding.keyZ.isEnabled = true
+                    binding.keyboardToggle.visibility = android.view.View.VISIBLE
+                    buildToolbars()
                     // Teclado ativado: mostra a barra de comando; desativado: so teclas de atalho
                     if (settings.keyboardEnabled) {
                         binding.inputBar.visibility = View.VISIBLE

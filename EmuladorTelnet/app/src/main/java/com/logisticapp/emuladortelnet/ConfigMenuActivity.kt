@@ -36,7 +36,9 @@ class ConfigMenuActivity : AppCompatActivity() {
         findViewById<android.view.View>(R.id.config_geral).setOnClickListener { emBreve("Geral") }
 
         // Tela
-        findViewById<android.view.View>(R.id.config_toolbar).setOnClickListener { emBreve("Configuração da barra de ferramentas") }
+        findViewById<android.view.View>(R.id.config_toolbar).setOnClickListener {
+            startActivity(android.content.Intent(this, ToolbarConfigActivity::class.java))
+        }
         findViewById<android.view.View>(R.id.config_screen_options).setOnClickListener {
             startActivity(android.content.Intent(this, ScreenOptionsActivity::class.java))
         }
