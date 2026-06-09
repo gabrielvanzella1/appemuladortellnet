@@ -112,6 +112,10 @@ class AppSettings private constructor(context: Context) {
         get() = prefs.getInt(K_COLOR_STATUS_BG, 0)   // 0 = padrao
         set(v) { prefs.edit().putInt(K_COLOR_STATUS_BG, v).apply() }
 
+    var colorInputField: Int
+        get() = prefs.getInt(K_COLOR_INPUT_FIELD, 0) // 0 = reverso natural
+        set(v) { prefs.edit().putInt(K_COLOR_INPUT_FIELD, v).apply() }
+
     // ----- Barras de ferramentas (4 barras de botoes) -----
     var toolbars: List<List<ToolbarButton>>
         get() {
@@ -140,6 +144,30 @@ class AppSettings private constructor(context: Context) {
             toolbars = bars
         }
     }
+
+    // ----- Telnet Opcoes -----
+    var telnetOptions: TelnetOptions
+        get() {
+            val json = prefs.getString(K_TELNET_OPTIONS, null) ?: return TelnetOptions()
+            return try {
+                gson.fromJson(json, TelnetOptions::class.java) ?: TelnetOptions()
+            } catch (e: Exception) {
+                TelnetOptions()
+            }
+        }
+        set(v) { prefs.edit().putString(K_TELNET_OPTIONS, gson.toJson(v)).apply() }
+
+    // ----- Servidor proxy -----
+    var proxyOptions: ProxyOptions
+        get() {
+            val json = prefs.getString(K_PROXY_OPTIONS, null) ?: return ProxyOptions()
+            return try {
+                gson.fromJson(json, ProxyOptions::class.java) ?: ProxyOptions()
+            } catch (e: Exception) {
+                ProxyOptions()
+            }
+        }
+        set(v) { prefs.edit().putString(K_PROXY_OPTIONS, gson.toJson(v)).apply() }
 
     /** Aplica a orientacao escolhida na Activity informada. */
     fun applyOrientation(activity: Activity) {
@@ -180,9 +208,16 @@ class AppSettings private constructor(context: Context) {
         private const val K_COLOR_BG = "color_bg"
         private const val K_COLOR_STATUS_FG = "color_status_fg"
         private const val K_COLOR_STATUS_BG = "color_status_bg"
+        private const val K_COLOR_INPUT_FIELD = "color_input_field"
 
         // Barras de ferramentas
         private const val K_TOOLBARS = "toolbars"
+
+        // Telnet Opcoes
+        private const val K_TELNET_OPTIONS = "telnet_options"
+
+        // Servidor proxy
+        private const val K_PROXY_OPTIONS = "proxy_options"
 
         // Cores padrao (ARGB)
         const val DEFAULT_FG = 0xFF00FF00.toInt()        // verde

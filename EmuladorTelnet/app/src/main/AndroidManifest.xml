@@ -80,6 +80,18 @@
             android:name=".ToolbarAddActivity"
             android:exported="false" />
 
+        <!-- Configuracoes > Comunicacao > Telnet Opcoes -->
+        <activity
+            android:name=".TelnetOptionsActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Configuracoes > Comunicacao > Servidor proxy -->
+        <activity
+            android:name=".ProxyActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- 5. Terminal Telnet -->
         <activity
             android:name=".MainActivity"

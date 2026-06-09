@@ -75,6 +75,7 @@ class MainActivity : AppCompatActivity() {
         val factory = TelnetViewModelFactory(repository)
         viewModel = ViewModelProvider(this, factory).get(TelnetViewModel::class.java)
         viewModel.setForegroundColor(settings.colorForeground)
+        viewModel.setFieldColor(settings.colorInputField)
 
         setupListeners()
         observeViewModel()
@@ -115,59 +116,15 @@ class MainActivity : AppCompatActivity() {
             viewModel.disconnect()
         }
 
-        binding.sendButton.setOnClickListener {
-            val command = binding.commandInput.text.toString()
-            if (command.isNotEmpty()) {
-                viewModel.sendCommand(command)
-                binding.commandInput.text.clear()
-                viewModel.resetInputHistory()
-                hideKeyboard()
-            }
-        }
-
-        binding.commandInput.setOnEditorActionListener { _, actionId, event ->
-            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEND ||
-                (event?.keyCode == android.view.KeyEvent.KEYCODE_ENTER &&
-                        event.action == android.view.KeyEvent.ACTION_DOWN)) {
-                val command = binding.commandInput.text.toString()
-                if (command.isNotEmpty()) {
-                    viewModel.sendCommand(command)
-                    binding.commandInput.text.clear()
-                    viewModel.resetInputHistory()
-                    hideKeyboard()
-                }
-                return@setOnEditorActionListener true
-            }
-            false
-        }
-
-        binding.commandInput.setOnKeyListener { _, keyCode, event ->
-            if (event.action == android.view.KeyEvent.ACTION_DOWN) {
-                when (keyCode) {
-                    android.view.KeyEvent.KEYCODE_DPAD_UP -> {
-                        val prev = viewModel.getPreviousCommand()
-                        if (prev != null) {
-                            binding.commandInput.setText(prev)
-                            binding.commandInput.setSelection(prev.length)
-                        }
-                        return@setOnKeyListener true
-                    }
-                    android.view.KeyEvent.KEYCODE_DPAD_DOWN -> {
-                        val next = viewModel.getNextCommand()
-                        binding.commandInput.setText(next ?: "")
-                        if (next != null) binding.commandInput.setSelection(next.length)
-                        return@setOnKeyListener true
-                    }
-                }
-            }
-            false
-        }
-
+        // Digitacao vai direto ao servidor (via TerminalView), como num emulador real
+        binding.terminalOutput.onInput = { bytes -> viewModel.sendRaw(bytes) }
 
         // Botao de mostrar/ocultar teclado (ao lado de Desconectar)
         binding.keyboardToggle.setOnClickListener { toggleKeyboard() }
 
+        // Tocar no terminal abre o teclado e rola para o fim
         binding.terminalOutput.setOnClickListener {
+            openKeyboard()
             binding.scrollView.post {
                 binding.scrollView.fullScroll(android.widget.ScrollView.FOCUS_DOWN)
             }
@@ -181,8 +138,6 @@ class MainActivity : AppCompatActivity() {
                     binding.statusText.text = getString(R.string.status_disconnected)
                     binding.statusText.setTextColor(getColor(android.R.color.darker_gray))
                     binding.disconnectButton.isEnabled = false
-                    binding.commandInput.isEnabled = false
-                    binding.sendButton.isEnabled = false
                     binding.controlKeysBar.visibility = android.view.View.GONE
                     binding.keyboardToggle.visibility = android.view.View.GONE
                     if (hasConnected) {
@@ -199,8 +154,6 @@ class MainActivity : AppCompatActivity() {
                     binding.statusText.text = getString(R.string.status_connecting)
                     binding.statusText.setTextColor(getColor(android.R.color.holo_orange_dark))
                     binding.disconnectButton.isEnabled = false
-                    binding.commandInput.isEnabled = false
-                    binding.sendButton.isEnabled = false
                     binding.controlKeysBar.visibility = android.view.View.GONE
                 }
                 ConnectionState.CONNECTED -> {
@@ -209,37 +162,25 @@ class MainActivity : AppCompatActivity() {
                     binding.statusText.text = getString(R.string.status_connected)
                     binding.statusText.setTextColor(getColor(android.R.color.holo_green_dark))
                     binding.disconnectButton.isEnabled = true
-                    binding.commandInput.isEnabled = true
-                    binding.sendButton.isEnabled = true
                     binding.controlKeysBar.visibility = android.view.View.VISIBLE
                     binding.keyboardToggle.visibility = android.view.View.VISIBLE
                     buildToolbars()
-                    // Teclado ativado: mostra a barra de comando; desativado: so teclas de atalho
+                    // Teclado habilitado: abre automaticamente ao conectar
                     if (settings.keyboardEnabled) {
-                        binding.inputBar.visibility = View.VISIBLE
-                        binding.commandInput.requestFocus()
-                    } else {
-                        binding.inputBar.visibility = View.GONE
+                        openKeyboard()
                     }
-                    hideKeyboard()
                 }
                 ConnectionState.ERROR -> {
                     binding.statusText.text = getString(R.string.status_error)
                     binding.statusText.setTextColor(getColor(android.R.color.holo_red_dark))
                     binding.disconnectButton.isEnabled = false
-                    binding.commandInput.isEnabled = false
-                    binding.sendButton.isEnabled = false
                     binding.controlKeysBar.visibility = android.view.View.GONE
                 }
             }
         }
 
-        viewModel.terminalOutputStyled.observe(this) { htmlOutput ->
-            try {
-                binding.terminalOutput.text = Html.fromHtml(htmlOutput, Html.FROM_HTML_MODE_LEGACY)
-            } catch (e: Exception) {
-                binding.terminalOutput.text = htmlOutput
-            }
+        viewModel.terminalOutputStyled.observe(this) { styled ->
+            binding.terminalOutput.text = styled
             binding.scrollView.post {
                 binding.scrollView.fullScroll(android.widget.ScrollView.FOCUS_DOWN)
             }
@@ -277,5 +218,74 @@ class MainActivity : AppCompatActivity() {
     private fun hideKeyboard() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(binding.root.windowToken, 0)
+    }
+
+    /** Abre o teclado virtual focando o terminal (a digitacao vai direto ao servidor). */
+    private fun openKeyboard() {
+        binding.terminalOutput.requestFocus()
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(binding.terminalOutput, InputMethodManager.SHOW_IMPLICIT)
+    }
+
+    /** Mostra/oculta o teclado virtual. */
+    private fun toggleKeyboard() {
+        binding.terminalOutput.requestFocus()
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY)
+    }
+
+    /** Gera as 4 barras de ferramentas (linhas de botoes) a partir das configuracoes. */
+    private fun buildToolbars() {
+        binding.controlKeysBar.removeAllViews()
+        val bars = settings.toolbars
+        for (bar in bars) {
+            if (bar.isEmpty()) continue
+            val row = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+            }
+            for (btn in bar) {
+                val b = android.widget.Button(this).apply {
+                    text = btn.label
+                    isAllCaps = false
+                    textSize = 11f
+                    setTextColor(android.graphics.Color.WHITE)
+                    setBackgroundColor(0xFF2E5C6E.toInt())
+                    setPadding(0, 0, 0, 0)
+                    minWidth = 0
+                    minimumWidth = 0
+                    val lp = android.widget.LinearLayout.LayoutParams(
+                        0, (36 * resources.displayMetrics.density).toInt(), 1f)
+                    val m = (2 * resources.displayMetrics.density).toInt()
+                    lp.setMargins(m, m, m, m)
+                    layoutParams = lp
+                }
+                b.setOnClickListener { sendAction(btn.action) }
+                row.addView(b)
+            }
+            binding.controlKeysBar.addView(row)
+        }
+    }
+
+    /** Executa a acao de um botao de barra de ferramentas. */
+    private fun sendAction(action: String) {
+        val bytes = com.logisticapp.emuladortelnet.toolbar.ToolbarCatalog.bytesFor(action)
+        if (bytes != null) {
+            viewModel.sendRaw(bytes)
+            return
+        }
+        // Acoes especiais (tratadas no app)
+        when (action) {
+            "DISCONNECT" -> { manualDisconnect = true; viewModel.disconnect() }
+            "CONNECT" -> {
+                if (currentHost.isNotEmpty()) viewModel.connect(currentHost, currentPort.toString())
+            }
+            "BREAK" -> viewModel.sendRaw(byteArrayOf(255.toByte(), 243.toByte())) // IAC BRK
+            "COPY", "PASTE" -> android.widget.Toast.makeText(
+                this, "$action: em breve", android.widget.Toast.LENGTH_SHORT).show()
+            else -> Timber.d("Acao nao tratada: $action")
+        }
     }
 }

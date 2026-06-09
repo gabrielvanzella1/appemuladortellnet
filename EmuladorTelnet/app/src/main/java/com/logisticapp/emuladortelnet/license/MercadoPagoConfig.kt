@@ -8,7 +8,7 @@ object MercadoPagoConfig {
     const val LICENSE_PRICE = 49.90
 
     const val CURRENCY_ID = "BRL"
-    const val ITEM_TITLE = "Licença Vitalícia - TellX"
+    const val ITEM_TITLE = "Licença Vitalícia - ScanTE"
 
     // Deep links de retorno ao app após pagamento
     const val SUCCESS_URL = "emuladortelnet://payment/success"

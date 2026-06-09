@@ -1,0 +1,25 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="56dp"
+    android:height="56dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Corpo do "S": barras retas + curvas em U, pontas arredondadas -->
+    <path
+        android:strokeColor="#00D67A"
+        android:strokeWidth="15"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M64,37 L46,37 C34,37 34,54 46,54 L64,54 C76,54 76,71 64,71 L46,71" />
+
+    <!-- Ponto superior direito (sistema) -->
+    <path
+        android:fillColor="#00D67A"
+        android:pathData="M80,37 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0" />
+
+    <!-- Ponto inferior esquerdo (operador) -->
+    <path
+        android:fillColor="#00D67A"
+        android:pathData="M30,71 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0" />
+</vector>

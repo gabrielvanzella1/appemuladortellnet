@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="Servidor proxy"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/ic_arrow_back" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="32dp">
+
+            <!-- ===== SERVIDOR PROXY ===== -->
+            <TextView style="@style/TnSection" android:text="ScanTE Servidor proxy" />
+
+            <LinearLayout android:id="@+id/row_use_server" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Usar servidor" />
+                <CheckBox android:id="@+id/ck_use_server" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Endereço" />
+                <EditText android:id="@+id/in_address" style="@style/TnInput" android:inputType="textUri" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Porta" />
+                <EditText android:id="@+id/in_port" style="@style/TnInput" android:inputType="number" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout android:id="@+id/row_secure" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Comunicação segura" />
+                <CheckBox android:id="@+id/ck_secure" style="@style/TnCheck" />
+            </LinearLayout>
+
+            <!-- ===== MANTER CONEXAO ===== -->
+            <TextView style="@style/TnSection"
+                android:text="Proxy mantém conexão com o host em segundos quando" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Desconexão do usuário" />
+                <EditText android:id="@+id/in_keep_user" style="@style/TnInput" android:inputType="number" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Conexão perdida" />
+                <EditText android:id="@+id/in_keep_lost" style="@style/TnInput" android:inputType="number" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

@@ -26,6 +26,7 @@ class ScreenColorsActivity : AppCompatActivity() {
     private lateinit var swatchBg: View
     private lateinit var swatchStatusFg: View
     private lateinit var swatchStatusBg: View
+    private lateinit var swatchInputField: View
 
     // Paleta de cores oferecida no seletor
     private val palette = intArrayOf(
@@ -46,10 +47,11 @@ class ScreenColorsActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         toolbar.setNavigationOnClickListener { finish() }
 
-        swatchFg       = findViewById(R.id.swatch_fg)
-        swatchBg       = findViewById(R.id.swatch_bg)
-        swatchStatusFg = findViewById(R.id.swatch_status_fg)
-        swatchStatusBg = findViewById(R.id.swatch_status_bg)
+        swatchFg          = findViewById(R.id.swatch_fg)
+        swatchBg          = findViewById(R.id.swatch_bg)
+        swatchStatusFg    = findViewById(R.id.swatch_status_fg)
+        swatchStatusBg    = findViewById(R.id.swatch_status_bg)
+        swatchInputField  = findViewById(R.id.swatch_input_field)
 
         refreshSwatches()
         setupListeners()
@@ -60,6 +62,7 @@ class ScreenColorsActivity : AppCompatActivity() {
         applySwatch(swatchBg, settings.colorBackground)
         applySwatch(swatchStatusFg, settings.colorStatusForeground)
         applySwatch(swatchStatusBg, settings.colorStatusBackground)
+        applySwatch(swatchInputField, settings.colorInputField)
     }
 
     private fun setupListeners() {
@@ -81,6 +84,11 @@ class ScreenColorsActivity : AppCompatActivity() {
         findViewById<View>(R.id.row_status_bg).setOnClickListener {
             showColorPicker("Plano de fundo do status", true) {
                 settings.colorStatusBackground = it; applySwatch(swatchStatusBg, it)
+            }
+        }
+        findViewById<View>(R.id.row_input_field).setOnClickListener {
+            showColorPicker("Campos de preenchimento", true) {
+                settings.colorInputField = it; applySwatch(swatchInputField, it)
             }
         }
 

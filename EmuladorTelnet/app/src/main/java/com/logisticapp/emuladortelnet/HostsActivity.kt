@@ -224,7 +224,7 @@ class HostsActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Ajuda")
             .setMessage(
-                "TellX — Emulador Telnet\n\n" +
+                "ScanTE — Conecta · Sincroniza · Simplifica\n\n" +
                 "• Toque em + para criar uma nova sessão (nome, IP e porta).\n" +
                 "• Toque numa sessão para editar seus dados.\n" +
                 "• Use os 3 pontinhos de cada sessão para Conectar, Editar, " +
@@ -243,12 +243,13 @@ class HostsActivity : AppCompatActivity() {
             packageManager.getPackageInfo(packageName, 0).versionName
         } catch (e: Exception) { "1.0.0" }
         AlertDialog.Builder(this)
-            .setTitle("Sobre TellX")
+            .setTitle("Sobre ScanTE")
             .setMessage(
-                "TellX\nEmulador Telnet para ERP\n\n" +
+                "ScanTE\nConecta · Sincroniza · Simplifica\n\n" +
                 "Versão $version\n\n" +
-                "Conecta a servidores Telnet (Protheus, AS/400 e outros) " +
-                "com emulação de tela VT100."
+                "Software de comunicação entre coletores de dados e sistemas " +
+                "corporativos via terminal (Protheus, AS/400 e outros), com " +
+                "emulação de tela VT100."
             )
             .setPositiveButton("Fechar", null)
             .show()

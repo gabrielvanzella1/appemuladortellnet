@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="Telnet Opções"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/ic_arrow_back" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="32dp">
+
+            <!-- ===== CONEXAO ===== -->
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Endereço do servidor" />
+                <EditText android:id="@+id/in_server_address" style="@style/TnInput"
+                    android:inputType="textUri" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Tipo de terminal" />
+                <EditText android:id="@+id/in_terminal_type" style="@style/TnInput"
+                    android:gravity="center" android:inputType="text" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout android:id="@+id/row_line_terminator" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Terminador de linha" />
+                <TextView android:id="@+id/val_line_terminator" style="@style/TnValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout android:id="@+id/row_use_ip_brk" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Usar IP para BRK" />
+                <CheckBox android:id="@+id/ck_use_ip_brk" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout android:id="@+id/row_binary" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Modo binário" />
+                <CheckBox android:id="@+id/ck_binary" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout android:id="@+id/row_parity" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Simular paridade" />
+                <CheckBox android:id="@+id/ck_parity" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout android:id="@+id/row_keepalive_type" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Mantenha o tipo vivo" />
+                <TextView android:id="@+id/val_keepalive_type" style="@style/TnValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Mantenha o intervalo vivo" />
+                <EditText android:id="@+id/in_keepalive_interval" style="@style/TnInput"
+                    android:inputType="number" />
+            </LinearLayout>
+
+            <!-- ===== LOGIN TELNET ===== -->
+            <TextView style="@style/TnSection" android:text="Login Telnet" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Aguarde o prompt de login" />
+                <EditText android:id="@+id/in_wait_login" style="@style/TnInput" android:inputType="text" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Faça login com" />
+                <EditText android:id="@+id/in_login_with" style="@style/TnInput" android:inputType="text" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Aguarde a solicitação de senha" />
+                <EditText android:id="@+id/in_wait_password" style="@style/TnInput" android:inputType="text" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Senha" />
+                <EditText android:id="@+id/in_password" style="@style/TnInput" android:inputType="textPassword" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Aguarde o prompt de comando" />
+                <EditText android:id="@+id/in_wait_command" style="@style/TnInput" android:inputType="text" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Faça o comando" />
+                <EditText android:id="@+id/in_do_command" style="@style/TnInput" android:inputType="text" />
+            </LinearLayout>
+
+            <!-- ===== SOCKETS SEGUROS ===== -->
+            <TextView style="@style/TnSection" android:text="Sockets seguros" />
+
+            <LinearLayout android:id="@+id/row_ssl" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Use sockets seguros - SSL" />
+                <CheckBox android:id="@+id/ck_ssl" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout android:id="@+id/row_auth_cert" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Autenticar certificado do servidor" />
+                <CheckBox android:id="@+id/ck_auth_cert" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Certificado de cliente de nome de arquivo:" />
+                <EditText android:id="@+id/in_cert_file" style="@style/TnInput" android:inputType="text" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Certificado de cliente de senha:" />
+                <EditText android:id="@+id/in_cert_password" style="@style/TnInput" android:inputType="textPassword" />
+            </LinearLayout>
+
+            <!-- ===== CONEXAO SSH ===== -->
+            <TextView style="@style/TnSection" android:text="Conexão SSH" />
+
+            <LinearLayout android:id="@+id/row_ssh" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Usar conexão SSH" />
+                <CheckBox android:id="@+id/ck_ssh" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Endereço do servidor:" />
+                <EditText android:id="@+id/in_ssh_server" style="@style/TnInput" android:inputType="textUri" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Nome de usuário:" />
+                <EditText android:id="@+id/in_ssh_username" style="@style/TnInput" android:inputType="text" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Senha:" />
+                <EditText android:id="@+id/in_ssh_password" style="@style/TnInput" android:inputType="textPassword" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Usar chave privada" />
+                <EditText android:id="@+id/in_ssh_key" style="@style/TnInput" android:inputType="text" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Manter intervalo ativo em segundos" />
+                <EditText android:id="@+id/in_ssh_keepalive" style="@style/TnInput" android:inputType="number" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

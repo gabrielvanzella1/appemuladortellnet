@@ -33,12 +33,25 @@ class TerminalEmulator(
     private val chars = Array(rows) { CharArray(cols) { ' ' } }
     private val fg    = Array(rows) { IntArray(cols) { defaultFg } }
     private val bold  = Array(rows) { BooleanArray(cols) { false } }
+    // Marca celulas que sao "campo de preenchimento" (video reverso ou cor de fundo)
+    private val field = Array(rows) { BooleanArray(cols) { false } }
 
     private var cursorRow = 0
     private var cursorCol = 0
 
     private var curFg = defaultFg
     private var curBold = false
+    private var curReverse = false
+    private var curBgSet = false
+    private var curConceal = false   // texto oculto (tipico de campo de senha)
+
+    // Cor de fundo dos campos de preenchimento. 0 = reverso natural (usa a cor do texto).
+    private var fieldColor = 0
+
+    /** Define a cor de fundo dos campos de preenchimento (0 = reverso natural). */
+    fun setFieldColor(color: Int) {
+        fieldColor = color
+    }
 
     private enum class State { NORMAL, ESC, CSI }
     private var state = State.NORMAL
@@ -130,6 +143,7 @@ class TerminalEmulator(
             chars[cursorRow][cursorCol] = ch
             fg[cursorRow][cursorCol] = curFg
             bold[cursorRow][cursorCol] = curBold
+            field[cursorRow][cursorCol] = curReverse || curBgSet || curConceal
         }
         cursorCol++
     }
@@ -140,11 +154,13 @@ class TerminalEmulator(
             chars[r] = chars[r + 1].copyOf()
             fg[r] = fg[r + 1].copyOf()
             bold[r] = bold[r + 1].copyOf()
+            field[r] = field[r + 1].copyOf()
         }
         val last = rows - 1
         chars[last] = CharArray(cols) { ' ' }
         fg[last] = IntArray(cols) { defaultFg }
         bold[last] = BooleanArray(cols) { false }
+        field[last] = BooleanArray(cols) { false }
         cursorRow = last
     }
 
@@ -182,6 +198,7 @@ class TerminalEmulator(
             chars[r][c] = ' '
             fg[r][c] = defaultFg
             bold[r][c] = false
+            field[r][c] = false
         }
     }
 
@@ -190,6 +207,7 @@ class TerminalEmulator(
             chars[r][c] = ' '
             fg[r][c] = defaultFg
             bold[r][c] = false
+            field[r][c] = false
         }
     }
 
@@ -198,18 +216,25 @@ class TerminalEmulator(
             chars[r][c] = ' '
             fg[r][c] = defaultFg
             bold[r][c] = false
+            field[r][c] = false
         }
     }
 
     private fun applySgr(params: List<Int?>) {
         // Sem parâmetros = reset
         val list = if (params.isEmpty() || (params.size == 1 && params[0] == null)) listOf(0) else params
+        Timber.d("SGR: $list")
         for (p in list) {
             when (p) {
-                0, null -> { curFg = defaultFg; curBold = false }
+                0, null -> { curFg = defaultFg; curBold = false; curReverse = false; curBgSet = false; curConceal = false }
                 1 -> curBold = true
                 2, 22 -> curBold = false
-                7 -> { /* reverse: simplificado, ignorado */ }
+                7 -> curReverse = true       // video reverso (campo)
+                27 -> curReverse = false     // fim do reverso
+                8 -> curConceal = true       // oculto (campo de senha)
+                28 -> curConceal = false     // fim do oculto
+                in 40..47, in 100..107 -> curBgSet = true   // cor de fundo (campo)
+                49 -> curBgSet = false       // fundo padrao
                 30 -> curFg = Color.rgb(80, 80, 80)
                 31 -> curFg = Color.rgb(255, 0, 0)
                 32 -> curFg = Color.rgb(0, 255, 0)
@@ -266,6 +291,54 @@ class TerminalEmulator(
         return sb.toString()
     }
 
+    /**
+     * Renderiza a grade como CharSequence com spans de cor/negrito/campo.
+     * Campos de preenchimento (video reverso/fundo) recebem cor de fundo (fieldColor).
+     */
+    fun renderSpannable(): CharSequence {
+        val sb = android.text.SpannableStringBuilder()
+        val spannable = android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+
+        var lastContentRow = rows - 1
+        while (lastContentRow > 0 && isRowBlank(lastContentRow)) lastContentRow--
+
+        for (r in 0..lastContentRow) {
+            var c = 0
+            while (c < cols) {
+                val color = fg[r][c]
+                val isBold = bold[r][c]
+                val isField = field[r][c]
+                val segStart = c
+                while (c < cols && fg[r][c] == color && bold[r][c] == isBold && field[r][c] == isField) c++
+
+                val start = sb.length
+                for (i in segStart until c) sb.append(chars[r][i])
+                val end = sb.length
+
+                if (isField) {
+                    // Cor de fundo do campo: configurada, ou reverso natural (cor do texto)
+                    val bg = if (fieldColor != 0) fieldColor else color
+                    sb.setSpan(android.text.style.BackgroundColorSpan(bg), start, end, spannable)
+                    sb.setSpan(android.text.style.ForegroundColorSpan(contrastOn(bg)), start, end, spannable)
+                } else {
+                    sb.setSpan(android.text.style.ForegroundColorSpan(color), start, end, spannable)
+                }
+                if (isBold) {
+                    sb.setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, end, spannable)
+                }
+            }
+            if (r < lastContentRow) sb.append("\n")
+        }
+        return sb
+    }
+
+    /** Preto ou branco, o que tiver melhor contraste sobre [bg]. */
+    private fun contrastOn(bg: Int): Int {
+        val r = Color.red(bg); val g = Color.green(bg); val b = Color.blue(bg)
+        val luma = (0.299 * r + 0.587 * g + 0.114 * b)
+        return if (luma > 140) Color.BLACK else Color.WHITE
+    }
+
     private fun isRowBlank(r: Int): Boolean {
         for (c in 0 until cols) if (chars[r][c] != ' ') return false
         return true
@@ -291,6 +364,9 @@ class TerminalEmulator(
         cursorCol = 0
         curFg = defaultFg
         curBold = false
+        curReverse = false
+        curBgSet = false
+        curConceal = false
         state = State.NORMAL
         csiParams.setLength(0)
     }

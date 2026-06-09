@@ -55,6 +55,12 @@
                 <TextView style="@style/ConfigItemText" android:text="Plano de fundo do status" />
                 <View android:id="@+id/swatch_status_bg" style="@style/ConfigSwatch" />
             </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <LinearLayout android:id="@+id/row_input_field" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Campos de preenchimento" />
+                <View android:id="@+id/swatch_input_field" style="@style/ConfigSwatch" />
+            </LinearLayout>
 
             <View style="@style/OptionDivider" />
 

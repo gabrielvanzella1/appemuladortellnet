@@ -27,8 +27,12 @@ class ConfigMenuActivity : AppCompatActivity() {
         toolbar.setNavigationOnClickListener { finish() }
 
         // Comunicacao
-        findViewById<android.view.View>(R.id.config_telnet).setOnClickListener { emBreve("Telnet Opções") }
-        findViewById<android.view.View>(R.id.config_proxy).setOnClickListener { emBreve("Servidor proxy") }
+        findViewById<android.view.View>(R.id.config_telnet).setOnClickListener {
+            startActivity(android.content.Intent(this, TelnetOptionsActivity::class.java))
+        }
+        findViewById<android.view.View>(R.id.config_proxy).setOnClickListener {
+            startActivity(android.content.Intent(this, ProxyActivity::class.java))
+        }
 
         // Emulacao
         findViewById<android.view.View>(R.id.config_vt).setOnClickListener { emBreve("VT Opções") }

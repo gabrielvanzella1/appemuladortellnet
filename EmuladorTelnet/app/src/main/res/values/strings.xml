@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TellX</string>
+    <string name="app_name">ScanTE</string>
     <string name="app_version">1.0.0</string>
-    
+
     <!-- Main Activity -->
-    <string name="title_activity_main">TellX</string>
+    <string name="title_activity_main">ScanTE</string>
     <string name="button_connect">Conectar</string>
     <string name="button_disconnect">Desconectar</string>
     <string name="button_save_connection">Salvar</string>

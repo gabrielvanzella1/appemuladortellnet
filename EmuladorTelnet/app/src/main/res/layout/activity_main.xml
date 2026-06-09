@@ -63,7 +63,7 @@
             android:layout_height="wrap_content"
             android:scrollbars="none">
 
-            <TextView
+            <com.logisticapp.emuladortelnet.terminal.TerminalView
                 android:id="@+id/terminalOutput"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -73,49 +73,9 @@
                 android:background="#000000"
                 android:textColor="#00FF00"
                 android:includeFontPadding="false"
-                android:lineSpacingExtra="0dp"
-                android:textIsSelectable="true" />
+                android:lineSpacingExtra="0dp" />
         </HorizontalScrollView>
     </ScrollView>
-
-    <!-- Command Input -->
-    <LinearLayout
-        android:id="@+id/inputBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="4dp"
-        android:background="#000000">
-
-        <EditText
-            android:id="@+id/commandInput"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:hint="@string/hint_command"
-            android:inputType="text"
-            android:padding="6dp"
-            android:background="#1a1a1a"
-            android:textColor="#00FF00"
-            android:textColorHint="#666666"
-            android:fontFamily="monospace"
-            android:textSize="11sp"
-            android:imeOptions="actionSend"
-            android:enabled="false" />
-
-        <Button
-            android:id="@+id/sendButton"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:text="@string/button_send"
-            android:textSize="11sp"
-            android:textColor="@color/white"
-            android:background="@color/primary"
-            android:layout_marginStart="4dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:enabled="false" />
-    </LinearLayout>
 
     <!-- Barras de ferramentas (4 linhas geradas dinamicamente) -->
     <LinearLayout

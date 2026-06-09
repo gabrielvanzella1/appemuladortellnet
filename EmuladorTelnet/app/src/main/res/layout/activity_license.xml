@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background"
+    android:background="@drawable/bg_brand_dark"
     android:padding="16dp">
 
     <!-- Header com Logo -->
@@ -15,29 +15,51 @@
         android:paddingVertical="24dp">
 
         <FrameLayout
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:background="@drawable/circle_green">
+            android:layout_width="84dp"
+            android:layout_height="84dp"
+            android:background="@drawable/circle_logo_dark">
+
+            <ImageView
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_scante_logo"
+                android:contentDescription="ScanTE" />
+        </FrameLayout>
+
+        <!-- Nome: Scan (branco) + TE (verde) -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="14dp">
 
             <TextView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:text="TX"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Scan"
                 android:textSize="32sp"
-                android:textColor="@android:color/white"
-                android:textStyle="bold"
-                android:gravity="center" />
-        </FrameLayout>
+                android:textColor="#F8F9FA"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TE"
+                android:textSize="32sp"
+                android:textColor="@color/brand_green"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="TellX"
-            android:textSize="28sp"
-            android:textColor="@color/primary_green"
-            android:textStyle="bold"
+            android:text="Conecta · Sincroniza · Simplifica"
+            android:textSize="12sp"
+            android:textColor="#8DA2B0"
             android:gravity="center"
-            android:layout_marginTop="12dp" />
+            android:letterSpacing="0.04"
+            android:layout_marginTop="4dp" />
     </LinearLayout>
 
     <!-- Status Card -->
@@ -46,7 +68,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/info_background"
+        android:background="@drawable/card_dark"
         android:padding="16dp"
         android:layout_marginTop="24dp"
         android:layout_marginBottom="24dp">
@@ -57,7 +79,7 @@
             android:layout_height="wrap_content"
             android:text="Status: Teste Gratuito"
             android:textSize="16sp"
-            android:textColor="@color/primary_green"
+            android:textColor="@color/brand_green"
             android:textStyle="bold" />
 
         <TextView
@@ -66,7 +88,7 @@
             android:layout_height="wrap_content"
             android:text="30 dias grátis para testar"
             android:textSize="14sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#E0E6EA"
             android:layout_marginTop="8dp" />
 
         <LinearLayout
@@ -86,7 +108,7 @@
                     android:layout_height="wrap_content"
                     android:text="Dias Restantes"
                     android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textColor="#8DA2B0" />
 
                 <TextView
                     android:id="@+id/days_remaining"
@@ -94,7 +116,7 @@
                     android:layout_height="wrap_content"
                     android:text="30"
                     android:textSize="20sp"
-                    android:textColor="@color/primary_green"
+                    android:textColor="@color/brand_green"
                     android:textStyle="bold"
                     android:layout_marginTop="4dp" />
             </LinearLayout>
@@ -110,7 +132,7 @@
                     android:layout_height="wrap_content"
                     android:text="Tipo"
                     android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textColor="#8DA2B0" />
 
                 <TextView
                     android:id="@+id/license_type"
@@ -118,7 +140,7 @@
                     android:layout_height="wrap_content"
                     android:text="Trial"
                     android:textSize="20sp"
-                    android:textColor="@color/primary_green"
+                    android:textColor="@color/brand_green"
                     android:textStyle="bold"
                     android:layout_marginTop="4dp" />
             </LinearLayout>
@@ -132,7 +154,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginBottom="8dp"
-        android:indeterminateTint="@color/primary"
+        android:indeterminateTint="@color/brand_green"
         android:visibility="gone" />
 
     <!-- Botões de Ação -->
@@ -141,10 +163,10 @@
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:text="Continuar"
-        android:textColor="@android:color/white"
+        android:textColor="@color/brand_petrol"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:background="@drawable/button_primary_bg"
+        android:background="@drawable/button_accent_bg"
         android:layout_marginBottom="12dp" />
 
     <Button
@@ -152,10 +174,10 @@
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:text="Comprar Licença"
-        android:textColor="@color/primary_green"
+        android:textColor="@color/brand_green"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:background="@drawable/edit_text_bg"
+        android:background="@drawable/card_dark"
         android:layout_marginBottom="24dp" />
 
     <!-- Info Text -->
@@ -165,7 +187,7 @@
         android:layout_weight="1"
         android:text="📌 A licença é vitalícia após o pagamento\n\n💳 Aceita Mercado Pago\n\n✅ 30 dias grátis para testar"
         android:textSize="13sp"
-        android:textColor="@color/text_secondary"
+        android:textColor="#8DA2B0"
         android:gravity="center"
         android:layout_marginTop="24dp"
         android:padding="16dp" />
@@ -177,7 +199,7 @@
         android:layout_height="wrap_content"
         android:text=""
         android:textSize="10sp"
-        android:textColor="@color/text_secondary"
+        android:textColor="#5A6B78"
         android:gravity="center"
         android:layout_marginTop="12dp" />
 

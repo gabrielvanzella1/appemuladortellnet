@@ -34,6 +34,11 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
         emulator.setDefaultForeground(color)
     }
 
+    /** Define a cor de fundo dos campos de preenchimento (0 = reverso natural). */
+    fun setFieldColor(color: Int) {
+        emulator.setFieldColor(color)
+    }
+
     /** Envia bytes brutos ao servidor (setas, Ctrl, Esc...) sem adicionar CRLF. */
     fun sendRaw(bytes: ByteArray) {
         if (_connectionState.value != ConnectionState.CONNECTED) return
@@ -53,9 +58,9 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     private val _terminalOutput = MutableLiveData("")
     val terminalOutput: LiveData<String> = _terminalOutput
 
-    // Mensagens do terminal (com estilos ANSI processados)
-    private val _terminalOutputStyled = MutableLiveData("")
-    val terminalOutputStyled: LiveData<String> = _terminalOutputStyled
+    // Tela do terminal renderizada (com cores/campos via spans)
+    private val _terminalOutputStyled = MutableLiveData<CharSequence>("")
+    val terminalOutputStyled: LiveData<CharSequence> = _terminalOutputStyled
 
     // Conexão atual
     private val _currentConnection = MutableLiveData<TelnetConnection?>(null)
@@ -220,7 +225,7 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     private fun addTerminalOutput(text: String) {
         try {
             emulator.feed(text)
-            _terminalOutputStyled.postValue(emulator.renderHtml())
+            _terminalOutputStyled.postValue(emulator.renderSpannable())
         } catch (e: Exception) {
             Timber.e(e, "Erro ao processar tela")
         }
@@ -231,7 +236,7 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
      */
     fun clearTerminal() {
         emulator.reset()
-        _terminalOutputStyled.postValue(emulator.renderHtml())
+        _terminalOutputStyled.postValue(emulator.renderSpannable())
     }
 
     /**
