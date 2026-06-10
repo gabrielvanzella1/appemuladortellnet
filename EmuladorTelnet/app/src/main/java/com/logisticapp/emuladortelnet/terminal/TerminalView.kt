@@ -24,6 +24,9 @@ class TerminalView @JvmOverloads constructor(
     /** Recebe os bytes digitados para enviar ao servidor. */
     var onInput: ((ByteArray) -> Unit)? = null
 
+    /** Bytes enviados ao apertar ENTER (terminador de linha: CR, LF ou CR+LF). */
+    var lineTerminator: ByteArray = byteArrayOf(13)
+
     init {
         isFocusable = true
         isFocusableInTouchMode = true
@@ -54,7 +57,7 @@ class TerminalView @JvmOverloads constructor(
             override fun sendKeyEvent(event: KeyEvent): Boolean {
                 if (event.action == KeyEvent.ACTION_DOWN) {
                     when (event.keyCode) {
-                        KeyEvent.KEYCODE_ENTER -> { onInput?.invoke(byteArrayOf(13)); return true }
+                        KeyEvent.KEYCODE_ENTER -> { onInput?.invoke(lineTerminator); return true }
                         KeyEvent.KEYCODE_DEL   -> { onInput?.invoke(byteArrayOf(8)); return true }
                         KeyEvent.KEYCODE_TAB   -> { onInput?.invoke(byteArrayOf(9)); return true }
                         else -> {
@@ -70,7 +73,15 @@ class TerminalView @JvmOverloads constructor(
 
     private fun sendString(s: String) {
         if (s.isEmpty()) return
-        val bytes = s.replace("\n", "\r").toByteArray(Charsets.ISO_8859_1)
-        onInput?.invoke(bytes)
+        if (!s.contains('\n')) {
+            onInput?.invoke(s.toByteArray(Charsets.ISO_8859_1))
+            return
+        }
+        // Cada quebra de linha vira o terminador configurado
+        val parts = s.split('\n')
+        for ((idx, part) in parts.withIndex()) {
+            if (part.isNotEmpty()) onInput?.invoke(part.toByteArray(Charsets.ISO_8859_1))
+            if (idx < parts.size - 1) onInput?.invoke(lineTerminator)
+        }
     }
 }

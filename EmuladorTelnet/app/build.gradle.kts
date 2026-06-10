@@ -67,6 +67,9 @@ dependencies {
     // Network
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
 
+    // SSH
+    implementation("com.jcraft:jsch:0.1.55")
+
     // JSON
     implementation("com.google.code.gson:gson:2.10.1")
 

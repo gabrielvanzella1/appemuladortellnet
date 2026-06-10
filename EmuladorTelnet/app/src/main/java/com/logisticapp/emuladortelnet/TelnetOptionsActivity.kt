@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import com.logisticapp.emuladortelnet.database.TelnetRepository
 import com.logisticapp.emuladortelnet.settings.AppSettings
 import com.logisticapp.emuladortelnet.settings.TelnetOptions
 
@@ -66,7 +67,25 @@ class TelnetOptionsActivity : AppCompatActivity() {
 
         bindViews()
         loadValues()
+        setupServerAddress()
         setupSelectors()
+    }
+
+    /** "Endereço do servidor" reflete (somente leitura) o host da sessão usada por último. */
+    private fun setupServerAddress() {
+        val recent = TelnetRepository.getInstance(this)
+            .currentConnections()
+            .maxByOrNull { it.lastUsed }
+        if (recent != null) {
+            inServerAddress.setText("${recent.host}:${recent.port}")
+        } else {
+            inServerAddress.setText("")
+            inServerAddress.hint = "Nenhuma sessão cadastrada"
+        }
+        // Read-only: o endereço vem do cadastro da sessão (edite na config do host)
+        inServerAddress.keyListener = null
+        inServerAddress.isFocusable = false
+        inServerAddress.isCursorVisible = false
     }
 
     private fun bindViews() {
@@ -97,7 +116,6 @@ class TelnetOptionsActivity : AppCompatActivity() {
     }
 
     private fun loadValues() {
-        inServerAddress.setText(opts.serverAddress)
         inTerminalType.setText(opts.terminalType)
         valLineTerminator.text = opts.lineTerminator
         ckUseIpBrk.isChecked = opts.useIpForBrk

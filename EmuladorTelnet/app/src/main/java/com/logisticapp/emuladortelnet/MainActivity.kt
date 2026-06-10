@@ -76,6 +76,55 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this, factory).get(TelnetViewModel::class.java)
         viewModel.setForegroundColor(settings.colorForeground)
         viewModel.setFieldColor(settings.colorInputField)
+        viewModel.setTerminalType(settings.telnetOptions.terminalType)
+        viewModel.setBinaryMode(settings.telnetOptions.binaryMode)
+        viewModel.setSimulateParity(settings.telnetOptions.simulateParity)
+        viewModel.setKeepAlive(
+            settings.telnetOptions.keepAliveType,
+            settings.telnetOptions.keepAliveInterval.toIntOrNull() ?: 0
+        )
+        viewModel.setAutoLogin(
+            settings.telnetOptions.waitLoginPrompt,
+            settings.telnetOptions.loginWith,
+            settings.telnetOptions.waitPasswordPrompt,
+            settings.telnetOptions.password,
+            settings.telnetOptions.waitCommandPrompt,
+            settings.telnetOptions.doCommand
+        )
+        // SSL: carrega bytes do certificado cliente, se houver
+        val sslOpts = settings.telnetOptions
+        val certBytes: ByteArray? = if (sslOpts.useSsl && sslOpts.clientCertFile.isNotBlank()) {
+            try { java.io.File(sslOpts.clientCertFile).readBytes() } catch (e: Exception) { null }
+        } else null
+        viewModel.setSsl(sslOpts.useSsl, certBytes, sslOpts.clientCertPassword)
+
+        // SSH: carrega chave privada, se houver
+        val keyBytes: ByteArray? = if (sslOpts.useSsh && sslOpts.sshPrivateKey.isNotBlank()) {
+            try { java.io.File(sslOpts.sshPrivateKey).readBytes() } catch (e: Exception) { null }
+        } else null
+        val sshPortInt = currentPort  // usa a porta da sessão, ou pode vir de sshServer separado
+        val sshHostStr = sslOpts.sshServer.ifBlank { currentHost }
+        val sshPortParsed = sslOpts.sshServer.substringAfter(":", "22").toIntOrNull() ?: sshPortInt
+        val sshHostParsed = sslOpts.sshServer.substringBefore(":").ifBlank { sshHostStr }
+        viewModel.setSshConfig(
+            sslOpts.useSsh,
+            sshHostParsed,
+            sshPortParsed,
+            sslOpts.sshUsername,
+            sslOpts.sshPassword,
+            keyBytes,
+            sslOpts.sshKeepAlive.toIntOrNull() ?: 0
+        )
+
+        // Proxy HTTP CONNECT
+        val proxyOpts = settings.proxyOptions
+        val proxyPortInt = proxyOpts.port.toIntOrNull() ?: 30855
+        val proxyHostStr = proxyOpts.address.substringBefore(":")
+        val proxyPortParsed = proxyOpts.address.substringAfter(":", "").toIntOrNull() ?: proxyPortInt
+        viewModel.setProxy(proxyOpts.useServer, proxyHostStr, proxyPortParsed, proxyOpts.secureComm)
+
+        // Terminador de linha (Enter): aplica ao teclado
+        binding.terminalOutput.lineTerminator = lineTerminatorBytes()
 
         setupListeners()
         observeViewModel()
@@ -269,8 +318,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Bytes do terminador de linha configurado (Telnet Opcoes). */
+    private fun lineTerminatorBytes(): ByteArray = when (settings.telnetOptions.lineTerminator) {
+        "CR+LF" -> byteArrayOf(13, 10)
+        "LF"    -> byteArrayOf(10)
+        else    -> byteArrayOf(13)   // CR
+    }
+
     /** Executa a acao de um botao de barra de ferramentas. */
     private fun sendAction(action: String) {
+        // Enter respeita o terminador de linha configurado
+        if (action == "ENTER") {
+            viewModel.sendRaw(lineTerminatorBytes())
+            return
+        }
         val bytes = com.logisticapp.emuladortelnet.toolbar.ToolbarCatalog.bytesFor(action)
         if (bytes != null) {
             viewModel.sendRaw(bytes)
@@ -282,7 +343,11 @@ class MainActivity : AppCompatActivity() {
             "CONNECT" -> {
                 if (currentHost.isNotEmpty()) viewModel.connect(currentHost, currentPort.toString())
             }
-            "BREAK" -> viewModel.sendRaw(byteArrayOf(255.toByte(), 243.toByte())) // IAC BRK
+            "BREAK" -> {
+                // "Usar IP para BRK": envia Interrupt Process (244) em vez de Break (243)
+                val cmd = if (settings.telnetOptions.useIpForBrk) 244 else 243
+                viewModel.sendRaw(byteArrayOf(255.toByte(), cmd.toByte()))
+            }
             "COPY", "PASTE" -> android.widget.Toast.makeText(
                 this, "$action: em breve", android.widget.Toast.LENGTH_SHORT).show()
             else -> Timber.d("Acao nao tratada: $action")

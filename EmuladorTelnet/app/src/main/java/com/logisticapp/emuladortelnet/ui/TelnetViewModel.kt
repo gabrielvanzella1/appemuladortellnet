@@ -13,10 +13,20 @@ import com.logisticapp.emuladortelnet.network.TelnetClient
 import com.logisticapp.emuladortelnet.terminal.TerminalEmulator
 import com.logisticapp.emuladortelnet.terminal.InputHistoryManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import timber.log.Timber
+
+/**
+ * Estados da máquina de auto-login Telnet.
+ */
+private enum class TelnetAutoLoginState {
+    IDLE, WAITING_LOGIN, SENDING_LOGIN, WAITING_PASSWORD, SENDING_PASSWORD,
+    WAITING_COMMAND, SENDING_COMMAND, COMPLETE
+}
 
 /**
  * ViewModel para gerenciar estado da conexão Telnet
@@ -37,6 +47,135 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     /** Define a cor de fundo dos campos de preenchimento (0 = reverso natural). */
     fun setFieldColor(color: Int) {
         emulator.setFieldColor(color)
+    }
+
+    /** Define o tipo de terminal informado ao servidor (Telnet Opcoes). */
+    fun setTerminalType(type: String) {
+        telnetClient.setTerminalType(type)
+    }
+
+    /** Ativa/desativa o modo binario (transmissao 8-bit). */
+    fun setBinaryMode(enabled: Boolean) {
+        telnetClient.setBinaryMode(enabled)
+    }
+
+    /** Ativa/desativa a simulacao de paridade (mascara o 8o bit). */
+    fun setSimulateParity(enabled: Boolean) {
+        telnetClient.setSimulateParity(enabled)
+    }
+
+    // Keep-alive (Mantenha o tipo vivo)
+    private var keepAliveType = "TCP"
+    private var keepAliveIntervalSec = 0
+    private var keepAliveJob: Job? = null
+
+    /** Configura o keep-alive: tipo (TCP/NVT/Desligado) e intervalo em segundos. */
+    fun setKeepAlive(type: String, intervalSeconds: Int) {
+        keepAliveType = type
+        keepAliveIntervalSec = intervalSeconds
+        telnetClient.setKeepAliveType(type)
+    }
+
+    /** Configura SSL/TLS: ativa TLS e, opcionalmente, certificado cliente (.p12). */
+    fun setSsl(enabled: Boolean, certBytes: ByteArray? = null, certPassword: String = "") {
+        telnetClient.setSsl(enabled, certBytes, certPassword)
+    }
+
+    /** Configura proxy HTTP CONNECT para rotear a conexão Telnet/SSL. */
+    fun setProxy(enabled: Boolean, host: String, port: Int, secure: Boolean) {
+        telnetClient.setProxy(enabled, host, port, secure)
+    }
+
+    /** Configura SSH: ativa conexão via protocolo SSH. */
+    fun setSshConfig(
+        enabled: Boolean, host: String, port: Int,
+        username: String, password: String,
+        privateKeyBytes: ByteArray? = null,
+        keepAliveSec: Int = 0
+    ) {
+        telnetClient.setSshConfig(enabled, host, port, username, password, privateKeyBytes, keepAliveSec)
+    }
+
+    /** Inicia o envio periodico de NOP quando o keep-alive e NVT. */
+    private fun startKeepAlive() {
+        keepAliveJob?.cancel()
+        if (keepAliveType.equals("NVT", ignoreCase = true) && keepAliveIntervalSec > 0) {
+            keepAliveJob = viewModelScope.launch(Dispatchers.IO) {
+                while (isActive && telnetClient.isConnectedStatus()) {
+                    delay(keepAliveIntervalSec * 1000L)
+                    if (telnetClient.isConnectedStatus()) {
+                        telnetClient.sendNop()
+                        Timber.d("Keep-alive NVT: NOP enviado")
+                    }
+                }
+            }
+        }
+    }
+
+    // Auto-login Telnet
+    private var loginState = TelnetAutoLoginState.IDLE
+    private var loginPrompt = ""
+    private var username = ""
+    private var passwordPrompt = ""
+    private var password = ""
+    private var commandPrompt = ""
+    private var command = ""
+    private var screenBuffer = ""  // Monitora o texto recebido
+
+    /** Configura auto-login (todos os prompts e valores). */
+    fun setAutoLogin(
+        loginPrompt: String, username: String,
+        passwordPrompt: String, password: String,
+        commandPrompt: String, command: String
+    ) {
+        this.loginPrompt = loginPrompt
+        this.username = username
+        this.passwordPrompt = passwordPrompt
+        this.password = password
+        this.commandPrompt = commandPrompt
+        this.command = command
+        // Se todos os campos estão preenchidos, ativa auto-login ao conectar
+        val hasLogin = loginPrompt.isNotBlank() && username.isNotBlank()
+        loginState = if (hasLogin) TelnetAutoLoginState.WAITING_LOGIN else TelnetAutoLoginState.IDLE
+        Timber.d("Auto-login configurado: estado=$loginState")
+    }
+
+    /** Monitora o texto recebido e dispara as ações de auto-login (monitorar no addTerminalOutput). */
+    private fun checkAutoLogin(receivedText: String) {
+        if (loginState == TelnetAutoLoginState.IDLE || loginPrompt.isBlank()) return
+
+        screenBuffer += receivedText
+
+        when (loginState) {
+            TelnetAutoLoginState.WAITING_LOGIN -> {
+                if (screenBuffer.contains(loginPrompt, ignoreCase = true)) {
+                    Timber.d("Auto-login: encontrado prompt '$loginPrompt', enviando usuário")
+                    sendCommand(username)
+                    loginState = TelnetAutoLoginState.WAITING_PASSWORD
+                    screenBuffer = ""
+                }
+            }
+            TelnetAutoLoginState.WAITING_PASSWORD -> {
+                if (screenBuffer.contains(passwordPrompt, ignoreCase = true)) {
+                    Timber.d("Auto-login: encontrado prompt '$passwordPrompt', enviando senha")
+                    sendCommand(password)
+                    loginState = if (commandPrompt.isNotBlank()) TelnetAutoLoginState.WAITING_COMMAND else TelnetAutoLoginState.COMPLETE
+                    screenBuffer = ""
+                }
+            }
+            TelnetAutoLoginState.WAITING_COMMAND -> {
+                if (screenBuffer.contains(commandPrompt, ignoreCase = true)) {
+                    Timber.d("Auto-login: encontrado prompt '$commandPrompt'")
+                    if (command.isNotBlank()) {
+                        sendCommand(command)
+                        Timber.d("Auto-login: comando enviado, concluído")
+                    }
+                    loginState = TelnetAutoLoginState.COMPLETE
+                    screenBuffer = ""
+                }
+            }
+            else -> {}
+        }
     }
 
     /** Envia bytes brutos ao servidor (setas, Ctrl, Esc...) sem adicionar CRLF. */
@@ -108,6 +247,9 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
                     // Iniciar leitura de dados em background
                     startReadingData()
 
+                    // Iniciar keep-alive (se configurado como NVT)
+                    startKeepAlive()
+
                 } else {
                     _connectionState.postValue(ConnectionState.ERROR)
                     addTerminalOutput("Erro ao conectar: ${connectResult.exceptionOrNull()?.message}\n")
@@ -148,6 +290,7 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
      * Desconectar do servidor
      */
     fun disconnect() {
+        keepAliveJob?.cancel()
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val disconnectResult = telnetClient.disconnect()
@@ -226,6 +369,8 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
         try {
             emulator.feed(text)
             _terminalOutputStyled.postValue(emulator.renderSpannable())
+            // Verificar auto-login (monitora prompts e envia credenciais)
+            checkAutoLogin(text)
         } catch (e: Exception) {
             Timber.e(e, "Erro ao processar tela")
         }
