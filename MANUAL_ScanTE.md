@@ -30,6 +30,10 @@ permitindo digitar e navegar como num terminal de verdade.
   tempo limitado, ou Licença Vitalícia após a compra).
 - **Continuar:** entra no app (disponível durante o teste ou com licença válida).
 - **Comprar Licença:** inicia a compra da licença vitalícia (via Mercado Pago).
+- **Ativar com chave (novo):** campo para inserir a chave de licença no formato
+  `SCTE-XXXXXX-XXXXXX-XXXXXX`. Ao tocar em **Ativar**, o app valida a chave no servidor
+  ScanTE Admin, vincula o dispositivo e ativa a licença imediatamente. Use este campo
+  quando a empresa já gerou e enviou uma chave para o dispositivo.
 
 ---
 

@@ -1,10 +1,12 @@
 package com.logisticapp.emuladortelnet
 
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -25,6 +27,9 @@ class LicenseActivity : AppCompatActivity() {
     private lateinit var btnContinue: Button
     private lateinit var btnBuyLicense: Button
     private lateinit var progressBar: ProgressBar
+    private lateinit var inputLicenseKey: EditText
+    private lateinit var btnActivateKey: Button
+    private lateinit var tvActivationResult: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,6 +94,9 @@ class LicenseActivity : AppCompatActivity() {
         btnContinue = findViewById(R.id.btn_continue)
         btnBuyLicense = findViewById(R.id.btn_buy_license)
         progressBar = findViewById(R.id.progress_bar)
+        inputLicenseKey = findViewById(R.id.input_license_key)
+        btnActivateKey = findViewById(R.id.btn_activate_key)
+        tvActivationResult = findViewById(R.id.tv_activation_result)
     }
 
     private fun observeLicenseState() {
@@ -142,6 +150,17 @@ class LicenseActivity : AppCompatActivity() {
                 viewModel.onErrorShown()
             }
         }
+
+        viewModel.activationResult.observe(this) { result ->
+            result ?: return@observe
+            tvActivationResult.visibility = View.VISIBLE
+            tvActivationResult.text = result.second
+            tvActivationResult.setTextColor(
+                if (result.first) Color.parseColor("#4CAF50") else Color.parseColor("#F44336")
+            )
+            if (result.first) inputLicenseKey.setText("")
+            viewModel.onActivationResultShown()
+        }
     }
 
     private fun setupClickListeners() {
@@ -151,6 +170,12 @@ class LicenseActivity : AppCompatActivity() {
 
         btnBuyLicense.setOnClickListener {
             viewModel.startPayment()
+        }
+
+        btnActivateKey.setOnClickListener {
+            val chave = inputLicenseKey.text.toString()
+            tvActivationResult.visibility = View.GONE
+            viewModel.activateByKey(chave)
         }
     }
 

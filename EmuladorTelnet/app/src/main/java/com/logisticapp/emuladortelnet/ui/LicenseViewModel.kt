@@ -1,10 +1,12 @@
 package com.logisticapp.emuladortelnet.ui
 
 import android.app.Application
+import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.logisticapp.emuladortelnet.license.LicenseApiService
 import com.logisticapp.emuladortelnet.license.LicenseManager
 import com.logisticapp.emuladortelnet.license.MercadoPagoManager
 import kotlinx.coroutines.launch
@@ -14,6 +16,7 @@ class LicenseViewModel(application: Application) : AndroidViewModel(application)
 
     private val licenseManager = LicenseManager(application)
     private val mpManager = MercadoPagoManager()
+    private val apiService = LicenseApiService()
 
     private val _licenseStatus = MutableLiveData<String>()
     val licenseStatus: LiveData<String> = _licenseStatus
@@ -46,6 +49,10 @@ class LicenseViewModel(application: Application) : AndroidViewModel(application)
     // Mensagem de erro para exibir Toast (consumida uma vez)
     private val _errorMessage = MutableLiveData<String?>(null)
     val errorMessage: LiveData<String?> = _errorMessage
+
+    // Resultado da ativação por chave: Pair(sucesso, mensagem)
+    private val _activationResult = MutableLiveData<Pair<Boolean, String>?>(null)
+    val activationResult: LiveData<Pair<Boolean, String>?> = _activationResult
 
     init {
         licenseManager.initializeLicense()
@@ -150,6 +157,51 @@ class LicenseViewModel(application: Application) : AndroidViewModel(application)
         } else {
             _errorMessage.value = "Pagamento com status: $status."
         }
+    }
+
+    /**
+     * Ativa a licença via chave do scante-admin.
+     * Chama POST /api/licenca/validar com a chave, device_id e device_nome.
+     */
+    fun activateByKey(chave: String) {
+        if (chave.isBlank()) {
+            _activationResult.value = Pair(false, "Digite a chave de licença.")
+            return
+        }
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val deviceId = licenseManager.getDeviceId()
+                val deviceNome = "${Build.MANUFACTURER} ${Build.MODEL}"
+                val result = apiService.validarChave(chave, deviceId, deviceNome)
+                if (result.isSuccess) {
+                    val validacao = result.getOrNull()!!
+                    if (validacao.sucesso) {
+                        licenseManager.upgradeToPremiumByKey(
+                            chave = validacao.chave,
+                            tipo = validacao.tipo,
+                            diasRestantes = validacao.diasRestantes
+                        )
+                        loadLicenseInfo()
+                        _activationResult.value = Pair(true, "Licença ativada com sucesso!")
+                    } else {
+                        _activationResult.value = Pair(false, validacao.erro)
+                    }
+                } else {
+                    val msg = result.exceptionOrNull()?.message ?: "Erro de conexão com o servidor."
+                    _activationResult.value = Pair(false, "Não foi possível validar: $msg")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Erro ao ativar licença por chave")
+                _activationResult.value = Pair(false, "Erro ao ativar licença.")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun onActivationResultShown() {
+        _activationResult.value = null
     }
 
     fun onCheckoutOpened() {

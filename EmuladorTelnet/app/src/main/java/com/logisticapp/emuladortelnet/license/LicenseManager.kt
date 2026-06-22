@@ -159,6 +159,29 @@ class LicenseManager(private val context: Context) {
     }
 
     /**
+     * Ativa Premium via chave fornecida pelo servidor scante-admin.
+     */
+    fun upgradeToPremiumByKey(chave: String, tipo: String, diasRestantes: Int) {
+        prefs.edit().apply {
+            putString(KEY_LICENSE_KEY, chave)
+            putString(KEY_LICENSE_TYPE, "PREMIUM")
+            putLong(KEY_PURCHASE_DATE, System.currentTimeMillis())
+            putBoolean(KEY_IS_ACTIVE, true)
+            if (diasRestantes > 0) {
+                val expiry = System.currentTimeMillis() + (diasRestantes.toLong() * 24 * 60 * 60 * 1000)
+                putLong(KEY_TRIAL_END_DATE, expiry)
+            }
+            apply()
+        }
+        Timber.d("Licença PREMIUM ativada via chave $chave - tipo: $tipo")
+    }
+
+    /**
+     * Retorna a chave de licença salva localmente (pode ser null se nunca ativado via servidor).
+     */
+    fun getSavedLicenseKey(): String? = prefs.getString(KEY_LICENSE_KEY, null)?.takeIf { it.startsWith("SCTE-") }
+
+    /**
      * Atualizar ID do pedido Mercado Pago
      */
     fun setMercadoPagoOrderId(orderId: String) {
