@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="Transliteração"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/ic_arrow_back" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="32dp">
+
+            <!-- Cabeçalho informativo -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ScanTE &lt;=&gt; Transliteração de caracteres do host"
+                android:textSize="13sp"
+                android:textColor="#666666"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="10dp"
+                android:background="#F5F5F5" />
+
+            <!-- ===== CARACTERES DE 16 BITS ===== -->
+            <TextView style="@style/TnSection" android:text="Caracteres de 16 bits" />
+
+            <LinearLayout android:id="@+id/row_utf8" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Codificação UTF-8" />
+                <CheckBox android:id="@+id/ck_utf8" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- ===== CARACTERES DE 8 BITS ===== -->
+            <TextView style="@style/TnSection" android:text="Caracteres de 8 bits" />
+
+            <LinearLayout android:id="@+id/row_host8bit" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="8-bit Host" />
+                <CheckBox android:id="@+id/ck_host8bit" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout android:id="@+id/row_lowercase" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Permitir letras minúsculas para o host" />
+                <CheckBox android:id="@+id/ck_lowercase" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout android:id="@+id/row_host_charset" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Conjunto de caracteres hospedeiros" />
+                <TextView android:id="@+id/val_host_charset" style="@style/TnValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout android:id="@+id/row_national_translit" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Transliteração nacional (host de 7 bits)" />
+                <TextView android:id="@+id/val_national_translit" style="@style/TnValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout android:id="@+id/row_siso" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Use codificação SISO" />
+                <CheckBox android:id="@+id/ck_siso" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

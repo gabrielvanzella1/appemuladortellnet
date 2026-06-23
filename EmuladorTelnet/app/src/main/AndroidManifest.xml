@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="false"
@@ -92,10 +93,65 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Configuracoes > Emulacao > VT Opcoes -->
+        <activity
+            android:name=".VtOptionsActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Configuracoes > Emulacao > Transliteracao -->
+        <activity
+            android:name=".TransliterationActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Configuracoes > Emulacao > Geral -->
+        <activity
+            android:name=".GeneralEmulationActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Configuracoes > Dispositivos > Configuracao de impressao -->
+        <activity
+            android:name=".PrintConfigActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Configuracoes > Dispositivos > Leitor de codigo de barras -->
+        <activity
+            android:name=".BarcodeConfigActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- 5. Terminal Telnet -->
         <activity
             android:name=".MainActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Configuracoes > Teclado > Configurar teclado ScanTE -->
+        <activity
+            android:name=".KeyboardConfigActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".KeyboardPageEditActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Teclado personalizado ScanTE (IME) -->
+        <service
+            android:name=".keyboard.TerminalInputMethodService"
+            android:label="ScanTE Keyboard"
+            android:permission="android.permission.BIND_INPUT_METHOD"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/input_method" />
+        </service>
 
     </application>
 

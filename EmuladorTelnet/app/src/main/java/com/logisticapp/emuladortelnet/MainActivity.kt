@@ -7,6 +7,8 @@ import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -58,6 +60,15 @@ class MainActivity : AppCompatActivity() {
         // Nunca bloquear a tela quando conectado
         if (settings.keepScreenOn) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+
+        // Garante que o controlKeysBar fique colado acima do teclado (Android 11+)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+            val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
+            val navInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            // Padding bottom = altura do teclado (quando aberto) ou barra de navegação
+            view.setPadding(0, 0, 0, maxOf(imeInsets.bottom, navInsets.bottom))
+            insets
         }
 
         // Tamanho da fonte do terminal (Opcoes de tela)
@@ -125,6 +136,18 @@ class MainActivity : AppCompatActivity() {
 
         // Terminador de linha (Enter): aplica ao teclado
         binding.terminalOutput.lineTerminator = lineTerminatorBytes()
+
+        // VT Opções (ECHO, Modo ROLO, Backspace, alarme, etc.)
+        val vtOpts = settings.vtOptions
+        viewModel.setVtOptions(vtOpts)
+        binding.terminalOutput.backspaceAsDel = vtOpts.backspaceAction == "DEL"
+        binding.terminalOutput.f5PuttySequence = vtOpts.f5PuttySequence
+
+        // Transliteração (charset, lowercase, SISO, etc.)
+        viewModel.setTransliterationOptions(settings.transliterationOptions)
+
+        // Opções gerais de emulação (BS destrutivo, captura CR, tamanho da tela)
+        viewModel.setGeneralEmulationOptions(settings.generalEmulationOptions)
 
         setupListeners()
         observeViewModel()
@@ -234,6 +257,37 @@ class MainActivity : AppCompatActivity() {
                 binding.scrollView.fullScroll(android.widget.ScrollView.FOCUS_DOWN)
             }
         }
+
+        // Alarme do host (BEL): toca som + vibra quando não silenciado
+        viewModel.bellEvent.observe(this) { ev ->
+            if (ev != null) {
+                playBell()
+                viewModel.onBellHandled()
+            }
+        }
+    }
+
+    /** Toca o som de notificação e vibra (alarme do host / BEL). */
+    private fun playBell() {
+        try {
+            val tone = android.media.ToneGenerator(
+                android.media.AudioManager.STREAM_NOTIFICATION, 100
+            )
+            tone.startTone(android.media.ToneGenerator.TONE_PROP_BEEP, 200)
+            binding.terminalOutput.postDelayed({ tone.release() }, 300)
+        } catch (e: Exception) {
+            Timber.w(e, "Falha ao tocar alarme")
+        }
+        try {
+            val vib = getSystemService(Context.VIBRATOR_SERVICE) as? android.os.Vibrator
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                vib?.vibrate(android.os.VibrationEffect.createOneShot(120, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                @Suppress("DEPRECATION") vib?.vibrate(120)
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Falha ao vibrar")
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -280,21 +334,32 @@ class MainActivity : AppCompatActivity() {
     private fun toggleKeyboard() {
         binding.terminalOutput.requestFocus()
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY)
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
     }
 
-    /** Gera as 4 barras de ferramentas (linhas de botoes) a partir das configuracoes. */
+    /** Gera as barras de ferramentas com scroll horizontal quando há muitos botões. */
     private fun buildToolbars() {
         binding.controlKeysBar.removeAllViews()
         val bars = settings.toolbars
+        val density = resources.displayMetrics.density
+        val screenW = resources.displayMetrics.widthPixels
+        val btnH = (36 * density).toInt()
+        val margin = (2 * density).toInt()
+        val minBtnW = (72 * density).toInt()
+
         for (bar in bars) {
             if (bar.isEmpty()) continue
+
+            // Largura por botão: distribui igualmente se couber, senão usa mínimo e rola
+            val btnW = if (bar.size * minBtnW <= screenW) screenW / bar.size else minBtnW
+
             val row = android.widget.LinearLayout(this).apply {
                 orientation = android.widget.LinearLayout.HORIZONTAL
                 layoutParams = android.widget.LinearLayout.LayoutParams(
-                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
                     android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
             }
+
             for (btn in bar) {
                 val b = android.widget.Button(this).apply {
                     text = btn.label
@@ -305,16 +370,22 @@ class MainActivity : AppCompatActivity() {
                     setPadding(0, 0, 0, 0)
                     minWidth = 0
                     minimumWidth = 0
-                    val lp = android.widget.LinearLayout.LayoutParams(
-                        0, (36 * resources.displayMetrics.density).toInt(), 1f)
-                    val m = (2 * resources.displayMetrics.density).toInt()
-                    lp.setMargins(m, m, m, m)
+                    val lp = android.widget.LinearLayout.LayoutParams(btnW, btnH)
+                    lp.setMargins(margin, margin, margin, margin)
                     layoutParams = lp
                 }
                 b.setOnClickListener { sendAction(btn.action) }
                 row.addView(b)
             }
-            binding.controlKeysBar.addView(row)
+
+            val scroll = android.widget.HorizontalScrollView(this).apply {
+                isHorizontalScrollBarEnabled = false
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+            }
+            scroll.addView(row)
+            binding.controlKeysBar.addView(scroll)
         }
     }
 

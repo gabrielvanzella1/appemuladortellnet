@@ -21,6 +21,8 @@ object ToolbarCatalog {
      */
     fun bytesFor(action: String): ByteArray? {
         val esc = 27.toByte()
+        fun ss3(c: Char) = byteArrayOf(esc, 'O'.code.toByte(), c.code.toByte())
+        fun csi(seq: String): ByteArray = byteArrayOf(esc, '['.code.toByte()) + seq.map { it.code.toByte() }.toByteArray()
         return when (action) {
             "UP"      -> byteArrayOf(esc, '['.code.toByte(), 'A'.code.toByte())
             "DOWN"    -> byteArrayOf(esc, '['.code.toByte(), 'B'.code.toByte())
@@ -33,17 +35,30 @@ object ToolbarCatalog {
             "HOME"    -> byteArrayOf(esc, '['.code.toByte(), 'H'.code.toByte())
             "END"     -> byteArrayOf(esc, '['.code.toByte(), 'F'.code.toByte())
             "DELCHAR" -> byteArrayOf(127)
-            "INSERT"  -> byteArrayOf(esc, '['.code.toByte(), '2'.code.toByte(), '~'.code.toByte())
-            "PREVS"   -> byteArrayOf(esc, '['.code.toByte(), '5'.code.toByte(), '~'.code.toByte())
-            "NEXTS"   -> byteArrayOf(esc, '['.code.toByte(), '6'.code.toByte(), '~'.code.toByte())
+            "INSERT"  -> csi("2~")
+            "PREVS"   -> csi("5~")
+            "NEXTS"   -> csi("6~")
+            // Teclas de função (sequências VT220)
+            "F1"  -> ss3('P')
+            "F2"  -> ss3('Q')
+            "F3"  -> ss3('R')
+            "F4"  -> ss3('S')
+            "F5"  -> csi("15~")
+            "F6"  -> csi("17~")
+            "F7"  -> csi("18~")
+            "F8"  -> csi("19~")
+            "F9"  -> csi("20~")
+            "F10" -> csi("21~")
+            "F11" -> csi("23~")
+            "F12" -> csi("24~")
             else -> when {
                 action.startsWith("CTRL_") -> {
                     val ch = action.removePrefix("CTRL_").firstOrNull() ?: return null
-                    byteArrayOf((ch.uppercaseChar().code - 64).toByte())  // Ctrl+A = 1
+                    byteArrayOf((ch.uppercaseChar().code - 64).toByte())
                 }
                 action.startsWith("TEXT:") ->
                     action.removePrefix("TEXT:").toByteArray(Charsets.ISO_8859_1)
-                else -> null  // acao especial
+                else -> null
             }
         }
     }
@@ -51,69 +66,145 @@ object ToolbarCatalog {
     /** Descricao curta da acao (mostrada na tela de configuracao, ao lado do rotulo). */
     fun describe(action: String): String = when {
         action.startsWith("TEXT:") -> "Texto \"${action.removePrefix("TEXT:")}\""
-        action.startsWith("CTRL_") -> action.replace("_", "+").replaceFirstChar { 'C' } // CTRL_C -> Ctrl+C
-        action == "UP" -> "Up"
-        action == "DOWN" -> "Down"
-        action == "LEFT" -> "Left"
-        action == "RIGHT" -> "Right"
-        action == "ESC" -> "Esc"
-        action == "ENTER" -> "Enter"
-        action == "HOME" -> "Home"
-        action == "END" -> "End"
-        action == "DELCHAR" -> "DelChar"
-        action == "BACKTAB" -> "Backtab"
-        action == "INSERT" -> "Insert mode"
-        action == "PREVS" -> "PrevS"
-        action == "NEXTS" -> "NextS"
-        action == "COPY" -> "Copy"
-        action == "PASTE" -> "Paste"
-        action == "CONNECT" -> "Connect"
-        action == "DISCONNECT" -> "Disconnect"
-        action == "BREAK" -> "Break"
+        action.startsWith("CTRL_") -> action.replace("_", "+").replaceFirstChar { 'C' }
+        action == "UP"         -> "↑ Seta cima"
+        action == "DOWN"       -> "↓ Seta baixo"
+        action == "LEFT"       -> "← Seta esquerda"
+        action == "RIGHT"      -> "→ Seta direita"
+        action == "ESC"        -> "Esc"
+        action == "ENTER"      -> "Enter"
+        action == "TAB"        -> "Tab"
+        action == "HOME"       -> "Home"
+        action == "END"        -> "End"
+        action == "DELCHAR"    -> "Del (apaga char)"
+        action == "BACKTAB"    -> "Shift+Tab"
+        action == "INSERT"     -> "Insert"
+        action == "PREVS"      -> "Page Up"
+        action == "NEXTS"      -> "Page Down"
+        action == "COPY"       -> "Copiar"
+        action == "PASTE"      -> "Colar"
+        action == "CONNECT"    -> "Conectar"
+        action == "DISCONNECT" -> "Desconectar"
+        action == "BREAK"      -> "Break"
+        action.matches(Regex("F\\d{1,2}")) -> "Tecla $action"
         else -> action
     }
 
-    /** As 4 barras padrao (conforme telas do GlinkVT). */
-    val defaultToolbars: List<List<ToolbarButton>> = listOf(
-        listOf(
-            ToolbarButton("↑", "UP"),
-            ToolbarButton("Voltar", "ESC"),
-            ToolbarButton("Sim", "TEXT:S"),
-            ToolbarButton("Não", "TEXT:N")
+    /** Presets prontos de barras que o usuário pode inserir rapidamente na configuração. */
+    val presets: Map<String, List<ToolbarButton>> = mapOf(
+        "Números (0-9)" to listOf(
+            ToolbarButton("1","TEXT:1"), ToolbarButton("2","TEXT:2"),
+            ToolbarButton("3","TEXT:3"), ToolbarButton("4","TEXT:4"),
+            ToolbarButton("5","TEXT:5"), ToolbarButton("6","TEXT:6"),
+            ToolbarButton("7","TEXT:7"), ToolbarButton("8","TEXT:8"),
+            ToolbarButton("9","TEXT:9"), ToolbarButton("0","TEXT:0")
         ),
-        listOf(
-            ToolbarButton("↓", "DOWN"),
-            ToolbarButton("Ctrl+C", "CTRL_C"),
-            ToolbarButton("Ctrl+I", "CTRL_I"),
-            ToolbarButton("Ctrl+E", "CTRL_E")
+        "Símbolos" to listOf(
+            ToolbarButton("!","TEXT:!"), ToolbarButton("@","TEXT:@"),
+            ToolbarButton("#","TEXT:#"), ToolbarButton("$","TEXT:$"),
+            ToolbarButton("%","TEXT:%"), ToolbarButton("&","TEXT:&"),
+            ToolbarButton("*","TEXT:*"), ToolbarButton("-","TEXT:-"),
+            ToolbarButton("+","TEXT:+"), ToolbarButton("=","TEXT:="),
+            ToolbarButton("/","TEXT:/"), ToolbarButton("\\","TEXT:\\"),
+            ToolbarButton(".","TEXT:."), ToolbarButton(",","TEXT:,"),
+            ToolbarButton(":","TEXT::"), ToolbarButton(";","TEXT:;"),
+            ToolbarButton("_","TEXT:_"), ToolbarButton("?","TEXT:?"),
+            ToolbarButton("(","TEXT:("), ToolbarButton(")","TEXT:)"),
+            ToolbarButton("[","TEXT:["), ToolbarButton("]","TEXT:]"),
+            ToolbarButton("{","TEXT:{"), ToolbarButton("}","TEXT:}")
         ),
-        listOf(
-            ToolbarButton("←", "LEFT"),
-            ToolbarButton("Ctrl+K", "CTRL_K"),
-            ToolbarButton("Ctrl+P", "CTRL_P"),
-            ToolbarButton("Ctrl+Y", "CTRL_Y")
+        "Navegação" to listOf(
+            ToolbarButton("↑","UP"),   ToolbarButton("↓","DOWN"),
+            ToolbarButton("←","LEFT"), ToolbarButton("→","RIGHT"),
+            ToolbarButton("Home","HOME"), ToolbarButton("End","END"),
+            ToolbarButton("PgUp","PREVS"), ToolbarButton("PgDn","NEXTS")
         ),
-        listOf(
-            ToolbarButton("→", "RIGHT"),
-            ToolbarButton("Ctrl+W", "CTRL_W"),
-            ToolbarButton("Ctrl+Z", "CTRL_Z"),
-            ToolbarButton("Enter", "ENTER")
-        )
+        "Teclas F" to listOf(
+            ToolbarButton("F1","F1"),  ToolbarButton("F2","F2"),
+            ToolbarButton("F3","F3"),  ToolbarButton("F4","F4"),
+            ToolbarButton("F5","F5"),  ToolbarButton("F6","F6"),
+            ToolbarButton("F7","F7"),  ToolbarButton("F8","F8"),
+            ToolbarButton("F9","F9"),  ToolbarButton("F10","F10"),
+            ToolbarButton("F11","F11"),ToolbarButton("F12","F12")
+        ),
+        "Ctrl (A-Z)" to ('A'..'Z').map { ToolbarButton("^$it", "CTRL_$it") }
     )
 
-    /** Botoes disponiveis na tela "Adicionar botoes" (print 2). */
+    /** As 4 barras padrao. */
+    val defaultToolbars: List<List<ToolbarButton>> = listOf(
+        // Barra 1: números scrolláveis
+        listOf(
+            ToolbarButton("1","TEXT:1"), ToolbarButton("2","TEXT:2"),
+            ToolbarButton("3","TEXT:3"), ToolbarButton("4","TEXT:4"),
+            ToolbarButton("5","TEXT:5"), ToolbarButton("6","TEXT:6"),
+            ToolbarButton("7","TEXT:7"), ToolbarButton("8","TEXT:8"),
+            ToolbarButton("9","TEXT:9"), ToolbarButton("0","TEXT:0")
+        ),
+        // Barra 2: navegação + ações comuns
+        listOf(
+            ToolbarButton("↑","UP"),  ToolbarButton("↓","DOWN"),
+            ToolbarButton("←","LEFT"),ToolbarButton("→","RIGHT"),
+            ToolbarButton("Esc","ESC"), ToolbarButton("Enter","ENTER"),
+            ToolbarButton("Tab","TAB"), ToolbarButton("Del","DELCHAR")
+        ),
+        // Barra 3: Ctrl + teclas de sistema
+        listOf(
+            ToolbarButton("Ctrl+C","CTRL_C"), ToolbarButton("Ctrl+I","CTRL_I"),
+            ToolbarButton("Ctrl+E","CTRL_E"), ToolbarButton("Ctrl+K","CTRL_K"),
+            ToolbarButton("Ctrl+P","CTRL_P"), ToolbarButton("Ctrl+Y","CTRL_Y"),
+            ToolbarButton("Ctrl+Z","CTRL_Z"), ToolbarButton("Ctrl+W","CTRL_W")
+        ),
+        // Barra 4: vazia (usuário configura)
+        emptyList()
+    )
+
+    /** Botoes disponiveis na tela "Adicionar botoes". */
     val available: List<ToolbarButton> = listOf(
-        ToolbarButton("Find", "HOME"),
-        ToolbarButton("Select", "END"),
-        ToolbarButton("PrevS", "PREVS"),
-        ToolbarButton("NextS", "NEXTS"),
+        // Navegação
+        ToolbarButton("↑", "UP"),
+        ToolbarButton("↓", "DOWN"),
+        ToolbarButton("←", "LEFT"),
+        ToolbarButton("→", "RIGHT"),
+        ToolbarButton("Home", "HOME"),
+        ToolbarButton("End", "END"),
+        ToolbarButton("PgUp", "PREVS"),
+        ToolbarButton("PgDn", "NEXTS"),
+        // Edição
+        ToolbarButton("Esc", "ESC"),
+        ToolbarButton("Enter", "ENTER"),
+        ToolbarButton("Tab", "TAB"),
+        ToolbarButton("⇤", "BACKTAB"),
         ToolbarButton("Del", "DELCHAR"),
-        ToolbarButton("←", "BACKTAB"),
+        ToolbarButton("Ins", "INSERT"),
         ToolbarButton("Copy", "COPY"),
         ToolbarButton("Paste", "PASTE"),
-        ToolbarButton("Ins", "INSERT"),
-        ToolbarButton("Conne...", "CONNECT"),
+        // Funções F
+        ToolbarButton("F1", "F1"),
+        ToolbarButton("F2", "F2"),
+        ToolbarButton("F3", "F3"),
+        ToolbarButton("F4", "F4"),
+        ToolbarButton("F5", "F5"),
+        ToolbarButton("F6", "F6"),
+        ToolbarButton("F7", "F7"),
+        ToolbarButton("F8", "F8"),
+        ToolbarButton("F9", "F9"),
+        ToolbarButton("F10", "F10"),
+        ToolbarButton("F11", "F11"),
+        ToolbarButton("F12", "F12"),
+        // Ctrl
+        ToolbarButton("Ctrl+A", "CTRL_A"),
+        ToolbarButton("Ctrl+C", "CTRL_C"),
+        ToolbarButton("Ctrl+D", "CTRL_D"),
+        ToolbarButton("Ctrl+E", "CTRL_E"),
+        ToolbarButton("Ctrl+I", "CTRL_I"),
+        ToolbarButton("Ctrl+K", "CTRL_K"),
+        ToolbarButton("Ctrl+P", "CTRL_P"),
+        ToolbarButton("Ctrl+W", "CTRL_W"),
+        ToolbarButton("Ctrl+Y", "CTRL_Y"),
+        ToolbarButton("Ctrl+Z", "CTRL_Z"),
+        // Conexão
+        ToolbarButton("Conn.", "CONNECT"),
         ToolbarButton("Break", "BREAK"),
-        ToolbarButton("Disco...", "DISCONNECT")
+        ToolbarButton("Desc.", "DISCONNECT")
     )
 }

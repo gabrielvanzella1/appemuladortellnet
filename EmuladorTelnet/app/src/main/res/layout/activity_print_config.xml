@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="Configuração de impressão"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/ic_arrow_back" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="32dp">
+
+            <!-- Tipo de impressora -->
+            <LinearLayout android:id="@+id/row_printer_type" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Tipo de impressora" />
+                <TextView android:id="@+id/val_printer_type" style="@style/TnValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- Tempo limite da impressora -->
+            <LinearLayout android:id="@+id/row_timeout" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Tempo limite da impressora (s)" />
+                <EditText
+                    android:id="@+id/et_timeout"
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:gravity="end"
+                    android:textSize="14sp"
+                    android:background="@null"
+                    android:padding="4dp" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

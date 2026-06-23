@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="VT Opções"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/ic_arrow_back" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="32dp">
+
+            <!-- ECHO mode -->
+            <LinearLayout android:id="@+id/row_echo_mode" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="ECHO mode" />
+                <CheckBox android:id="@+id/ck_echo_mode" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- Modo ROLO -->
+            <LinearLayout android:id="@+id/row_scroll_mode" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Modo ROLO" />
+                <CheckBox android:id="@+id/ck_scroll_mode" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- Modo de linha -->
+            <LinearLayout android:id="@+id/row_line_mode" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Modo de linha" />
+                <TextView android:id="@+id/val_line_mode" style="@style/TnValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- Adicionar LFs a CRs -->
+            <LinearLayout android:id="@+id/row_add_lf" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Adicionar LFs a CRs" />
+                <CheckBox android:id="@+id/ck_add_lf" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- Nenhuma coluna 81 -->
+            <LinearLayout android:id="@+id/row_no_col81" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Nenhuma coluna 81" />
+                <CheckBox android:id="@+id/ck_no_col81" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- Ação da tecla Backspace -->
+            <LinearLayout android:id="@+id/row_backspace" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Ação da tecla Backspace" />
+                <TextView android:id="@+id/val_backspace" style="@style/TnValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- String de resposta -->
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="String de resposta" />
+                <EditText android:id="@+id/in_answerback" style="@style/TnInput"
+                    android:inputType="text"
+                    android:hint="" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- VT DA Alias -->
+            <LinearLayout android:id="@+id/row_vt_alias" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="VT DA Alias" />
+                <TextView android:id="@+id/val_vt_alias" style="@style/TnValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- F5 envia sequência PuTTY -->
+            <LinearLayout android:id="@+id/row_f5_putty" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="F5 envia sequência PuTTY" />
+                <CheckBox android:id="@+id/ck_f5_putty" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- Silenciar alarme do host -->
+            <LinearLayout android:id="@+id/row_silence_alarm" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Silenciar alarme do host" />
+                <CheckBox android:id="@+id/ck_silence_alarm" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- Máximo de alarmes de host consecutivos -->
+            <LinearLayout android:id="@+id/row_max_alarms" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Máximo de alarmes de host consecutivos" />
+                <TextView android:id="@+id/val_max_alarms" style="@style/TnValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- Ignorar sequências de escape desconhecidas -->
+            <LinearLayout android:id="@+id/row_ignore_escapes" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Ignorar sequências de escape desconhecidas" />
+                <CheckBox android:id="@+id/ck_ignore_escapes" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

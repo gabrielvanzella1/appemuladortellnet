@@ -57,6 +57,28 @@ class TerminalEmulator(
     private var state = State.NORMAL
     private val csiParams = StringBuilder()
 
+    // ---- VT Options (aplicadas pelo TelnetViewModel via setVtOptions) ----
+    var addLfToCr = false           // \r também avança linha
+    var noAutoWrap = false          // nenhuma coluna 81 — cursor fica na col 80
+    var scrollMode = true           // true=rola, false=wrapa para linha 0
+    var silenceHostAlarm = true     // ignorar BEL
+    var maxConsecutiveAlarms = Int.MAX_VALUE
+    var ignoreUnknownEscapes = true // true=ignora silenciosamente
+    var answerbackString = ""       // resposta ao ENQ (0x05)
+    var vtDaAlias = "VT100"         // resposta a ESC[c (DA query)
+    var onBell: (() -> Unit)? = null
+    var onEnq: ((String) -> Unit)? = null
+    var onDeviceAttrQuery: ((String) -> Unit)? = null
+    private var consecutiveBells = 0
+
+    // ---- Transliteration Options ----
+    var useSiso = false                  // SI/SO charset-shift suporte (0x0F / 0x0E)
+    private var charsetG1Active = false  // true = G1 charset ativo (pós SO)
+
+    // ---- General Emulation Options ----
+    var destructiveBackspace = false     // BS apaga o char na posição anterior
+    var captureOnCr = "LF"              // O que fazer ao receber CR: "Desativado", "LF", "CR+LF"
+
     companion object {
         private const val ESC = '\u001B'
         private const val NUL = '\u0000'
@@ -79,20 +101,54 @@ class TerminalEmulator(
     private fun handleNormal(ch: Char) {
         when (ch) {
             ESC -> state = State.ESC
-            '\n' -> { cursorRow++; if (cursorRow >= rows) scrollUp() }
-            '\r' -> cursorCol = 0
-            '\b' -> { if (cursorCol > 0) cursorCol-- }
-            '\t' -> { cursorCol = ((cursorCol / 8) + 1) * 8; if (cursorCol >= cols) cursorCol = cols - 1 }
-            NUL, BEL -> { /* ignorar */ }
-            else -> putChar(ch)
+            '\n' -> {
+                consecutiveBells = 0
+                cursorRow++
+                if (cursorRow >= rows) { if (scrollMode) scrollUp() else cursorRow = 0 }
+            }
+            '\r' -> {
+                consecutiveBells = 0
+                cursorCol = 0
+                // addLfToCr (VT Opções) OU captureOnCr (Geral) com LF/CR+LF
+                if (addLfToCr || captureOnCr == "LF" || captureOnCr == "CR+LF") {
+                    cursorRow++
+                    if (cursorRow >= rows) { if (scrollMode) scrollUp() else cursorRow = 0 }
+                }
+            }
+            '\b' -> {
+                consecutiveBells = 0
+                if (cursorCol > 0) {
+                    cursorCol--
+                    if (destructiveBackspace) {
+                        chars[cursorRow][cursorCol] = ' '
+                        fg[cursorRow][cursorCol]    = curFg
+                        bold[cursorRow][cursorCol]  = false
+                        field[cursorRow][cursorCol] = false
+                    }
+                }
+            }
+            '\t' -> { consecutiveBells = 0; cursorCol = ((cursorCol / 8) + 1) * 8; if (cursorCol >= cols) cursorCol = cols - 1 }
+            NUL -> { /* ignorar */ }
+            '' -> { if (useSiso) charsetG1Active = true  }  // SO: shift out → G1
+            '' -> { if (useSiso) charsetG1Active = false }  // SI: shift in  → G0
+            BEL -> {
+                consecutiveBells++
+                if (!silenceHostAlarm && (maxConsecutiveAlarms == Int.MAX_VALUE || consecutiveBells <= maxConsecutiveAlarms)) {
+                    onBell?.invoke()
+                }
+            }
+            '' -> onEnq?.invoke(answerbackString)   // ENQ — servidor pede identificação
+            else -> { consecutiveBells = 0; putChar(ch) }
         }
     }
 
     private fun handleEsc(ch: Char) {
         when (ch) {
             '[' -> { csiParams.setLength(0); state = State.CSI }
-            // Sequências ESC simples que não tratamos: descartar e voltar
-            else -> state = State.NORMAL
+            else -> {
+                if (!ignoreUnknownEscapes) Timber.d("ESC desconhecido: $ch")
+                state = State.NORMAL
+            }
         }
     }
 
@@ -129,15 +185,20 @@ class TerminalEmulator(
             'm' -> applySgr(params)
             'd' -> cursorRow = ((params.getOrNull(0) ?: 1) - 1).coerceIn(0, rows - 1)  // VPA
             'G' -> cursorCol = ((params.getOrNull(0) ?: 1) - 1).coerceIn(0, cols - 1)  // CHA
-            else -> Timber.d("CSI nao tratado: $command ($paramStr)")
+            'c' -> if ((params.getOrNull(0) ?: 0) == 0) onDeviceAttrQuery?.invoke(vtDaAlias)  // DA
+            else -> if (!ignoreUnknownEscapes) Timber.d("CSI nao tratado: $command ($paramStr)")
         }
     }
 
     private fun putChar(ch: Char) {
         if (cursorCol >= cols) {
-            cursorCol = 0
-            cursorRow++
-            if (cursorRow >= rows) scrollUp()
+            if (noAutoWrap) {
+                cursorCol = cols - 1  // fica na última coluna (sem coluna 81)
+            } else {
+                cursorCol = 0
+                cursorRow++
+                if (cursorRow >= rows) { if (scrollMode) scrollUp() else cursorRow = 0 }
+            }
         }
         if (cursorRow in 0 until rows && cursorCol in 0 until cols) {
             chars[cursorRow][cursorCol] = ch
@@ -369,5 +430,6 @@ class TerminalEmulator(
         curConceal = false
         state = State.NORMAL
         csiParams.setLength(0)
+        consecutiveBells = 0
     }
 }

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="Configurar teclado ScanTE"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/ic_arrow_back" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="24dp">
+
+            <!-- ===== PÁGINAS PADRÃO ===== -->
+            <TextView style="@style/TnSection" android:text="Páginas padrão" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnValue"
+                    android:text="Página QWERTY (letras)"
+                    android:layout_weight="1" />
+                <CheckBox android:id="@+id/ck_qwerty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnValue"
+                    android:text="Página numérica (0-9)"
+                    android:layout_weight="1" />
+                <CheckBox android:id="@+id/ck_numeric"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnValue"
+                    android:text="Página Navegação (setas, Home, End…)"
+                    android:layout_weight="1" />
+                <CheckBox android:id="@+id/ck_navigation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnValue"
+                    android:text="Página Fn + Ctrl (F1–F12, Ctrl A-Z)"
+                    android:layout_weight="1" />
+                <CheckBox android:id="@+id/ck_function_keys"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <!-- ===== LINHA DE SÍMBOLOS ===== -->
+            <TextView style="@style/TnSection" android:text="Linha de símbolos (página numérica)" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Digite os símbolos que aparecerão na linha superior da página numérica (rolável):"
+                    android:textSize="13sp"
+                    android:textColor="#666666"
+                    android:paddingBottom="6dp"/>
+
+                <EditText
+                    android:id="@+id/et_symbols_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:fontFamily="monospace"
+                    android:textSize="18sp"
+                    android:hint="@#$%&amp;*()[]{}&lt;&gt;/|=_" />
+            </LinearLayout>
+
+            <!-- ===== PÁGINAS PERSONALIZADAS ===== -->
+            <TextView style="@style/TnSection" android:text="Páginas personalizadas" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:text="Adicione páginas extras com botões de terminal (setas, Fn, Ctrl…). Role o teclado horizontalmente para acessá-las."
+                android:textSize="13sp"
+                android:textColor="#666666" />
+
+            <LinearLayout
+                android:id="@+id/ll_extra_pages"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <Button
+                android:id="@+id/btn_add_page"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:layout_marginTop="8dp"
+                android:text="＋ Adicionar página"
+                android:backgroundTint="@color/primary" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

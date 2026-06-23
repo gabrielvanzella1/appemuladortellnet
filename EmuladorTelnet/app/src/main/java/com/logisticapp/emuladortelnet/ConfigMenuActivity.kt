@@ -35,9 +35,15 @@ class ConfigMenuActivity : AppCompatActivity() {
         }
 
         // Emulacao
-        findViewById<android.view.View>(R.id.config_vt).setOnClickListener { emBreve("VT Opções") }
-        findViewById<android.view.View>(R.id.config_transliteracao).setOnClickListener { emBreve("Transliteração") }
-        findViewById<android.view.View>(R.id.config_geral).setOnClickListener { emBreve("Geral") }
+        findViewById<android.view.View>(R.id.config_vt).setOnClickListener {
+            startActivity(android.content.Intent(this, VtOptionsActivity::class.java))
+        }
+        findViewById<android.view.View>(R.id.config_transliteracao).setOnClickListener {
+            startActivity(android.content.Intent(this, TransliterationActivity::class.java))
+        }
+        findViewById<android.view.View>(R.id.config_geral).setOnClickListener {
+            startActivity(android.content.Intent(this, GeneralEmulationActivity::class.java))
+        }
 
         // Tela
         findViewById<android.view.View>(R.id.config_toolbar).setOnClickListener {
@@ -51,9 +57,18 @@ class ConfigMenuActivity : AppCompatActivity() {
         }
         findViewById<android.view.View>(R.id.config_vt_attr_map).setOnClickListener { emBreve("VT Mapeamento de atributos") }
 
+        // Teclado
+        findViewById<android.view.View>(R.id.config_keyboard).setOnClickListener {
+            startActivity(android.content.Intent(this, KeyboardConfigActivity::class.java))
+        }
+
         // Dispositivos
-        findViewById<android.view.View>(R.id.config_print).setOnClickListener { emBreve("Configuração de impressão") }
-        findViewById<android.view.View>(R.id.config_barcode).setOnClickListener { emBreve("Configuração do leitor de código de barras") }
+        findViewById<android.view.View>(R.id.config_print).setOnClickListener {
+            startActivity(android.content.Intent(this, PrintConfigActivity::class.java))
+        }
+        findViewById<android.view.View>(R.id.config_barcode).setOnClickListener {
+            startActivity(android.content.Intent(this, BarcodeConfigActivity::class.java))
+        }
     }
 
     private fun emBreve(nome: String) {

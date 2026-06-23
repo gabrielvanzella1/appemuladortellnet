@@ -201,18 +201,125 @@ São **4 barras** de botões que aparecem no terminal. Cada botão envia uma tec
 
 ---
 
-## 8. Configurações → Emulação 🔧
-- **VT Opções:** ajustes finos do terminal VT.
-- **Transliteração:** substituição/conversão de caracteres.
-- **Geral:** opções gerais de emulação.
+## 8. Configurações → Emulação
 
-## 9. Configurações → Dispositivos 🔧
-- **Configuração de impressão**
-- **Configuração do leitor de código de barras**
+### VT Opções ✅
+Ajustes finos do comportamento do terminal VT. Cada opção é salva automaticamente ao sair
+da tela e passa a valer na **próxima conexão**.
+
+| Opção | O que faz |
+|---|---|
+| **ECHO mode** | Mostra na tela o que você digita, mesmo quando o servidor não devolve (eco local). Deixe ligado se o que digita "não aparece"; desligue se aparecer **dobrado**. |
+| **Modo ROLO** | Ligado: ao chegar no fim da tela, o conteúdo rola para cima (como um terminal comum). Desligado: a tela volta ao topo sem rolar. |
+| **Modo de linha** | *Desativado* (padrão, segue o ECHO mode) · *Local* (força eco local) · *Remoto* (nunca ecoa localmente). |
+| **Adicionar LFs a CRs** | Cada "Enter" (CR) também avança uma linha. Ligue se o texto recebido fica todo "grudado" na mesma linha. |
+| **Nenhuma coluna 81** | Trava o cursor na coluna 80 em vez de "vazar" para a linha seguinte. Evita quebras de linha indevidas em telas de 80 colunas. |
+| **Ação da tecla Backspace** | *BS* (envia 0x08) ou *DEL* (envia 0x7F). Mude se a tecla apagar não funcionar no sistema. |
+| **String de resposta** | Texto que o app envia automaticamente quando o host pergunta "quem é você?" (caractere ENQ). |
+| **VT DA Alias** | Modelo de terminal informado ao sistema (VT52, VT100, VT220, VT320, ANSI). Também define a resposta de identificação. |
+| **F5 envia sequência PuTTY** | Faz a tecla F5 enviar o código no padrão PuTTY em vez do padrão VT. |
+| **Silenciar alarme do host** | Quando ligado, ignora o "bip" (BEL) enviado pelo sistema. Desligado: toca um som e vibra o aparelho. |
+| **Máximo de alarmes de host consecutivos** | Limita quantos bips seguidos podem tocar (Max = sem limite). |
+| **Ignorar sequências de escape desconhecidas** | Descarta silenciosamente códigos de controle que o app não reconhece, evitando "lixo" na tela. |
+
+### Transliteração ✅
+Controla como os caracteres são codificados e convertidos entre o app e o host.
+As configurações são salvas ao sair da tela e aplicadas na próxima conexão.
+
+#### Caracteres de 16 bits
+| Opção | O que faz |
+|---|---|
+| **Codificação UTF-8** | Quando ligado, o app usa UTF-8 para enviar e receber. Necessário para sistemas que operam com Unicode (ex: Java/web). Quando desligado, usa o charset selecionado em "Conjunto de caracteres hospedeiros". |
+
+#### Caracteres de 8 bits
+| Opção | O que faz |
+|---|---|
+| **8-bit Host** | Ligado: o app transmite caracteres de 8 bits (bytes 0x80–0xFF) ao servidor. Desligado: mascara o 8º bit, forçando todos os bytes a 7 bits — para hosts antigos que não aceitam dados de 8 bits. |
+| **Permitir letras minúsculas para o host** | Ligado: envia o que o usuário digita sem alterar caixa. Desligado: converte todas as letras para MAIÚSCULAS antes de enviar. |
+| **Conjunto de caracteres hospedeiros** | Define a codificação usada para interpretar os bytes recebidos do servidor. Use **Padrão (Latim 1)** para maioria dos ERPs brasileiros, **Windows-1252** para sistemas Windows antigos, ou a codificação específica do seu servidor (ISO 8859-2, Cirílico, etc.). |
+| **Transliteração nacional (host de 7 bits)** | Para hosts que só aceitam ASCII 7 bits, esta opção substitui automaticamente os acentos pelo caractere base ao **enviar** (ex: "ç" → "c", "ã" → "a"). Selecione o idioma para usar o mapa correto. |
+| **Use codificação SISO** | Ativa o suporte a códigos de controle SI (0x0F) e SO (0x0E), usados por alguns hosts para alternar entre dois conjuntos de caracteres. Use somente se o sistema exige (geralmente hosts IBM legados). |
+
+### Geral ✅
+Ajustes de comportamento geral do emulador de terminal.
+
+| Opção | O que faz |
+|---|---|
+| **BS destrutivo** | Quando ligado, a tecla Backspace apaga o caractere na posição anterior além de mover o cursor. Quando desligado, apenas move o cursor (comportamento padrão VT). |
+| **Capturar em CR** | O que o terminal faz ao receber um CR (retorno de carro) do servidor. *Desativado*: apenas move para coluna 1. *LF*: também avança uma linha (útil para sistemas que enviam só CR como terminador). *CR+LF*: avança linha explicitamente. |
+| **Comprimento da rolagem (em páginas)** | Quantas páginas de histórico o terminal guarda para scroll-back (padrão: 32). |
+| **Largura inicial da tela** | Número de colunas da grade do terminal: 80 (padrão VT100) ou 132 (modo largo VT220). Também é enviado ao servidor via NAWS (negociação de tamanho). |
+| **Altura inicial da tela (linhas)** | Número de linhas da grade do terminal (padrão: 24). Também é enviado ao servidor via NAWS. |
+
+## 9. Configurações → Dispositivos
+
+### 9.1. Configuração de impressão ✅
+
+| Campo | Para que serve |
+|---|---|
+| **Tipo de impressora** | Modelo/fabricante da impressora utilizada: Padrão, Epson ESC/POS, Star, Zebra ZPL, Citizen ou Bixolon. |
+| **Tempo limite da impressora (s)** | Segundos que o app aguarda a impressora responder antes de cancelar a operação (padrão: 5). |
+
+### 9.2. Configuração do leitor de código de barras ✅
+
+| Campo | Para que serve |
+|---|---|
+| **Tipo de dispositivo leitor** | Fabricante/modelo do coletor ou leitor de barras: Honeywell, Zebra, Datalogic, Bluebird, Urovo, Newland, Sunmi ou Genérico. |
+| **Ação após verificação** | O que o app faz automaticamente após uma leitura bem-sucedida: *Nenhum* (só insere o texto), *Enter* (envia Enter), *Tab* (avança campo), *Enter + Tab*. |
+| **Remover caracteres no início** | Descarta N caracteres do início do código lido (0–10). Útil para remover prefixos/identificadores do símbolo. |
+| **Remover caracteres no final** | Descarta N caracteres do final do código lido (0–10). Útil para remover sufixos ou checkdigit extra. |
+| **Adicione texto antes** | Texto fixo inserido antes do código lido ao enviar ao sistema. |
+| **Adicione texto depois** | Texto fixo inserido depois do código lido ao enviar ao sistema. |
+| **Usar mapeamento de teclado** | Quando ligado, o leitor é tratado como teclado físico — as teclas lidas passam pelo mapeamento configurado no terminal. |
+| **Mostrar na linha de status** | Exibe um indicador na barra de status quando uma leitura é realizada. |
 
 ---
 
-## 10. Glossário rápido
+## 10. Teclado personalizado ScanTE ✅
+
+O ScanTE inclui um teclado próprio (IME) otimizado para uso em terminais.
+Para ativá-lo: **Configurações do Android → Gerenciar teclados → ScanTE Keyboard** (ligar).
+
+### Como usar
+
+| Gesto / Botão | Ação |
+|---|---|
+| Deslize para a esquerda | Vai para a próxima página do teclado |
+| Deslize para a direita | Volta para a página anterior |
+| Toque em "ABC / 123 / P1…" (abas) | Navega diretamente para aquela página |
+| **⇧** (shift) | Ativa maiúsculas (próximo caractere) · toque novamente = fixo |
+| **⇪** | Capslock ativado |
+| **?!** | Abre teclado de símbolos especiais |
+| **↵** | Envia Enter ao sistema |
+| **⌫** | Apaga o último caractere |
+
+### Páginas padrão
+
+| Página | Conteúdo |
+|---|---|
+| **ABC** | QWERTY completo com números, símbolos e espaço |
+| **123** | Teclado numérico (0–9, operadores) + linha de símbolos configurável |
+
+### Configurar o teclado
+
+Acesse **Configurações → Teclado → Configurar teclado ScanTE**:
+
+| Opção | O que faz |
+|---|---|
+| **Página QWERTY (letras)** | Ativa/desativa a página ABC no teclado |
+| **Página numérica (0-9)** | Ativa/desativa a página 123 |
+| **Linha de símbolos** | Define os caracteres exibidos na linha scrollável do topo da página numérica |
+| **＋ Adicionar página** | Cria uma nova página personalizada (escolha de um preset ou em branco) |
+
+### Páginas personalizadas
+
+Adicione quantas páginas quiser com botões de terminal (setas, teclas Fn, Ctrl+letra,
+comandos customizados). Cada página é editável: adicione/remova botões individualmente
+ou use presets prontos (Navegação, Teclas F, Ctrl A-Z, Símbolos…).
+
+---
+
+## 11. Glossário rápido
 
 - **Telnet:** protocolo de terminal por texto (RFC 854).
 - **CR / LF / CR+LF:** caracteres invisíveis de "fim de linha" enviados ao apertar Enter.

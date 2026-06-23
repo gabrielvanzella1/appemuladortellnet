@@ -157,6 +157,90 @@ class AppSettings private constructor(context: Context) {
         }
         set(v) { prefs.edit().putString(K_TELNET_OPTIONS, gson.toJson(v)).apply() }
 
+    // ----- VT Opcoes -----
+    var vtOptions: VtOptions
+        get() {
+            val json = prefs.getString(K_VT_OPTIONS, null) ?: return VtOptions()
+            return try {
+                gson.fromJson(json, VtOptions::class.java) ?: VtOptions()
+            } catch (e: Exception) {
+                VtOptions()
+            }
+        }
+        set(v) { prefs.edit().putString(K_VT_OPTIONS, gson.toJson(v)).apply() }
+
+    // ----- Configuracao do leitor de codigo de barras -----
+    var barcodeOptions: BarcodeOptions
+        get() {
+            val json = prefs.getString(K_BARCODE_OPTIONS, null) ?: return BarcodeOptions()
+            return try {
+                gson.fromJson(json, BarcodeOptions::class.java) ?: BarcodeOptions()
+            } catch (e: Exception) {
+                BarcodeOptions()
+            }
+        }
+        set(v) { prefs.edit().putString(K_BARCODE_OPTIONS, gson.toJson(v)).apply() }
+
+    // ----- Configuracao de impressao -----
+    var printOptions: PrintOptions
+        get() {
+            val json = prefs.getString(K_PRINT_OPTIONS, null) ?: return PrintOptions()
+            return try {
+                gson.fromJson(json, PrintOptions::class.java) ?: PrintOptions()
+            } catch (e: Exception) {
+                PrintOptions()
+            }
+        }
+        set(v) { prefs.edit().putString(K_PRINT_OPTIONS, gson.toJson(v)).apply() }
+
+    // ----- Geral de emulacao -----
+    var generalEmulationOptions: GeneralEmulationOptions
+        get() {
+            val json = prefs.getString(K_GENERAL_EMULATION, null) ?: return GeneralEmulationOptions()
+            return try {
+                gson.fromJson(json, GeneralEmulationOptions::class.java) ?: GeneralEmulationOptions()
+            } catch (e: Exception) {
+                GeneralEmulationOptions()
+            }
+        }
+        set(v) { prefs.edit().putString(K_GENERAL_EMULATION, gson.toJson(v)).apply() }
+
+    // ----- Teclado personalizado (IME) -----
+    var keyboardSettings: KeyboardSettings
+        get() {
+            val json = prefs.getString(K_KEYBOARD_SETTINGS, null) ?: return KeyboardSettings()
+            return try {
+                gson.fromJson(json, KeyboardSettings::class.java) ?: KeyboardSettings()
+            } catch (e: Exception) {
+                KeyboardSettings()
+            }
+        }
+        set(v) { prefs.edit().putString(K_KEYBOARD_SETTINGS, gson.toJson(v)).apply() }
+
+    fun addKeyboardPage(page: List<ToolbarButton>) {
+        val s = keyboardSettings
+        s.extraPages = s.extraPages + listOf(page)
+        keyboardSettings = s
+    }
+
+    fun removeKeyboardPage(index: Int) {
+        val s = keyboardSettings
+        s.extraPages = s.extraPages.toMutableList().also { it.removeAt(index) }
+        keyboardSettings = s
+    }
+
+    // ----- Transliteracao -----
+    var transliterationOptions: TransliterationOptions
+        get() {
+            val json = prefs.getString(K_TRANSLIT_OPTIONS, null) ?: return TransliterationOptions()
+            return try {
+                gson.fromJson(json, TransliterationOptions::class.java) ?: TransliterationOptions()
+            } catch (e: Exception) {
+                TransliterationOptions()
+            }
+        }
+        set(v) { prefs.edit().putString(K_TRANSLIT_OPTIONS, gson.toJson(v)).apply() }
+
     // ----- Servidor proxy -----
     var proxyOptions: ProxyOptions
         get() {
@@ -215,6 +299,24 @@ class AppSettings private constructor(context: Context) {
 
         // Telnet Opcoes
         private const val K_TELNET_OPTIONS = "telnet_options"
+
+        // VT Opcoes
+        private const val K_VT_OPTIONS = "vt_options"
+
+        // Configuracao do leitor de codigo de barras
+        private const val K_BARCODE_OPTIONS = "barcode_options"
+
+        // Configuracao de impressao
+        private const val K_PRINT_OPTIONS = "print_options"
+
+        // Geral de emulacao
+        private const val K_GENERAL_EMULATION = "general_emulation"
+
+        // Teclado personalizado (IME)
+        private const val K_KEYBOARD_SETTINGS = "keyboard_settings"
+
+        // Transliteracao
+        private const val K_TRANSLIT_OPTIONS = "translit_options"
 
         // Servidor proxy
         private const val K_PROXY_OPTIONS = "proxy_options"

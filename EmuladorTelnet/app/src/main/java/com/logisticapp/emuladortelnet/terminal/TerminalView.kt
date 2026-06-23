@@ -27,6 +27,12 @@ class TerminalView @JvmOverloads constructor(
     /** Bytes enviados ao apertar ENTER (terminador de linha: CR, LF ou CR+LF). */
     var lineTerminator: ByteArray = byteArrayOf(13)
 
+    /** Backspace envia DEL (0x7F) em vez de BS (0x08). */
+    var backspaceAsDel: Boolean = false
+
+    /** F5 envia sequência PuTTY (ESC[[E) em vez do padrão (ESC[15~). */
+    var f5PuttySequence: Boolean = false
+
     init {
         isFocusable = true
         isFocusableInTouchMode = true
@@ -49,17 +55,25 @@ class TerminalView @JvmOverloads constructor(
             }
 
             override fun deleteSurroundingText(beforeLength: Int, afterLength: Int): Boolean {
-                // Backspace em alguns teclados chega por aqui
-                repeat(beforeLength.coerceAtLeast(1)) { onInput?.invoke(byteArrayOf(8)) }
+                val bsByte = if (backspaceAsDel) 127.toByte() else 8.toByte()
+                repeat(beforeLength.coerceAtLeast(1)) { onInput?.invoke(byteArrayOf(bsByte)) }
                 return true
             }
 
             override fun sendKeyEvent(event: KeyEvent): Boolean {
                 if (event.action == KeyEvent.ACTION_DOWN) {
+                    val bsByte = if (backspaceAsDel) 127.toByte() else 8.toByte()
                     when (event.keyCode) {
                         KeyEvent.KEYCODE_ENTER -> { onInput?.invoke(lineTerminator); return true }
-                        KeyEvent.KEYCODE_DEL   -> { onInput?.invoke(byteArrayOf(8)); return true }
+                        KeyEvent.KEYCODE_DEL   -> { onInput?.invoke(byteArrayOf(bsByte)); return true }
                         KeyEvent.KEYCODE_TAB   -> { onInput?.invoke(byteArrayOf(9)); return true }
+                        KeyEvent.KEYCODE_F5    -> {
+                            val seq = if (f5PuttySequence)
+                                byteArrayOf(27, '['.code.toByte(), '['.code.toByte(), 'E'.code.toByte())
+                            else
+                                byteArrayOf(27, '['.code.toByte(), '1'.code.toByte(), '5'.code.toByte(), '~'.code.toByte())
+                            onInput?.invoke(seq); return true
+                        }
                         else -> {
                             val ch = event.unicodeChar
                             if (ch != 0) { onInput?.invoke(byteArrayOf(ch.toByte())); return true }

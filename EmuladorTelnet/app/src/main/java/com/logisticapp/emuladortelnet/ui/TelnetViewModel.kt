@@ -10,6 +10,9 @@ import com.logisticapp.emuladortelnet.data.TelnetConnection
 import com.logisticapp.emuladortelnet.database.SavedConnection
 import com.logisticapp.emuladortelnet.database.TelnetRepository
 import com.logisticapp.emuladortelnet.network.TelnetClient
+import com.logisticapp.emuladortelnet.settings.GeneralEmulationOptions
+import com.logisticapp.emuladortelnet.settings.TransliterationOptions
+import com.logisticapp.emuladortelnet.settings.VtOptions
 import com.logisticapp.emuladortelnet.terminal.TerminalEmulator
 import com.logisticapp.emuladortelnet.terminal.InputHistoryManager
 import kotlinx.coroutines.Dispatchers
@@ -36,8 +39,8 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     // Cliente Telnet
     private val telnetClient = TelnetClient()
 
-    // Emulador de tela VT100 (grade 80x24)
-    private val emulator = TerminalEmulator()
+    // Emulador de tela VT100 (dimensões configuráveis via setGeneralEmulationOptions)
+    private var emulator = TerminalEmulator()
 
     /** Define a cor padrao do texto do terminal (Cores da tela > Primeiro plano). */
     fun setForegroundColor(color: Int) {
@@ -52,6 +55,140 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     /** Define o tipo de terminal informado ao servidor (Telnet Opcoes). */
     fun setTerminalType(type: String) {
         telnetClient.setTerminalType(type)
+    }
+
+    // ---- VT Options ----
+    private var localEcho = false
+    private var lineMode = "Desativado"
+
+    // ---- Transliteration Options ----
+    private var allowLowercase = true
+    private var host8bit = true
+    private var nationalTranslitMode = "Padrão (sem transliteração)"
+
+    // Mapa de transliteração para línguas latinas (PT, FR, DE, ES, IT)
+    private val TRANSLIT_LATIN = mapOf(
+        'á' to 'a', 'à' to 'a', 'â' to 'a', 'ã' to 'a', 'ä' to 'a',
+        'é' to 'e', 'è' to 'e', 'ê' to 'e', 'ë' to 'e',
+        'í' to 'i', 'ì' to 'i', 'î' to 'i', 'ï' to 'i',
+        'ó' to 'o', 'ò' to 'o', 'ô' to 'o', 'õ' to 'o', 'ö' to 'o',
+        'ú' to 'u', 'ù' to 'u', 'û' to 'u', 'ü' to 'u',
+        'ç' to 'c', 'ñ' to 'n', 'ý' to 'y',
+        'Á' to 'A', 'À' to 'A', 'Â' to 'A', 'Ã' to 'A', 'Ä' to 'A',
+        'É' to 'E', 'È' to 'E', 'Ê' to 'E', 'Ë' to 'E',
+        'Í' to 'I', 'Ì' to 'I', 'Î' to 'I', 'Ï' to 'I',
+        'Ó' to 'O', 'Ò' to 'O', 'Ô' to 'O', 'Õ' to 'O', 'Ö' to 'O',
+        'Ú' to 'U', 'Ù' to 'U', 'Û' to 'U', 'Ü' to 'U',
+        'Ç' to 'C', 'Ñ' to 'N', 'Ý' to 'Y'
+    )
+    // Adiciona caracteres nórdicos ao mapa base
+    private val TRANSLIT_NORDIC = TRANSLIT_LATIN + mapOf(
+        'å' to 'a', 'æ' to 'a', 'ø' to 'o',
+        'Å' to 'A', 'Æ' to 'A', 'Ø' to 'O'
+    )
+
+    private fun getTranslitMap(): Map<Char, Char> = when (nationalTranslitMode) {
+        "Português (Brasil)", "Espanhol", "Francês", "Alemão", "Italiano" -> TRANSLIT_LATIN
+        "Sueco / Finlandês", "Norueguês / Dinamarquês" -> TRANSLIT_NORDIC
+        else -> emptyMap()
+    }
+
+    private fun charsetNameFromLabel(label: String): String = when {
+        label.contains("8859-2") -> "ISO-8859-2"
+        label.contains("8859-5") -> "ISO-8859-5"
+        label.contains("8859-7") -> "ISO-8859-7"
+        label.contains("8859-9") -> "ISO-8859-9"
+        label.contains("8859-15") -> "ISO-8859-15"
+        label.contains("1252") -> "windows-1252"
+        label.contains("1251") -> "windows-1251"
+        label.contains("850") -> "IBM850"
+        label.contains("437") -> "IBM437"
+        else -> "ISO-8859-1"
+    }
+
+    /**
+     * Aplica as configurações de transliteração ao cliente Telnet e ao emulador.
+     * Deve ser chamado em MainActivity.onCreate() após ler settings.transliterationOptions.
+     */
+    fun setTransliterationOptions(opts: TransliterationOptions) {
+        allowLowercase = opts.allowLowercase
+        host8bit = opts.host8bit
+        nationalTranslitMode = opts.nationalTranslit
+
+        val charsetName = if (opts.utf8Encoding) "UTF-8" else charsetNameFromLabel(opts.hostCharset)
+        telnetClient.setCharset(charsetName)
+        emulator.useSiso = opts.useSiso
+    }
+
+    // Evento de BEL: a Activity observa e toca o som
+    private val _bellEvent = MutableLiveData<Unit?>(null)
+    val bellEvent: LiveData<Unit?> = _bellEvent
+    fun onBellHandled() { _bellEvent.value = null }
+
+    /**
+     * Aplica todas as VT Opções ao emulador e ao cliente Telnet.
+     * Deve ser chamado em MainActivity.onCreate() após ler settings.vtOptions.
+     */
+    fun setVtOptions(opts: VtOptions) {
+        lineMode  = opts.lineMode
+        // Modo de linha: Local força eco local; Remoto suprime; Desativado segue ECHO mode
+        localEcho = when (opts.lineMode) {
+            "Local"  -> true
+            "Remoto" -> false
+            else     -> opts.echoMode
+        }
+
+        emulator.addLfToCr           = opts.addLfToCr
+        emulator.noAutoWrap          = opts.noColumn81
+        emulator.scrollMode          = opts.scrollMode
+        emulator.silenceHostAlarm    = opts.silenceHostAlarm
+        emulator.maxConsecutiveAlarms = when (opts.maxConsecutiveAlarms) {
+            "Max" -> Int.MAX_VALUE
+            else  -> opts.maxConsecutiveAlarms.toIntOrNull() ?: Int.MAX_VALUE
+        }
+        emulator.ignoreUnknownEscapes = opts.ignoreUnknownEscapes
+        emulator.answerbackString     = opts.answerbackString
+        emulator.vtDaAlias            = opts.vtDaAlias
+
+        // Resposta ao ENQ (0x05) do servidor
+        emulator.onEnq = { str ->
+            if (str.isNotEmpty()) viewModelScope.launch(Dispatchers.IO) {
+                telnetClient.sendRawBytes(str.toByteArray(Charsets.ISO_8859_1))
+            }
+        }
+
+        // Resposta ao DA query (ESC[c)
+        emulator.onDeviceAttrQuery = { alias ->
+            val response = when (alias.uppercase()) {
+                "VT52"  -> "/Z"
+                "VT220" -> "[?62;1;6c"
+                "VT320" -> "[?63;1;6c"
+                else    -> "[?1;0c"   // VT100 / ANSI
+            }
+            viewModelScope.launch(Dispatchers.IO) {
+                telnetClient.sendRawBytes(response.toByteArray(Charsets.ISO_8859_1))
+            }
+        }
+
+        // BEL → notifica a Activity para tocar o som
+        emulator.onBell = { _bellEvent.postValue(Unit) }
+
+        // VT DA Alias define também o tipo de terminal negociado no Telnet
+        if (opts.vtDaAlias.isNotBlank()) telnetClient.setTerminalType(opts.vtDaAlias)
+    }
+
+    /**
+     * Aplica as opções gerais de emulação (BS destrutivo, captura CR, tamanho da tela).
+     * Deve ser chamado em MainActivity.onCreate() após ler settings.generalEmulationOptions.
+     */
+    fun setGeneralEmulationOptions(opts: GeneralEmulationOptions) {
+        emulator.destructiveBackspace = opts.destructiveBackspace
+        emulator.captureOnCr         = opts.captureOnCr
+        // Tamanho da tela: recria o emulador com as novas dimensões (antes de conectar)
+        if (opts.initialWidth != emulator.cols || opts.initialHeight != emulator.rows) {
+            emulator = TerminalEmulator(opts.initialHeight, opts.initialWidth)
+        }
+        telnetClient.setScreenSize(opts.initialWidth, opts.initialHeight)
     }
 
     /** Ativa/desativa o modo binario (transmissao 8-bit). */
@@ -181,8 +318,41 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     /** Envia bytes brutos ao servidor (setas, Ctrl, Esc...) sem adicionar CRLF. */
     fun sendRaw(bytes: ByteArray) {
         if (_connectionState.value != ConnectionState.CONNECTED) return
+
+        // Aplicar transformações de transliteração antes de enviar
+        var out = bytes
+
+        // 1. Transliteração nacional: troca acentuados pelo base ASCII
+        val translitMap = getTranslitMap()
+        if (translitMap.isNotEmpty()) {
+            out = out.map { b ->
+                val c = (b.toInt() and 0xFF).toChar()
+                val mapped = translitMap[c]
+                mapped?.code?.toByte() ?: b
+            }.toByteArray()
+        }
+
+        // 2. Proibir minúsculas: converte a-z → A-Z
+        if (!allowLowercase) {
+            out = out.map { b ->
+                val c = b.toInt() and 0xFF
+                if (c in 0x61..0x7A) (c - 0x20).toByte() else b
+            }.toByteArray()
+        }
+
+        // 3. Host 7-bit: mascara o 8º bit
+        if (!host8bit) {
+            out = out.map { b -> (b.toInt() and 0x7F).toByte() }.toByteArray()
+        }
+
+        // ECHO mode: o terminal local exibe o que foi digitado (quando o host não ecoa)
+        if (localEcho) {
+            val printable = out.none { it.toInt() == 27 || (it.toInt() in 0..31 && it.toInt() != 13 && it.toInt() != 10 && it.toInt() != 8 && it.toInt() != 9) }
+            if (printable) addTerminalOutput(String(out, Charsets.ISO_8859_1))
+        }
+
         viewModelScope.launch(Dispatchers.IO) {
-            telnetClient.sendRawBytes(bytes)
+            telnetClient.sendRawBytes(out)
         }
     }
 

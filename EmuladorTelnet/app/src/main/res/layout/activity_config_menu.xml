@@ -91,6 +91,14 @@
                 <ImageView style="@style/ConfigChevron" />
             </LinearLayout>
 
+            <!-- ===== TECLADO ===== -->
+            <TextView style="@style/ConfigSection" android:text="Teclado" />
+
+            <LinearLayout android:id="@+id/config_keyboard" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Configurar teclado ScanTE" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+
             <!-- ===== DISPOSITIVOS ===== -->
             <TextView style="@style/ConfigSection" android:text="Dispositivos" />
 

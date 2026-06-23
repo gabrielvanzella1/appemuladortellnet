@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="Geral"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/ic_arrow_back" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="32dp">
+
+            <!-- BS destrutivo -->
+            <LinearLayout android:id="@+id/row_destructive_bs" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="BS destrutivo" />
+                <CheckBox android:id="@+id/ck_destructive_bs" style="@style/TnCheck" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- Disponível (seção) -->
+            <TextView style="@style/TnSection" android:text="Disponível" />
+
+            <!-- Capturar em CR -->
+            <LinearLayout android:id="@+id/row_capture_cr" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Capturar em CR" />
+                <TextView android:id="@+id/val_capture_cr" style="@style/TnValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- Comprimento da rolagem -->
+            <LinearLayout android:id="@+id/row_scroll_length" style="@style/TnRow">
+                <TextView style="@style/TnLabel"
+                    android:text="Comprimento da rolagem (em páginas)" />
+                <EditText
+                    android:id="@+id/et_scroll_length"
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:gravity="end"
+                    android:textSize="14sp"
+                    android:background="@null"
+                    android:padding="4dp" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- Largura inicial da tela -->
+            <LinearLayout android:id="@+id/row_initial_width" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Largura inicial da tela" />
+                <TextView android:id="@+id/val_initial_width" style="@style/TnValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- Altura inicial da tela -->
+            <LinearLayout android:id="@+id/row_initial_height" style="@style/TnRow">
+                <TextView style="@style/TnLabel"
+                    android:text="Altura inicial da tela (linhas)" />
+                <EditText
+                    android:id="@+id/et_initial_height"
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:gravity="end"
+                    android:textSize="14sp"
+                    android:background="@null"
+                    android:padding="4dp" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

@@ -31,6 +31,8 @@ class TelnetClient {
     private var isConnected = false
     private var charset: Charset = Charsets.ISO_8859_1
     private var terminalType = "VT100"   // respondido na negociacao IAC TERMINAL-TYPE
+    private var terminalWidth = 80       // largura da tela (NAWS)
+    private var terminalHeight = 24      // altura da tela (NAWS)
     private var binaryMode = false       // negociar transmissao binaria 8-bit
     private var simulateParity = false   // mascarar o 8o bit (paridade) dos dados recebidos
     private var keepAliveType = "TCP"    // TCP | NVT | Desligado
@@ -77,6 +79,12 @@ class TelnetClient {
 
     fun setCharset(name: String) {
         charset = try { Charset.forName(name) } catch (e: Exception) { Charsets.ISO_8859_1 }
+    }
+
+    /** Define o tamanho da tela negociado via NAWS (largura x altura). */
+    fun setScreenSize(width: Int, height: Int) {
+        terminalWidth = width
+        terminalHeight = height
     }
 
     /** Define o tipo de terminal informado ao servidor (ex: VT100, VT220, ANSI). */
@@ -354,11 +362,11 @@ class TelnetClient {
                                         sendRaw(output, byteArrayOf(IAC.toByte(), WILL.toByte(), opt.toByte()))
                                     }
                                     OPT_NAWS -> {
-                                        // Informar tamanho de tela 80x24
                                         sendRaw(output, byteArrayOf(IAC.toByte(), WILL.toByte(), opt.toByte()))
                                         sendRaw(output, byteArrayOf(
                                             IAC.toByte(), SB.toByte(), OPT_NAWS.toByte(),
-                                            0, 80, 0, 24,
+                                            (terminalWidth shr 8).toByte(), terminalWidth.toByte(),
+                                            (terminalHeight shr 8).toByte(), terminalHeight.toByte(),
                                             IAC.toByte(), SE.toByte()
                                         ))
                                     }
