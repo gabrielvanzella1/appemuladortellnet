@@ -43,6 +43,11 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/menu_calculadora"
+        android:title="Calculadora"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/menu_options"
         android:title="Opções gerais"
         app:showAsAction="never" />

@@ -297,9 +297,16 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.menu_logout -> { sair(); true }
+            R.id.menu_calculadora -> { abrirCalculadora(); true }
+            R.id.menu_logout      -> { sair(); true }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun abrirCalculadora() {
+        FloatingCalculatorHelper(this) { resultado ->
+            viewModel.sendRaw(resultado.toByteArray(Charsets.ISO_8859_1))
+        }.show()
     }
 
     private fun sair() {

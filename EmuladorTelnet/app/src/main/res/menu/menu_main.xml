@@ -3,6 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/menu_calculadora"
+        android:title="Calculadora"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/menu_logout"
         android:title="Sair"
         app:showAsAction="never" />

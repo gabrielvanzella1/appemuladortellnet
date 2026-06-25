@@ -58,6 +58,7 @@ Ações que valem para o app / sessões:
 | **Importação** | Importa sessões de um arquivo (.json) |
 | **Exportação** | Compartilha/salva as sessões num arquivo (.json) — backup |
 | **Modelos** | 🔧 Modelos prontos de sessão |
+| **Calculadora** | Abre a calculadora flutuante (ver seção 11) |
 | **Opções gerais** | Configurações de comportamento do app (ver seção 7) |
 | **Sobre ScanTE** | Versão e informações do app |
 
@@ -319,7 +320,44 @@ ou use presets prontos (Navegação, Teclas F, Ctrl A-Z, Símbolos…).
 
 ---
 
-## 11. Glossário rápido
+## 11. Calculadora flutuante ✅
+
+O ScanTE inclui uma **calculadora que flutua sobre qualquer tela** do app e pode ser
+minimizada para um botão arrastável, sem interromper o trabalho no terminal.
+
+### Como abrir
+
+- Na tela de **Sessões** → menu **3 pontos** → **Calculadora**
+- Na tela do **Terminal** → menu **3 pontos** → **Calculadora**
+
+Na primeira vez, o Android pedirá permissão para "exibir sobre outros apps" — toque em
+**Permitir** e volte ao ScanTE; a calculadora abrirá automaticamente.
+
+### Usar a calculadora
+
+| Botão | Função |
+|---|---|
+| **C** | Limpa tudo (começa do zero) |
+| **±** | Inverte o sinal do número (positivo/negativo) |
+| **%** | Divide por 100 (percentual) |
+| **÷ × - +** | Operações aritméticas |
+| **=** | Calcula o resultado |
+| **.** | Ponto decimal |
+
+### Minimizar e mover
+
+| Ação | Como fazer |
+|---|---|
+| **Minimizar** | Toque no ícone **⬇** no cabeçalho — a calculadora vira um botão 🧮 |
+| **Restaurar** | Toque no botão 🧮 |
+| **Mover** | Arraste pelo cabeçalho "⠿  Calculadora" (janela completa) ou arraste o botão 🧮 (minimizado) |
+| **Fechar** | Toque no **✕** no cabeçalho, ou na notificação → **Fechar** |
+
+A calculadora permanece visível mesmo ao trocar de tela dentro do app.
+
+---
+
+## 12. Glossário rápido
 
 - **Telnet:** protocolo de terminal por texto (RFC 854).
 - **CR / LF / CR+LF:** caracteres invisíveis de "fim de linha" enviados ao apertar Enter.

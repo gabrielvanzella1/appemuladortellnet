@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/brand_petrol"
+    android:padding="8dp">
+
+    <!-- Display -->
+    <TextView
+        android:id="@+id/tv_expression"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="28dp"
+        android:gravity="end|center_vertical"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
+        android:textSize="13sp"
+        android:textColor="@color/primary_light"
+        android:singleLine="true"
+        android:ellipsize="start"
+        android:text="" />
+
+    <TextView
+        android:id="@+id/tv_display"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="56dp"
+        android:gravity="end|center_vertical"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
+        android:paddingBottom="4dp"
+        android:textSize="36sp"
+        android:textColor="#FFFFFF"
+        android:fontFamily="monospace"
+        android:singleLine="true"
+        android:ellipsize="start"
+        android:text="0" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/primary_light"
+        android:layout_marginBottom="6dp"/>
+
+    <!-- Linha 1: C  ±  %  ÷ -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/CalcRow">
+        <Button android:id="@+id/btn_clear"    style="@style/CalcBtnFunc"  android:text="C" />
+        <Button android:id="@+id/btn_sign"     style="@style/CalcBtnFunc"  android:text="±" />
+        <Button android:id="@+id/btn_percent"  style="@style/CalcBtnFunc"  android:text="%" />
+        <Button android:id="@+id/btn_div"      style="@style/CalcBtnOp"    android:text="÷" />
+    </LinearLayout>
+
+    <!-- Linha 2: 7  8  9  × -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/CalcRow">
+        <Button android:id="@+id/btn_7"  style="@style/CalcBtnNum" android:text="7" />
+        <Button android:id="@+id/btn_8"  style="@style/CalcBtnNum" android:text="8" />
+        <Button android:id="@+id/btn_9"  style="@style/CalcBtnNum" android:text="9" />
+        <Button android:id="@+id/btn_mul" style="@style/CalcBtnOp"  android:text="×" />
+    </LinearLayout>
+
+    <!-- Linha 3: 4  5  6  - -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/CalcRow">
+        <Button android:id="@+id/btn_4"    style="@style/CalcBtnNum" android:text="4" />
+        <Button android:id="@+id/btn_5"    style="@style/CalcBtnNum" android:text="5" />
+        <Button android:id="@+id/btn_6"    style="@style/CalcBtnNum" android:text="6" />
+        <Button android:id="@+id/btn_sub"  style="@style/CalcBtnOp"  android:text="-" />
+    </LinearLayout>
+
+    <!-- Linha 4: 1  2  3  + -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/CalcRow">
+        <Button android:id="@+id/btn_1"    style="@style/CalcBtnNum" android:text="1" />
+        <Button android:id="@+id/btn_2"    style="@style/CalcBtnNum" android:text="2" />
+        <Button android:id="@+id/btn_3"    style="@style/CalcBtnNum" android:text="3" />
+        <Button android:id="@+id/btn_add"  style="@style/CalcBtnOp"  android:text="+" />
+    </LinearLayout>
+
+    <!-- Linha 5: 0(duplo)  .  = -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/CalcRow">
+        <Button android:id="@+id/btn_0"      style="@style/CalcBtnNum"
+            android:layout_width="0dp" android:layout_weight="2"
+            android:text="0" android:gravity="center_vertical|start"
+            android:paddingLeft="28dp"/>
+        <Button android:id="@+id/btn_dot"    style="@style/CalcBtnNum" android:text="." />
+        <Button android:id="@+id/btn_equals" style="@style/CalcBtnEq"  android:text="=" />
+    </LinearLayout>
+
+    <!-- Botão enviar ao terminal -->
+    <Button
+        android:id="@+id/btn_send_terminal"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="6dp"
+        android:text="→ Enviar ao terminal"
+        android:textSize="14sp"
+        android:backgroundTint="@color/secondary"
+        android:textColor="@color/brand_petrol" />
+
+</LinearLayout>

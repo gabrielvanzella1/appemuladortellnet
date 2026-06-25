@@ -171,6 +171,47 @@
         <item name="android:maxWidth">150dp</item>
     </style>
 
+    <!-- Calculadora (cores ScanTE) -->
+    <style name="CalcRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <style name="CalcBtnBase">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">58dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_margin">3dp</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/brand_white</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <!-- Números: azul petróleo médio -->
+    <style name="CalcBtnNum" parent="CalcBtnBase">
+        <item name="android:backgroundTint">@color/primary_light</item>
+    </style>
+
+    <!-- Operadores: verde jade -->
+    <style name="CalcBtnOp" parent="CalcBtnBase">
+        <item name="android:backgroundTint">@color/secondary</item>
+        <item name="android:textColor">@color/brand_petrol</item>
+    </style>
+
+    <!-- Funções (C ± %): azul petróleo mais escuro -->
+    <style name="CalcBtnFunc" parent="CalcBtnBase">
+        <item name="android:backgroundTint">@color/primary_dark</item>
+        <item name="android:textColor">@color/secondary</item>
+    </style>
+
+    <!-- Igual: verde jade -->
+    <style name="CalcBtnEq" parent="CalcBtnBase">
+        <item name="android:backgroundTint">@color/secondary</item>
+        <item name="android:textColor">@color/brand_petrol</item>
+    </style>
+
     <style name="TnDivider">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">1dp</item>
