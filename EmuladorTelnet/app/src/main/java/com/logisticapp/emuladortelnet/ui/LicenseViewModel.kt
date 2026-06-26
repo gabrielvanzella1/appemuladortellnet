@@ -3,13 +3,16 @@ package com.logisticapp.emuladortelnet.ui
 import android.app.Application
 import android.os.Build
 import androidx.lifecycle.AndroidViewModel
+import com.logisticapp.emuladortelnet.BuildConfig
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.logisticapp.emuladortelnet.license.LicenseApiService
 import com.logisticapp.emuladortelnet.license.LicenseManager
 import com.logisticapp.emuladortelnet.license.MercadoPagoManager
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 class LicenseViewModel(application: Application) : AndroidViewModel(application) {
@@ -58,6 +61,8 @@ class LicenseViewModel(application: Application) : AndroidViewModel(application)
         licenseManager.initializeLicense()
         loadLicenseInfo()
         _deviceInfo.value = licenseManager.getDeviceInfo()
+        syncWithServer()
+        pingServidor()
     }
 
     fun loadLicenseInfo() {
@@ -67,15 +72,67 @@ class LicenseViewModel(application: Application) : AndroidViewModel(application)
             _licenseMessage.value = info.message
             _daysRemaining.value = info.daysRemaining
             _canContinue.value = !info.isExpired
-            _licenseType.value = when (info.status) {
-                "PREMIUM" -> "Vitalício"
-                "TRIAL" -> "Teste"
+            _licenseType.value = when {
+                info.status == "PREMIUM" && info.daysRemaining == -1 -> "Vitalício"
+                info.status == "PREMIUM" -> licenseManager.getLicenseSubtype()
+                    .replaceFirstChar { it.uppercaseChar() }
+                info.status == "TRIAL" -> "Teste"
                 else -> "Expirado"
             }
         } catch (e: Exception) {
             Timber.e(e, "Erro ao carregar licença")
             _errorMessage.value = "Erro ao carregar informações da licença"
             _canContinue.value = false
+        }
+    }
+
+    /**
+     * Re-valida a licença salva com o servidor.
+     * Se foi revogada/expirada no admin, atualiza o estado local.
+     * Se o servidor não responder, mantém o estado local (modo offline).
+     */
+    private fun syncWithServer() {
+        val savedKey = licenseManager.getSavedLicenseKey() ?: return
+        viewModelScope.launch {
+            try {
+                val deviceId = licenseManager.getDeviceId()
+                val deviceNome = "${Build.MANUFACTURER} ${Build.MODEL}"
+                val result = apiService.validarChave(savedKey, deviceId, deviceNome)
+                if (result.isSuccess) {
+                    val validacao = result.getOrNull()!!
+                    if (validacao.sucesso) {
+                        licenseManager.upgradeToPremiumByKey(
+                            chave = validacao.chave,
+                            tipo = validacao.tipo,
+                            diasRestantes = validacao.diasRestantes
+                        )
+                    } else {
+                        licenseManager.revokeLicense()
+                        Timber.d("Licença inválida no servidor: ${validacao.erro}")
+                    }
+                    loadLicenseInfo()
+                }
+            } catch (e: Exception) {
+                Timber.w(e, "Sem conexão com servidor — usando licença local")
+            }
+        }
+    }
+
+    private fun pingServidor() {
+        val deviceId   = licenseManager.getDeviceId()
+        val deviceNome = "${Build.MANUFACTURER} ${Build.MODEL}"
+        val appVersion = BuildConfig.VERSION_NAME
+        val licenseKey = licenseManager.getSavedLicenseKey()
+        viewModelScope.launch {
+            // NonCancellable garante que o ping termina mesmo se a Activity for destruída
+            withContext(NonCancellable) {
+                try {
+                    apiService.pingServidor(deviceId, deviceNome, appVersion, licenseKey)
+                    Timber.d("Ping enviado com sucesso")
+                } catch (e: Exception) {
+                    Timber.w(e, "Ping ao servidor falhou: ${e.message}")
+                }
+            }
         }
     }
 

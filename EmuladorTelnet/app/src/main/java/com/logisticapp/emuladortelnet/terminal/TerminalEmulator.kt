@@ -355,6 +355,7 @@ class TerminalEmulator(
     /**
      * Renderiza a grade como CharSequence com spans de cor/negrito/campo.
      * Campos de preenchimento (video reverso/fundo) recebem cor de fundo (fieldColor).
+     * A célula do cursor sempre recebe destaque para indicar o campo ativo.
      */
     fun renderSpannable(): CharSequence {
         val sb = android.text.SpannableStringBuilder()
@@ -362,6 +363,8 @@ class TerminalEmulator(
 
         var lastContentRow = rows - 1
         while (lastContentRow > 0 && isRowBlank(lastContentRow)) lastContentRow--
+        // Garante que a linha do cursor seja sempre renderizada (mesmo que esteja em linha vazia)
+        if (cursorRow > lastContentRow) lastContentRow = cursorRow.coerceAtMost(rows - 1)
 
         for (r in 0..lastContentRow) {
             var c = 0
@@ -377,7 +380,6 @@ class TerminalEmulator(
                 val end = sb.length
 
                 if (isField) {
-                    // Cor de fundo do campo: configurada, ou reverso natural (cor do texto)
                     val bg = if (fieldColor != 0) fieldColor else color
                     sb.setSpan(android.text.style.BackgroundColorSpan(bg), start, end, spannable)
                     sb.setSpan(android.text.style.ForegroundColorSpan(contrastOn(bg)), start, end, spannable)
@@ -390,6 +392,20 @@ class TerminalEmulator(
             }
             if (r < lastContentRow) sb.append("\n")
         }
+
+        // Destaque do cursor: cada linha tem exatamente cols chars + 1 '\n' (exceto a última)
+        // Posição no spannable = cursorRow * (cols + 1) + cursorCol
+        if (cursorCol < cols) {
+            val cursorPos = cursorRow * (cols + 1) + cursorCol
+            if (cursorPos < sb.length) {
+                val cursorBg = if (fieldColor != 0) fieldColor else Color.rgb(0, 200, 100)
+                sb.setSpan(android.text.style.BackgroundColorSpan(cursorBg),
+                    cursorPos, cursorPos + 1, spannable)
+                sb.setSpan(android.text.style.ForegroundColorSpan(contrastOn(cursorBg)),
+                    cursorPos, cursorPos + 1, spannable)
+            }
+        }
+
         return sb
     }
 

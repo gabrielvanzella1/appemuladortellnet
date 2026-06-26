@@ -34,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var settings: AppSettings
     private var hasConnected = false
     private var manualDisconnect = false
+    private var slotId = -1
 
     // Dados da conexao atual (para reconexao automatica)
     private var currentHost = ""
@@ -48,6 +49,7 @@ class MainActivity : AppCompatActivity() {
         const val EXTRA_PORT    = "extra_port"
         const val EXTRA_NAME    = "extra_name"
         const val EXTRA_HOST_ID = "extra_host_id"
+        const val EXTRA_SLOT_ID = "extra_slot_id"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,82 +85,40 @@ class MainActivity : AppCompatActivity() {
         }
 
         repository = TelnetRepository.getInstance(this)
-        val factory = TelnetViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, factory).get(TelnetViewModel::class.java)
-        viewModel.setForegroundColor(settings.colorForeground)
-        viewModel.setFieldColor(settings.colorInputField)
-        viewModel.setTerminalType(settings.telnetOptions.terminalType)
-        viewModel.setBinaryMode(settings.telnetOptions.binaryMode)
-        viewModel.setSimulateParity(settings.telnetOptions.simulateParity)
-        viewModel.setKeepAlive(
-            settings.telnetOptions.keepAliveType,
-            settings.telnetOptions.keepAliveInterval.toIntOrNull() ?: 0
-        )
-        viewModel.setAutoLogin(
-            settings.telnetOptions.waitLoginPrompt,
-            settings.telnetOptions.loginWith,
-            settings.telnetOptions.waitPasswordPrompt,
-            settings.telnetOptions.password,
-            settings.telnetOptions.waitCommandPrompt,
-            settings.telnetOptions.doCommand
-        )
-        // SSL: carrega bytes do certificado cliente, se houver
-        val sslOpts = settings.telnetOptions
-        val certBytes: ByteArray? = if (sslOpts.useSsl && sslOpts.clientCertFile.isNotBlank()) {
-            try { java.io.File(sslOpts.clientCertFile).readBytes() } catch (e: Exception) { null }
-        } else null
-        viewModel.setSsl(sslOpts.useSsl, certBytes, sslOpts.clientCertPassword)
 
-        // SSH: carrega chave privada, se houver
-        val keyBytes: ByteArray? = if (sslOpts.useSsh && sslOpts.sshPrivateKey.isNotBlank()) {
-            try { java.io.File(sslOpts.sshPrivateKey).readBytes() } catch (e: Exception) { null }
-        } else null
-        val sshPortInt = currentPort  // usa a porta da sessão, ou pode vir de sshServer separado
-        val sshHostStr = sslOpts.sshServer.ifBlank { currentHost }
-        val sshPortParsed = sslOpts.sshServer.substringAfter(":", "22").toIntOrNull() ?: sshPortInt
-        val sshHostParsed = sslOpts.sshServer.substringBefore(":").ifBlank { sshHostStr }
-        viewModel.setSshConfig(
-            sslOpts.useSsh,
-            sshHostParsed,
-            sshPortParsed,
-            sslOpts.sshUsername,
-            sslOpts.sshPassword,
-            keyBytes,
-            sslOpts.sshKeepAlive.toIntOrNull() ?: 0
-        )
+        // Determina a origem da sessão: SessionStore (multi-sessão) ou intent direto
+        slotId = intent.getIntExtra(EXTRA_SLOT_ID, -1)
+        val slot = if (slotId >= 0) SessionStore.get(slotId) else null
 
-        // Proxy HTTP CONNECT
-        val proxyOpts = settings.proxyOptions
-        val proxyPortInt = proxyOpts.port.toIntOrNull() ?: 30855
-        val proxyHostStr = proxyOpts.address.substringBefore(":")
-        val proxyPortParsed = proxyOpts.address.substringAfter(":", "").toIntOrNull() ?: proxyPortInt
-        viewModel.setProxy(proxyOpts.useServer, proxyHostStr, proxyPortParsed, proxyOpts.secureComm)
+        if (slot != null) {
+            currentHost = slot.host
+            currentPort = slot.port
+            currentName = slot.hostName
+            viewModel = slot.viewModel
+        } else {
+            currentHost = intent.getStringExtra(EXTRA_HOST) ?: ""
+            currentPort = intent.getIntExtra(EXTRA_PORT, 23)
+            currentName = intent.getStringExtra(EXTRA_NAME) ?: currentHost
+            val factory = TelnetViewModelFactory(repository)
+            viewModel = ViewModelProvider(this, factory).get(TelnetViewModel::class.java)
+        }
 
-        // Terminador de linha (Enter): aplica ao teclado
-        binding.terminalOutput.lineTerminator = lineTerminatorBytes()
-
-        // VT Opções (ECHO, Modo ROLO, Backspace, alarme, etc.)
-        val vtOpts = settings.vtOptions
-        viewModel.setVtOptions(vtOpts)
-        binding.terminalOutput.backspaceAsDel = vtOpts.backspaceAction == "DEL"
-        binding.terminalOutput.f5PuttySequence = vtOpts.f5PuttySequence
-
-        // Transliteração (charset, lowercase, SISO, etc.)
-        viewModel.setTransliterationOptions(settings.transliterationOptions)
-
-        // Opções gerais de emulação (BS destrutivo, captura CR, tamanho da tela)
-        viewModel.setGeneralEmulationOptions(settings.generalEmulationOptions)
-
+        applyViewModelSettings()
         setupListeners()
         observeViewModel()
         registerScreenOffReceiver()
 
-        currentHost = intent.getStringExtra(EXTRA_HOST) ?: ""
-        currentPort = intent.getIntExtra(EXTRA_PORT, 23)
-        currentName = intent.getStringExtra(EXTRA_NAME) ?: currentHost
+        if (currentName.isNotEmpty()) binding.statusText.text = currentName
 
-        if (currentHost.isNotEmpty()) {
-            binding.statusText.text = currentName
+        if (slot != null) {
+            if (viewModel.connectionState.value == ConnectionState.CONNECTED) hasConnected = true
+            if (viewModel.connectionState.value == ConnectionState.DISCONNECTED && currentHost.isNotEmpty()) {
+                viewModel.connect(currentHost, currentPort.toString())
+                Timber.d("Conectando (slot $slotId): $currentName -> $currentHost:$currentPort")
+            } else {
+                Timber.d("Retomando sessão (slot $slotId): $currentName [${viewModel.connectionState.value}]")
+            }
+        } else if (currentHost.isNotEmpty()) {
             viewModel.connect(currentHost, currentPort.toString())
             Timber.d("Auto-conectando: $currentName -> $currentHost:$currentPort")
         }
@@ -177,15 +137,94 @@ class MainActivity : AppCompatActivity() {
         registerReceiver(screenOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (slotId >= 0) binding.btnBackSessions.visibility = View.VISIBLE
+        updateSessionBadge()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         screenOffReceiver?.let { runCatching { unregisterReceiver(it) } }
     }
 
+    private fun updateSessionBadge() {
+        if (slotId >= 0 && SessionStore.activeCount() > 1) {
+            binding.tvSessionBadge.text = "⇄"
+            binding.tvSessionBadge.visibility = View.VISIBLE
+        } else {
+            binding.tvSessionBadge.visibility = View.GONE
+        }
+    }
+
+    private fun applyViewModelSettings() {
+        viewModel.setForegroundColor(settings.colorForeground)
+        viewModel.setFieldColor(settings.colorInputField)
+        viewModel.setTerminalType(settings.telnetOptions.terminalType)
+        viewModel.setBinaryMode(settings.telnetOptions.binaryMode)
+        viewModel.setSimulateParity(settings.telnetOptions.simulateParity)
+        viewModel.setKeepAlive(
+            settings.telnetOptions.keepAliveType,
+            settings.telnetOptions.keepAliveInterval.toIntOrNull() ?: 0
+        )
+        viewModel.setAutoLogin(
+            settings.telnetOptions.waitLoginPrompt,
+            settings.telnetOptions.loginWith,
+            settings.telnetOptions.waitPasswordPrompt,
+            settings.telnetOptions.password,
+            settings.telnetOptions.waitCommandPrompt,
+            settings.telnetOptions.doCommand
+        )
+        val sslOpts = settings.telnetOptions
+        val certBytes: ByteArray? = if (sslOpts.useSsl && sslOpts.clientCertFile.isNotBlank()) {
+            try { java.io.File(sslOpts.clientCertFile).readBytes() } catch (e: Exception) { null }
+        } else null
+        viewModel.setSsl(sslOpts.useSsl, certBytes, sslOpts.clientCertPassword)
+        val keyBytes: ByteArray? = if (sslOpts.useSsh && sslOpts.sshPrivateKey.isNotBlank()) {
+            try { java.io.File(sslOpts.sshPrivateKey).readBytes() } catch (e: Exception) { null }
+        } else null
+        val sshHostStr = sslOpts.sshServer.ifBlank { currentHost }
+        val sshPortParsed = sslOpts.sshServer.substringAfter(":", "22").toIntOrNull() ?: currentPort
+        val sshHostParsed = sslOpts.sshServer.substringBefore(":").ifBlank { sshHostStr }
+        viewModel.setSshConfig(
+            sslOpts.useSsh, sshHostParsed, sshPortParsed,
+            sslOpts.sshUsername, sslOpts.sshPassword, keyBytes,
+            sslOpts.sshKeepAlive.toIntOrNull() ?: 0
+        )
+        val proxyOpts = settings.proxyOptions
+        val proxyPortInt = proxyOpts.port.toIntOrNull() ?: 30855
+        val proxyHostStr = proxyOpts.address.substringBefore(":")
+        val proxyPortParsed = proxyOpts.address.substringAfter(":", "").toIntOrNull() ?: proxyPortInt
+        viewModel.setProxy(proxyOpts.useServer, proxyHostStr, proxyPortParsed, proxyOpts.secureComm)
+        binding.terminalOutput.lineTerminator = lineTerminatorBytes()
+        val vtOpts = settings.vtOptions
+        viewModel.setVtOptions(vtOpts)
+        binding.terminalOutput.backspaceAsDel = vtOpts.backspaceAction == "DEL"
+        binding.terminalOutput.f5PuttySequence = vtOpts.f5PuttySequence
+        viewModel.setTransliterationOptions(settings.transliterationOptions)
+        viewModel.setGeneralEmulationOptions(settings.generalEmulationOptions)
+    }
+
     private fun setupListeners() {
         binding.disconnectButton.setOnClickListener {
             manualDisconnect = true
-            viewModel.disconnect()
+            if (slotId >= 0) SessionStore.close(slotId) else viewModel.disconnect()
+            finish()
+        }
+
+        binding.btnBackSessions.apply {
+            visibility = if (slotId >= 0) View.VISIBLE else View.GONE
+            setOnClickListener { finish() }
+        }
+
+        binding.tvSessionBadge.setOnClickListener {
+            val other = SessionStore.otherSession(slotId)
+            if (other != null) {
+                startActivity(Intent(this, MainActivity::class.java).apply {
+                    putExtra(EXTRA_SLOT_ID, other.slotId)
+                })
+            }
+            finish()
         }
 
         // Digitacao vai direto ao servidor (via TerminalView), como num emulador real
@@ -310,19 +349,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sair() {
-        android.app.AlertDialog.Builder(this)
-            .setTitle("Sair")
-            .setMessage("Deseja sair da aplicacao?")
-            .setPositiveButton("Sim") { _, _ ->
-                manualDisconnect = true
-                viewModel.disconnect()
-                val intent = Intent(this, HostsActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                startActivity(intent)
-                finish()
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
+        finish()
     }
 
     private fun hideKeyboard() {

@@ -145,6 +145,41 @@ class AppSettings private constructor(context: Context) {
         }
     }
 
+    fun renameButton(barIndex: Int, buttonIndex: Int, newLabel: String) {
+        val bars = toolbars.map { it.toMutableList() }.toMutableList()
+        if (barIndex in bars.indices && buttonIndex in bars[barIndex].indices) {
+            val old = bars[barIndex][buttonIndex]
+            bars[barIndex][buttonIndex] = ToolbarButton(newLabel, old.action)
+            toolbars = bars
+        }
+    }
+
+    fun addBar() {
+        val bars = toolbars.map { it.toMutableList() }.toMutableList()
+        if (bars.size < 6) { bars.add(mutableListOf()); toolbars = bars }
+    }
+
+    fun removeBar(barIndex: Int) {
+        val bars = toolbars.map { it.toMutableList() }.toMutableList()
+        if (bars.size > 1 && barIndex in bars.indices) { bars.removeAt(barIndex); toolbars = bars }
+    }
+
+    fun moveBarUp(barIndex: Int) {
+        val bars = toolbars.map { it.toMutableList() }.toMutableList()
+        if (barIndex > 0 && barIndex in bars.indices) {
+            val tmp = bars[barIndex]; bars[barIndex] = bars[barIndex - 1]; bars[barIndex - 1] = tmp
+            toolbars = bars
+        }
+    }
+
+    fun moveBarDown(barIndex: Int) {
+        val bars = toolbars.map { it.toMutableList() }.toMutableList()
+        if (barIndex < bars.size - 1 && barIndex in bars.indices) {
+            val tmp = bars[barIndex]; bars[barIndex] = bars[barIndex + 1]; bars[barIndex + 1] = tmp
+            toolbars = bars
+        }
+    }
+
     // ----- Telnet Opcoes -----
     var telnetOptions: TelnetOptions
         get() {

@@ -264,9 +264,15 @@ class HostsActivity : AppCompatActivity() {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 
+    override fun onResume() {
+        super.onResume()
+        adapter.notifyDataSetChanged()
+    }
+
     private fun showPopupMenu(host: SavedConnection, anchor: View) {
         val popup = PopupMenu(this, anchor)
-        popup.menu.add(0, 1, 0, "Conectar")
+        val connectLabel = if (SessionStore.isActive(host.id)) "Retomar" else "Conectar"
+        popup.menu.add(0, 1, 0, connectLabel)
         popup.menu.add(0, 2, 1, "Editar")
         popup.menu.add(0, 3, 2, "Configuracao")
         popup.menu.add(0, 4, 3, "Remover")
@@ -283,11 +289,14 @@ class HostsActivity : AppCompatActivity() {
     }
 
     private fun connectToHost(host: SavedConnection) {
+        val result = SessionStore.openOrResume(this, host.id, host.name, host.host, host.port)
+        if (result == null) {
+            toast("Máximo de 2 sessões ativas. Desconecte uma para abrir outra.")
+            return
+        }
+        val (slotId, _) = result
         val intent = Intent(this, MainActivity::class.java).apply {
-            putExtra(MainActivity.EXTRA_HOST, host.host)
-            putExtra(MainActivity.EXTRA_PORT, host.port)
-            putExtra(MainActivity.EXTRA_NAME, host.name)
-            putExtra(MainActivity.EXTRA_HOST_ID, host.id)
+            putExtra(MainActivity.EXTRA_SLOT_ID, slotId)
         }
         startActivity(intent)
     }
@@ -345,11 +354,13 @@ class HostsAdapter(
     inner class VH(view: View) : RecyclerView.ViewHolder(view) {
         private val name: TextView = view.findViewById(R.id.host_name)
         private val address: TextView = view.findViewById(R.id.host_address)
+        private val badge: TextView = view.findViewById(R.id.tv_active_badge)
         private val btnMenu: ImageButton = view.findViewById(R.id.btn_menu)
 
         fun bind(host: SavedConnection) {
             name.text = host.name
             address.text = "${host.host}:${host.port}"
+            badge.visibility = if (SessionStore.isActive(host.id)) View.VISIBLE else View.GONE
             itemView.setOnClickListener { onItemClick(host) }
             btnMenu.setOnClickListener { onMenuClick(host, btnMenu) }
         }

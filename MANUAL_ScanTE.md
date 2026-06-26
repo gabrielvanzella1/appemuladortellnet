@@ -72,11 +72,33 @@ Ações que valem para o app / sessões:
   "Desconectar") para abrir o teclado. O que você digita vai **direto** para o sistema —
   é assim que se preenche Usuário, Senha e comandos.
 - **Ícone de teclado:** mostra/oculta o teclado virtual.
-- **Desconectar:** encerra a conexão.
+- **Desconectar:** encerra a conexão e volta às Sessões.
+- **◀ Voltar às sessões (sem desconectar):** botão no canto esquerdo da barra — volta para
+  a tela de Sessões **mantendo a conexão ativa** em segundo plano. Para retomar, toque
+  novamente na sessão na lista (ela exibirá **● Conectado**).
+- **⇄ Badge de sessão:** aparece quando há **2 sessões ativas** simultaneamente. Toque
+  para voltar à lista de Sessões e escolher qual sessão operar.
 - **Barras de ferramentas:** botões de atalho (setas, Enter, Ctrl+letra, etc.) configuráveis
   (ver seção 6.3).
 - **Campos de preenchimento destacados:** os campos editáveis do sistema (ex: Usuário,
   Senha) aparecem com cor de fundo, para você ver onde digitar.
+- **Menu 3 pontos → Sessões (manter conexão):** volta às Sessões sem desconectar (igual
+  ao botão ◀).
+
+### 4.1 Múltiplas sessões simultâneas ✅
+
+O ScanTE permite **até 2 conexões Telnet ativas ao mesmo tempo**, em servidores diferentes.
+
+**Como usar:**
+1. Conecte à primeira sessão normalmente → terminal abre.
+2. Toque em **◀** (ou menu → Sessões) para voltar à lista **sem fechar a conexão**.
+3. Na lista, a sessão aparece com **● Conectado** ao lado do endereço.
+4. Toque em **Conectar** na segunda sessão → segundo terminal abre.
+5. Para alternar entre os terminais abertos, use o botão **⇄** que aparece na barra
+   superior quando há 2 sessões ativas.
+
+**Limite:** ao tentar abrir uma 3ª sessão, o app exibe aviso _"Máximo de 2 sessões ativas"_.
+Desconecte uma delas primeiro usando o botão **Desconectar** no terminal correspondente.
 
 ---
 
@@ -180,10 +202,19 @@ por dentro desse túnel de forma transparente.
 - *Ajuste de cor (escuro/brilhante):* 🔧
 
 ### 6.3. Configuração da barra de ferramentas ✅
-São **4 barras** de botões que aparecem no terminal. Cada botão envia uma tecla/comando
+São até **6 barras** de botões que aparecem no terminal. Cada botão envia uma tecla/comando
 (setas, Enter, Esc, Ctrl+letra, texto, Connect/Disconnect…).
-- **Adicionar:** escolhe a barra e adiciona botões prontos (Find, Select, Copy, Paste, etc.).
-- **Tocar num botão da lista:** remove.
+
+**Gerenciar barras:**
+- **+ Nova barra de ferramentas:** cria uma nova barra (máximo 6).
+- **▲ / ▼:** reordena a posição das barras.
+- **🗑:** remove a barra (pede confirmação).
+
+**Gerenciar botões dentro de uma barra:**
+- **Adicionar (chip):** toque para abrir a lista de teclas/comandos disponíveis e adicionar à barra.
+- **✎ (renomear):** define um nome personalizado para o botão. Ex: adicione F1 e renomeie
+  para "Iniciar" — no terminal aparecerá o rótulo "Iniciar", mas enviará a tecla F1.
+- **✕:** remove o botão da barra.
 
 ### 6.4. Opções de tela / VT Mapeamento de atributos 🔧
 
@@ -357,7 +388,50 @@ A calculadora permanece visível mesmo ao trocar de tela dentro do app.
 
 ---
 
-## 12. Glossário rápido
+## 12. Painel de Administração — Dispositivos ✅
+
+O painel **scante-admin** inclui uma seção **Dispositivos** que exibe todos os aparelhos
+que já abriram o app, com ou sem licença.
+
+### Como funciona
+
+A cada vez que o app é aberto, ele envia automaticamente ao servidor as seguintes informações:
+- Nome e ID do dispositivo
+- Versão do app
+- Chave de licença (se houver)
+
+Essas informações ficam registradas e visíveis no painel em **Menu → Dispositivos**.
+
+### Dashboard — Dispositivos
+
+| Card | O que mostra |
+|---|---|
+| **Total** | Quantidade de dispositivos distintos que já abriram o app |
+| **Online agora** | Dispositivos que abriram o app nos últimos 5 minutos |
+| **Com licença ativa** | Aparelhos com licença ativa vinculada |
+| **Sem licença** | Aparelhos que ainda não ativaram uma licença |
+
+### Tabela de dispositivos
+
+| Coluna | Descrição |
+|---|---|
+| **Dispositivo** | Nome do aparelho (Fabricante + Modelo) e Device ID (truncado) |
+| **Empresa** | Empresa vinculada à licença (quando houver) |
+| **Licença** | Chave SCTE ativada no dispositivo (quando houver) |
+| **Status** | Ativa · Trial · Expirada · Revogada · Sem licença |
+| **Primeiro acesso** | Data/hora da primeira abertura do app neste aparelho |
+| **Último acesso** | Data/hora da última abertura — exibe badge **Online** quando < 5 min |
+| **Versão** | Versão do app instalado no aparelho |
+
+### Filtros disponíveis
+
+- **Buscar:** pesquisa por nome do dispositivo, empresa ou chave de licença.
+- **Status Licença:** filtra por Ativa, Sem licença, Expirada, Revogada ou Trial.
+- **Presença:** exibe apenas dispositivos Online agora ou Offline.
+
+---
+
+## 13. Glossário rápido
 
 - **Telnet:** protocolo de terminal por texto (RFC 854).
 - **CR / LF / CR+LF:** caracteres invisíveis de "fim de linha" enviados ao apertar Enter.

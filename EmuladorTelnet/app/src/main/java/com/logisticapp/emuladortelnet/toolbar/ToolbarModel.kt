@@ -13,7 +13,7 @@ data class ToolbarButton(
  */
 object ToolbarCatalog {
 
-    const val NUM_BARS = 4
+    const val MAX_BARS = 6
 
     /**
      * Bytes a enviar ao servidor para a acao. Retorna null para acoes

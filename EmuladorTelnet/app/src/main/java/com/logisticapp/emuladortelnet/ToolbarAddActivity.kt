@@ -121,7 +121,7 @@ class ToolbarAddActivity : AppCompatActivity() {
             }
             val chip = TextView(this).apply {
                 text = btn.label
-                setTextColor(0xFF333333.toInt())
+                setTextColor(0xFFFFFFFF.toInt())
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
                 gravity = Gravity.CENTER
                 minWidth = dp(56)
@@ -262,8 +262,8 @@ class ToolbarAddActivity : AppCompatActivity() {
     private fun chipBg(): android.graphics.drawable.Drawable {
         return android.graphics.drawable.GradientDrawable().apply {
             cornerRadius = dp(6).toFloat()
-            setColor(0xFFE8E8E8.toInt())
-            setStroke(dp(1), 0xFFBBBBBB.toInt())
+            setColor(0xFF2E5C6E.toInt())   // mesma cor dos botões no terminal
+            setStroke(dp(1), 0xFF1B4A63.toInt())
         }
     }
 

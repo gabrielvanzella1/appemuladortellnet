@@ -13,7 +13,7 @@ class LicenseApiService {
 
     companion object {
         // Altere para a URL de produção após o deploy do scante-admin
-        const val BASE_URL = "http://scante-admin.test"
+        const val BASE_URL = "http://172.23.3.37:8099"
         private const val API_SECRET = "SCANTE_API_SECRET_MUDE_ISSO_2026"
         private const val TIMEOUT_MS = 15_000
     }
@@ -26,6 +26,36 @@ class LicenseApiService {
         val expiraEm: String = "",
         val erro: String = ""
     )
+
+    suspend fun pingServidor(
+        deviceId: String,
+        deviceNome: String,
+        appVersion: String,
+        licenseKey: String?
+    ): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            val url = URL("$BASE_URL/api/dispositivo/ping")
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "POST"
+                setRequestProperty("Content-Type", "application/json")
+                setRequestProperty("Authorization", "Bearer $API_SECRET")
+                connectTimeout = TIMEOUT_MS
+                readTimeout = TIMEOUT_MS
+                doOutput = true
+            }
+            val body = JSONObject().apply {
+                put("device_id",   deviceId)
+                put("device_nome", deviceNome)
+                put("app_version", appVersion)
+                if (licenseKey != null) put("license_key", licenseKey)
+            }.toString()
+            OutputStreamWriter(conn.outputStream).use { it.write(body) }
+            conn.responseCode
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
     suspend fun validarChave(
         chave: String,
@@ -56,22 +86,21 @@ class LicenseApiService {
             val response = BufferedReader(InputStreamReader(stream)).use { it.readText() }
             val json = JSONObject(response)
 
-            if (json.optBoolean("sucesso", false)) {
-                val licenca = json.optJSONObject("licenca") ?: JSONObject()
+            if (json.optBoolean("valida", false)) {
                 Result.success(
                     ValidacaoResult(
                         sucesso = true,
-                        chave = licenca.optString("chave"),
-                        tipo = licenca.optString("tipo"),
-                        diasRestantes = licenca.optInt("dias_restantes", -1),
-                        expiraEm = licenca.optString("expira_em")
+                        chave = chave.trim().uppercase(),
+                        tipo = json.optString("tipo", "vitalicia"),
+                        diasRestantes = if (json.isNull("dias_restantes")) -1 else json.optInt("dias_restantes", -1),
+                        expiraEm = json.optString("expira_em")
                     )
                 )
             } else {
                 Result.success(
                     ValidacaoResult(
                         sucesso = false,
-                        erro = json.optString("erro", "Chave inválida ou já vinculada a outro dispositivo.")
+                        erro = json.optString("mensagem", "Chave inválida ou já vinculada a outro dispositivo.")
                     )
                 )
             }

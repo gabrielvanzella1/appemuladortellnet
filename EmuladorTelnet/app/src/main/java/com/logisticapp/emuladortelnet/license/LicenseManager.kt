@@ -25,6 +25,7 @@ class LicenseManager(private val context: Context) {
         private const val KEY_DEVICE_ID = "license_device_id"
         private const val KEY_LICENSE_KEY = "license_key"
         private const val KEY_LICENSE_TYPE = "license_type"
+        private const val KEY_LICENSE_SUBTYPE = "license_subtype"   // "vitalicia" | "mensal" | etc
         private const val KEY_TRIAL_START_DATE = "trial_start_date"
         private const val KEY_TRIAL_END_DATE = "trial_end_date"
         private const val KEY_PURCHASE_DATE = "purchase_date"
@@ -59,7 +60,7 @@ class LicenseManager(private val context: Context) {
 
         val deviceId = getDeviceId()
         val now = System.currentTimeMillis()
-        val trialEndDate = now + (30L * 24 * 60 * 60 * 1000)
+        val trialEndDate = now + (7L * 24 * 60 * 60 * 1000)
 
         prefs.edit().apply {
             putString(KEY_DEVICE_ID, deviceId)
@@ -165,21 +166,40 @@ class LicenseManager(private val context: Context) {
         prefs.edit().apply {
             putString(KEY_LICENSE_KEY, chave)
             putString(KEY_LICENSE_TYPE, "PREMIUM")
+            putString(KEY_LICENSE_SUBTYPE, tipo)
             putLong(KEY_PURCHASE_DATE, System.currentTimeMillis())
             putBoolean(KEY_IS_ACTIVE, true)
             if (diasRestantes > 0) {
                 val expiry = System.currentTimeMillis() + (diasRestantes.toLong() * 24 * 60 * 60 * 1000)
                 putLong(KEY_TRIAL_END_DATE, expiry)
+            } else {
+                putLong(KEY_TRIAL_END_DATE, 0L) // vitalicia: sem expiração
             }
             apply()
         }
-        Timber.d("Licença PREMIUM ativada via chave $chave - tipo: $tipo")
+        Timber.d("Licença PREMIUM ativada via chave $chave - tipo: $tipo - dias: $diasRestantes")
+    }
+
+    /**
+     * Revoga a licença local (chamado quando o servidor retorna revogada/expirada).
+     */
+    fun revokeLicense() {
+        prefs.edit().apply {
+            putString(KEY_LICENSE_TYPE, "TRIAL")
+            putBoolean(KEY_IS_ACTIVE, false)
+            putLong(KEY_TRIAL_END_DATE, 0L)  // zera para isTrialValid() retornar false
+            // Mantém KEY_LICENSE_KEY para poder re-verificar no servidor depois
+            apply()
+        }
+        Timber.d("Licença revogada localmente por sincronização com servidor")
     }
 
     /**
      * Retorna a chave de licença salva localmente (pode ser null se nunca ativado via servidor).
      */
     fun getSavedLicenseKey(): String? = prefs.getString(KEY_LICENSE_KEY, null)?.takeIf { it.startsWith("SCTE-") }
+
+    fun getLicenseSubtype(): String = prefs.getString(KEY_LICENSE_SUBTYPE, "vitalicia") ?: "vitalicia"
 
     /**
      * Atualizar ID do pedido Mercado Pago
@@ -197,13 +217,27 @@ class LicenseManager(private val context: Context) {
         val trialStartDate = prefs.getLong(KEY_TRIAL_START_DATE, System.currentTimeMillis())
         val purchaseDate = prefs.getLong(KEY_PURCHASE_DATE, 0L)
 
+        val subtype = prefs.getString(KEY_LICENSE_SUBTYPE, "vitalicia") ?: "vitalicia"
+        val expiryDate = prefs.getLong(KEY_TRIAL_END_DATE, 0L)
+        val premiumExpired = expiryDate > 0L && System.currentTimeMillis() > expiryDate
+
         return when {
-            licenseType == "PREMIUM" && isActive -> {
+            licenseType == "PREMIUM" && isActive && !premiumExpired && subtype == "vitalicia" -> {
                 LicenseDisplayInfo(
                     status = "PREMIUM",
                     message = "Licença Vitalícia Ativa",
                     purchaseDate = formatDate(purchaseDate),
                     daysRemaining = -1,
+                    isExpired = false
+                )
+            }
+            licenseType == "PREMIUM" && isActive && !premiumExpired -> {
+                val days = ((expiryDate - System.currentTimeMillis()) / 86400000).toInt().coerceAtLeast(0)
+                LicenseDisplayInfo(
+                    status = "PREMIUM",
+                    message = "Licença Ativa — $days dias restantes (expira ${formatDate(expiryDate)})",
+                    purchaseDate = formatDate(purchaseDate),
+                    daysRemaining = days,
                     isExpired = false
                 )
             }

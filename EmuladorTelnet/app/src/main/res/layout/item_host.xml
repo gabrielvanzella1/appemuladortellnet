@@ -47,6 +47,17 @@
             android:textSize="13sp"
             android:textColor="@color/text_secondary"
             android:layout_marginTop="2dp" />
+
+        <TextView
+            android:id="@+id/tv_active_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="● Conectado"
+            android:textColor="#00D67A"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:layout_marginTop="2dp"
+            android:visibility="gone" />
     </LinearLayout>
 
     <!-- Botao 3 pontos -->
