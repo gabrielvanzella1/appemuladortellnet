@@ -75,6 +75,16 @@
             android:name=".ScreenColorsActivity"
             android:exported="false" />
 
+        <!-- Configuracoes > Tela > VT Mapeamento de atributos -->
+        <activity
+            android:name=".VtAttrMapActivity"
+            android:exported="false" />
+
+        <!-- Modelos de sessao -->
+        <activity
+            android:name=".TemplatesActivity"
+            android:exported="false" />
+
         <!-- Configuracoes > Tela > Configuracao da barra de ferramentas -->
         <activity
             android:name=".ToolbarConfigActivity"

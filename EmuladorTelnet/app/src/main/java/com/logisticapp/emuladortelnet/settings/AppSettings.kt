@@ -116,6 +116,44 @@ class AppSettings private constructor(context: Context) {
         get() = prefs.getInt(K_COLOR_INPUT_FIELD, 0) // 0 = reverso natural
         set(v) { prefs.edit().putInt(K_COLOR_INPUT_FIELD, v).apply() }
 
+    // ----- Ajuste de cor (0 = automático) -----
+    var colorFgDark: Int
+        get() = prefs.getInt(K_COLOR_FG_DARK, 0)
+        set(v) { prefs.edit().putInt(K_COLOR_FG_DARK, v).apply() }
+
+    var colorFgBright: Int
+        get() = prefs.getInt(K_COLOR_FG_BRIGHT, 0)
+        set(v) { prefs.edit().putInt(K_COLOR_FG_BRIGHT, v).apply() }
+
+    var colorBgAdjust: Int
+        get() = prefs.getInt(K_COLOR_BG_ADJUST, 0)
+        set(v) { prefs.edit().putInt(K_COLOR_BG_ADJUST, v).apply() }
+
+    // ----- VT Mapeamento de atributos -----
+    var vtAttrMap: VtAttrMapOptions
+        get() {
+            val json = prefs.getString(K_VT_ATTR_MAP, null) ?: return VtAttrMapOptions()
+            return try {
+                gson.fromJson(json, VtAttrMapOptions::class.java) ?: VtAttrMapOptions()
+            } catch (e: Exception) {
+                VtAttrMapOptions()
+            }
+        }
+        set(v) { prefs.edit().putString(K_VT_ATTR_MAP, gson.toJson(v)).apply() }
+
+    // ----- Modelos de sessao -----
+    var sessionTemplates: List<SessionTemplate>
+        get() {
+            val json = prefs.getString(K_SESSION_TEMPLATES, null) ?: return emptyList()
+            return try {
+                val type = object : TypeToken<List<SessionTemplate>>() {}.type
+                gson.fromJson<List<SessionTemplate>>(json, type) ?: emptyList()
+            } catch (e: Exception) {
+                emptyList()
+            }
+        }
+        set(v) { prefs.edit().putString(K_SESSION_TEMPLATES, gson.toJson(v)).apply() }
+
     // ----- Barras de ferramentas (4 barras de botoes) -----
     var toolbars: List<List<ToolbarButton>>
         get() {
@@ -328,6 +366,11 @@ class AppSettings private constructor(context: Context) {
         private const val K_COLOR_STATUS_FG = "color_status_fg"
         private const val K_COLOR_STATUS_BG = "color_status_bg"
         private const val K_COLOR_INPUT_FIELD = "color_input_field"
+        private const val K_COLOR_FG_DARK = "color_fg_dark"
+        private const val K_COLOR_FG_BRIGHT = "color_fg_bright"
+        private const val K_COLOR_BG_ADJUST = "color_bg_adjust"
+        private const val K_VT_ATTR_MAP = "vt_attr_map"
+        private const val K_SESSION_TEMPLATES = "session_templates"
 
         // Barras de ferramentas
         private const val K_TOOLBARS = "toolbars"

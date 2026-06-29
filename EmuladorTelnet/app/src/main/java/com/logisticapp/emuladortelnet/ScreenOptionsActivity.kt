@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.CheckBox
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -84,14 +83,34 @@ class ScreenOptionsActivity : AppCompatActivity() {
             settings.fields3DWhiteBg = checkFields3dWhite.isChecked
         }
 
-        // Demais seletores — refinaremos depois
-        findViewById<View>(R.id.row_font_name).setOnClickListener { emBreve("Nome da fonte") }
-        findViewById<View>(R.id.row_cursor_type).setOnClickListener { emBreve("Tipo de cursor") }
-        findViewById<View>(R.id.row_cursor_color).setOnClickListener { emBreve("Cor do cursor") }
-        findViewById<View>(R.id.row_fields_3d).setOnClickListener { emBreve("Campos variáveis 3D") }
-        findViewById<View>(R.id.row_show_toolbar).setOnClickListener { emBreve("Mostrar barra de ferramentas") }
-        findViewById<View>(R.id.row_limit_view).setOnClickListener { emBreve("Limitar visualização da tela") }
-        findViewById<View>(R.id.row_double_tap).setOnClickListener { emBreve("Toque duas vezes") }
+        findViewById<View>(R.id.row_font_name).setOnClickListener { pickOption("Nome da fonte",
+            arrayOf("Padrão", "Courier New", "Droid Sans Mono"), settings.fontName) {
+            settings.fontName = it; valFontName.text = it
+        }}
+        findViewById<View>(R.id.row_cursor_type).setOnClickListener { pickOption("Tipo de cursor",
+            arrayOf("Bloco", "Barra", "Sublinhado", "Nenhum"), settings.cursorType) {
+            settings.cursorType = it; valCursorType.text = it
+        }}
+        findViewById<View>(R.id.row_cursor_color).setOnClickListener { pickOption("Cor do cursor",
+            arrayOf("Verde", "Branco", "Ciano", "Amarelo", "Vermelho", "Azul", "Laranja"), settings.cursorColor) {
+            settings.cursorColor = it; valCursorColor.text = it
+        }}
+        findViewById<View>(R.id.row_fields_3d).setOnClickListener { pickOption("Campos variáveis 3D",
+            arrayOf("Ligado sem atributos", "Ligado com atributos", "Desligado"), settings.fields3D) {
+            settings.fields3D = it; valFields3d.text = it
+        }}
+        findViewById<View>(R.id.row_show_toolbar).setOnClickListener { pickOption("Mostrar barra de ferramentas",
+            arrayOf("Automático", "Sempre", "Nunca"), settings.showToolbar) {
+            settings.showToolbar = it; valShowToolbar.text = it
+        }}
+        findViewById<View>(R.id.row_limit_view).setOnClickListener { pickOption("Limitar visualização da tela",
+            arrayOf("Sem limite", "26,20", "40,24", "80,24", "132,24"), settings.limitView) {
+            settings.limitView = it; valLimitView.text = it
+        }}
+        findViewById<View>(R.id.row_double_tap).setOnClickListener { pickOption("Toque duas vezes",
+            arrayOf("Redefinir tamanho da tela", "Zoom in", "Zoom out", "Nenhum"), settings.doubleTapAction) {
+            settings.doubleTapAction = it; valDoubleTap.text = it
+        }}
     }
 
     private fun pickFontSize() {
@@ -110,7 +129,15 @@ class ScreenOptionsActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun emBreve(nome: String) {
-        Toast.makeText(this, "$nome: em breve", Toast.LENGTH_SHORT).show()
+    private fun pickOption(title: String, options: Array<String>, current: String, onPick: (String) -> Unit) {
+        val checked = options.indexOf(current).takeIf { it >= 0 } ?: 0
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setSingleChoiceItems(options, checked) { dialog, which ->
+                onPick(options[which])
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 }

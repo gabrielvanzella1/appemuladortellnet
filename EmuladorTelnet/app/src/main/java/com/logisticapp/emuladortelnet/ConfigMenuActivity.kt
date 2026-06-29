@@ -1,7 +1,6 @@
 package com.logisticapp.emuladortelnet
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.logisticapp.emuladortelnet.settings.AppSettings
@@ -55,7 +54,9 @@ class ConfigMenuActivity : AppCompatActivity() {
         findViewById<android.view.View>(R.id.config_screen_colors).setOnClickListener {
             startActivity(android.content.Intent(this, ScreenColorsActivity::class.java))
         }
-        findViewById<android.view.View>(R.id.config_vt_attr_map).setOnClickListener { emBreve("VT Mapeamento de atributos") }
+        findViewById<android.view.View>(R.id.config_vt_attr_map).setOnClickListener {
+            startActivity(android.content.Intent(this, VtAttrMapActivity::class.java))
+        }
 
         // Teclado
         findViewById<android.view.View>(R.id.config_keyboard).setOnClickListener {
@@ -71,7 +72,4 @@ class ConfigMenuActivity : AppCompatActivity() {
         }
     }
 
-    private fun emBreve(nome: String) {
-        Toast.makeText(this, "$nome: em breve", Toast.LENGTH_SHORT).show()
-    }
 }

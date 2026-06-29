@@ -5,7 +5,6 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.View
 import android.widget.GridLayout
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -27,6 +26,9 @@ class ScreenColorsActivity : AppCompatActivity() {
     private lateinit var swatchStatusFg: View
     private lateinit var swatchStatusBg: View
     private lateinit var swatchInputField: View
+    private lateinit var swatchFgDark: View
+    private lateinit var swatchFgBright: View
+    private lateinit var swatchBgAdjust: View
 
     // Paleta de cores oferecida no seletor
     private val palette = intArrayOf(
@@ -52,6 +54,9 @@ class ScreenColorsActivity : AppCompatActivity() {
         swatchStatusFg    = findViewById(R.id.swatch_status_fg)
         swatchStatusBg    = findViewById(R.id.swatch_status_bg)
         swatchInputField  = findViewById(R.id.swatch_input_field)
+        swatchFgDark      = findViewById(R.id.swatch_fg_dark)
+        swatchFgBright    = findViewById(R.id.swatch_fg_bright)
+        swatchBgAdjust    = findViewById(R.id.swatch_adjust_bg)
 
         refreshSwatches()
         setupListeners()
@@ -63,6 +68,9 @@ class ScreenColorsActivity : AppCompatActivity() {
         applySwatch(swatchStatusFg, settings.colorStatusForeground)
         applySwatch(swatchStatusBg, settings.colorStatusBackground)
         applySwatch(swatchInputField, settings.colorInputField)
+        applySwatch(swatchFgDark, settings.colorFgDark)
+        applySwatch(swatchFgBright, settings.colorFgBright)
+        applySwatch(swatchBgAdjust, settings.colorBgAdjust)
     }
 
     private fun setupListeners() {
@@ -92,10 +100,24 @@ class ScreenColorsActivity : AppCompatActivity() {
             }
         }
 
-        // Ajuste de cor — refinar depois
-        findViewById<View>(R.id.row_fg_dark).setOnClickListener { emBreve("Primeiro plano escuro") }
-        findViewById<View>(R.id.row_fg_bright).setOnClickListener { emBreve("Primeiro plano brilhante") }
-        findViewById<View>(R.id.row_adjust_bg).setOnClickListener { emBreve("Plano de fundo (ajuste)") }
+        // Ajuste de cor — cor do texto escuro (dim/SGR 2)
+        findViewById<View>(R.id.row_fg_dark).setOnClickListener {
+            showColorPicker("Primeiro plano escuro", true) {
+                settings.colorFgDark = it; applySwatch(swatchFgDark, it)
+            }
+        }
+        // Ajuste de cor — cor do texto brilhante (bold)
+        findViewById<View>(R.id.row_fg_bright).setOnClickListener {
+            showColorPicker("Primeiro plano brilhante", true) {
+                settings.colorFgBright = it; applySwatch(swatchFgBright, it)
+            }
+        }
+        // Ajuste de cor — fundo para texto escuro
+        findViewById<View>(R.id.row_adjust_bg).setOnClickListener {
+            showColorPicker("Plano de fundo (ajuste)", true) {
+                settings.colorBgAdjust = it; applySwatch(swatchBgAdjust, it)
+            }
+        }
     }
 
     /** Pinta o quadradinho de amostra. color == 0 => "padrao" (borda tracejada vermelha). */
@@ -148,8 +170,4 @@ class ScreenColorsActivity : AppCompatActivity() {
     }
 
     private fun dp(v: Float): Float = v * resources.displayMetrics.density
-
-    private fun emBreve(nome: String) {
-        Toast.makeText(this, "$nome: em breve", Toast.LENGTH_SHORT).show()
-    }
 }

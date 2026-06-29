@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="Mapeamento de atributos VT"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/ic_arrow_back" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="8dp"
+            android:paddingBottom="24dp">
+
+            <TextView style="@style/ConfigSection" android:text="Atributos de vídeo" />
+
+            <!-- Negrito -->
+            <LinearLayout android:id="@+id/row_bold_mode" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Negrito" />
+                <TextView android:id="@+id/val_bold_mode" style="@style/ConfigItemValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <!-- Sublinhado -->
+            <LinearLayout android:id="@+id/row_underline" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Sublinhado (SGR 4)" />
+                <CheckBox android:id="@+id/check_underline"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:buttonTint="@color/primary" />
+            </LinearLayout>
+            <View style="@style/ConfigItemDivider" />
+
+            <!-- Piscante -->
+            <LinearLayout android:id="@+id/row_blink_mode" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Piscante (SGR 5)" />
+                <TextView android:id="@+id/val_blink_mode" style="@style/ConfigItemValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

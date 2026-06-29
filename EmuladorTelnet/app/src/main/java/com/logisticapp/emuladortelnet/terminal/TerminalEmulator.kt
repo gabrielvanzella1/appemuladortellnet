@@ -30,9 +30,12 @@ class TerminalEmulator(
         }
     }
 
-    private val chars = Array(rows) { CharArray(cols) { ' ' } }
-    private val fg    = Array(rows) { IntArray(cols) { defaultFg } }
-    private val bold  = Array(rows) { BooleanArray(cols) { false } }
+    private val chars     = Array(rows) { CharArray(cols) { ' ' } }
+    private val fg        = Array(rows) { IntArray(cols) { defaultFg } }
+    private val bold      = Array(rows) { BooleanArray(cols) { false } }
+    private val dim       = Array(rows) { BooleanArray(cols) { false } }
+    private val underline = Array(rows) { BooleanArray(cols) { false } }
+    private val blink     = Array(rows) { BooleanArray(cols) { false } }
     // Marca celulas que sao "campo de preenchimento" (video reverso ou cor de fundo)
     private val field = Array(rows) { BooleanArray(cols) { false } }
 
@@ -41,6 +44,9 @@ class TerminalEmulator(
 
     private var curFg = defaultFg
     private var curBold = false
+    private var curDim = false
+    private var curUnderline = false
+    private var curBlink = false
     private var curReverse = false
     private var curBgSet = false
     private var curConceal = false   // texto oculto (tipico de campo de senha)
@@ -52,6 +58,32 @@ class TerminalEmulator(
     fun setFieldColor(color: Int) {
         fieldColor = color
     }
+
+    // ---- Cursor display settings (Opções de tela) ----
+    /** true = cursor visível; false = oculto (blinking toggle). */
+    var showCursor: Boolean = true
+    /** "Barra", "Bloco", "Sublinhado", "Nenhum" */
+    var cursorDisplayType: String = "Bloco"
+    /** Cor ARGB do cursor. */
+    var cursorDisplayColor: Int = Color.rgb(0, 200, 100)
+    /** "Ligado sem atributos", "Ligado com atributos", "Desligado" */
+    var fields3dMode: String = "Ligado sem atributos"
+
+    // ---- Color Adjust settings (Ajuste de cor) ----
+    /** Cor do texto escuro (SGR 2 = dim). 0 = escurece 50% automaticamente. */
+    var dimFgColor: Int = 0
+    /** Cor do texto brilhante (bold com modo cor). 0 = clareia 50% automaticamente. */
+    var brightFgColor: Int = 0
+    /** Fundo para texto escuro (dim). 0 = sem ajuste de fundo. */
+    var bgAdjustColor: Int = 0
+
+    // ---- VT Attr Map settings (Mapeamento de atributos VT) ----
+    /** "Negrito", "Cor brilhante", "Negrito+Cor", "Nenhum" */
+    var boldMode: String = "Negrito"
+    /** SGR 4 (sublinhado) habilitado. */
+    var underlineEnabled: Boolean = true
+    /** Como renderizar piscante (SGR 5): "Negrito", "Cor brilhante", "Nenhum" */
+    var blinkMode: String = "Nenhum"
 
     private enum class State { NORMAL, ESC, CSI }
     private var state = State.NORMAL
@@ -201,10 +233,13 @@ class TerminalEmulator(
             }
         }
         if (cursorRow in 0 until rows && cursorCol in 0 until cols) {
-            chars[cursorRow][cursorCol] = ch
-            fg[cursorRow][cursorCol] = curFg
-            bold[cursorRow][cursorCol] = curBold
-            field[cursorRow][cursorCol] = curReverse || curBgSet || curConceal
+            chars[cursorRow][cursorCol]     = ch
+            fg[cursorRow][cursorCol]        = curFg
+            bold[cursorRow][cursorCol]      = curBold
+            dim[cursorRow][cursorCol]       = curDim
+            underline[cursorRow][cursorCol] = curUnderline
+            blink[cursorRow][cursorCol]     = curBlink
+            field[cursorRow][cursorCol]     = curReverse || curBgSet || curConceal
         }
         cursorCol++
     }
@@ -212,16 +247,22 @@ class TerminalEmulator(
     private fun scrollUp() {
         // Rola tudo uma linha para cima e limpa a última
         for (r in 0 until rows - 1) {
-            chars[r] = chars[r + 1].copyOf()
-            fg[r] = fg[r + 1].copyOf()
-            bold[r] = bold[r + 1].copyOf()
-            field[r] = field[r + 1].copyOf()
+            chars[r]     = chars[r + 1].copyOf()
+            fg[r]        = fg[r + 1].copyOf()
+            bold[r]      = bold[r + 1].copyOf()
+            dim[r]       = dim[r + 1].copyOf()
+            underline[r] = underline[r + 1].copyOf()
+            blink[r]     = blink[r + 1].copyOf()
+            field[r]     = field[r + 1].copyOf()
         }
         val last = rows - 1
-        chars[last] = CharArray(cols) { ' ' }
-        fg[last] = IntArray(cols) { defaultFg }
-        bold[last] = BooleanArray(cols) { false }
-        field[last] = BooleanArray(cols) { false }
+        chars[last]     = CharArray(cols) { ' ' }
+        fg[last]        = IntArray(cols) { defaultFg }
+        bold[last]      = BooleanArray(cols) { false }
+        dim[last]       = BooleanArray(cols) { false }
+        underline[last] = BooleanArray(cols) { false }
+        blink[last]     = BooleanArray(cols) { false }
+        field[last]     = BooleanArray(cols) { false }
         cursorRow = last
     }
 
@@ -256,28 +297,37 @@ class TerminalEmulator(
 
     private fun clearRow(r: Int) {
         for (c in 0 until cols) {
-            chars[r][c] = ' '
-            fg[r][c] = defaultFg
-            bold[r][c] = false
-            field[r][c] = false
+            chars[r][c]     = ' '
+            fg[r][c]        = defaultFg
+            bold[r][c]      = false
+            dim[r][c]       = false
+            underline[r][c] = false
+            blink[r][c]     = false
+            field[r][c]     = false
         }
     }
 
     private fun clearRowFrom(r: Int, fromCol: Int) {
         for (c in fromCol until cols) {
-            chars[r][c] = ' '
-            fg[r][c] = defaultFg
-            bold[r][c] = false
-            field[r][c] = false
+            chars[r][c]     = ' '
+            fg[r][c]        = defaultFg
+            bold[r][c]      = false
+            dim[r][c]       = false
+            underline[r][c] = false
+            blink[r][c]     = false
+            field[r][c]     = false
         }
     }
 
     private fun clearRowTo(r: Int, toCol: Int) {
         for (c in 0..toCol.coerceAtMost(cols - 1)) {
-            chars[r][c] = ' '
-            fg[r][c] = defaultFg
-            bold[r][c] = false
-            field[r][c] = false
+            chars[r][c]     = ' '
+            fg[r][c]        = defaultFg
+            bold[r][c]      = false
+            dim[r][c]       = false
+            underline[r][c] = false
+            blink[r][c]     = false
+            field[r][c]     = false
         }
     }
 
@@ -287,12 +337,17 @@ class TerminalEmulator(
         Timber.d("SGR: $list")
         for (p in list) {
             when (p) {
-                0, null -> { curFg = defaultFg; curBold = false; curReverse = false; curBgSet = false; curConceal = false }
-                1 -> curBold = true
-                2, 22 -> curBold = false
-                7 -> curReverse = true       // video reverso (campo)
+                0, null -> { curFg = defaultFg; curBold = false; curDim = false; curUnderline = false; curBlink = false; curReverse = false; curBgSet = false; curConceal = false }
+                1  -> curBold = true
+                2  -> curDim = true
+                4  -> curUnderline = true
+                5  -> curBlink = true
+                22 -> { curBold = false; curDim = false }
+                24 -> curUnderline = false
+                25 -> curBlink = false
+                7  -> curReverse = true       // video reverso (campo)
                 27 -> curReverse = false     // fim do reverso
-                8 -> curConceal = true       // oculto (campo de senha)
+                8  -> curConceal = true       // oculto (campo de senha)
                 28 -> curConceal = false     // fim do oculto
                 in 40..47, in 100..107 -> curBgSet = true   // cor de fundo (campo)
                 49 -> curBgSet = false       // fundo padrao
@@ -369,44 +424,107 @@ class TerminalEmulator(
         for (r in 0..lastContentRow) {
             var c = 0
             while (c < cols) {
-                val color = fg[r][c]
-                val isBold = bold[r][c]
-                val isField = field[r][c]
+                val color       = fg[r][c]
+                val isBold      = bold[r][c]
+                val isDim       = dim[r][c]
+                val isUnderline = underline[r][c]
+                val isBlink     = blink[r][c]
+                val isField     = field[r][c]
                 val segStart = c
-                while (c < cols && fg[r][c] == color && bold[r][c] == isBold && field[r][c] == isField) c++
+                while (c < cols
+                    && fg[r][c]        == color
+                    && bold[r][c]      == isBold
+                    && dim[r][c]       == isDim
+                    && underline[r][c] == isUnderline
+                    && blink[r][c]     == isBlink
+                    && field[r][c]     == isField) c++
 
                 val start = sb.length
                 for (i in segStart until c) sb.append(chars[r][i])
                 val end = sb.length
 
-                if (isField) {
+                if (isField && fields3dMode != "Desligado") {
                     val bg = if (fieldColor != 0) fieldColor else color
                     sb.setSpan(android.text.style.BackgroundColorSpan(bg), start, end, spannable)
                     sb.setSpan(android.text.style.ForegroundColorSpan(contrastOn(bg)), start, end, spannable)
+                    if (fields3dMode == "Ligado com atributos") {
+                        sb.setSpan(android.text.style.UnderlineSpan(), start, end, spannable)
+                    }
                 } else {
-                    sb.setSpan(android.text.style.ForegroundColorSpan(color), start, end, spannable)
+                    val effectiveFg = when {
+                        isDim && dimFgColor != 0  -> dimFgColor
+                        isDim                     -> darkenColor(color)
+                        isBold && (boldMode == "Cor brilhante" || boldMode == "Negrito+Cor") && brightFgColor != 0 -> brightFgColor
+                        isBold && (boldMode == "Cor brilhante" || boldMode == "Negrito+Cor") -> brightenColor(color)
+                        else                      -> color
+                    }
+                    sb.setSpan(android.text.style.ForegroundColorSpan(effectiveFg), start, end, spannable)
+                    if (isDim && bgAdjustColor != 0) {
+                        sb.setSpan(android.text.style.BackgroundColorSpan(bgAdjustColor), start, end, spannable)
+                    }
                 }
-                if (isBold) {
+
+                // Peso negrito
+                if (isBold && (boldMode == "Negrito" || boldMode == "Negrito+Cor")) {
                     sb.setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, end, spannable)
+                }
+
+                // Sublinhado (SGR 4)
+                if (isUnderline && underlineEnabled) {
+                    sb.setSpan(android.text.style.UnderlineSpan(), start, end, spannable)
+                }
+
+                // Piscante (SGR 5) — renderizado conforme blinkMode
+                if (isBlink) when (blinkMode) {
+                    "Negrito" -> sb.setSpan(
+                        android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, end, spannable)
+                    "Cor brilhante" -> sb.setSpan(
+                        android.text.style.ForegroundColorSpan(brightenColor(color)), start, end, spannable)
                 }
             }
             if (r < lastContentRow) sb.append("\n")
         }
 
-        // Destaque do cursor: cada linha tem exatamente cols chars + 1 '\n' (exceto a última)
-        // Posição no spannable = cursorRow * (cols + 1) + cursorCol
-        if (cursorCol < cols) {
+        // Cursor: posição = cursorRow * (cols + 1) + cursorCol
+        if (showCursor && cursorDisplayType != "Nenhum" && cursorCol < cols) {
             val cursorPos = cursorRow * (cols + 1) + cursorCol
             if (cursorPos < sb.length) {
-                val cursorBg = if (fieldColor != 0) fieldColor else Color.rgb(0, 200, 100)
-                sb.setSpan(android.text.style.BackgroundColorSpan(cursorBg),
-                    cursorPos, cursorPos + 1, spannable)
-                sb.setSpan(android.text.style.ForegroundColorSpan(contrastOn(cursorBg)),
-                    cursorPos, cursorPos + 1, spannable)
+                when (cursorDisplayType) {
+                    "Bloco" -> {
+                        sb.setSpan(android.text.style.BackgroundColorSpan(cursorDisplayColor),
+                            cursorPos, cursorPos + 1, spannable)
+                        sb.setSpan(android.text.style.ForegroundColorSpan(contrastOn(cursorDisplayColor)),
+                            cursorPos, cursorPos + 1, spannable)
+                    }
+                    "Sublinhado" -> {
+                        sb.setSpan(android.text.style.UnderlineSpan(), cursorPos, cursorPos + 1, spannable)
+                        sb.setSpan(android.text.style.ForegroundColorSpan(cursorDisplayColor),
+                            cursorPos, cursorPos + 1, spannable)
+                    }
+                    else -> { // "Barra" — destaque semi-transparente
+                        val semiColor = (cursorDisplayColor and 0x00FFFFFF) or 0x60000000.toInt()
+                        sb.setSpan(android.text.style.BackgroundColorSpan(semiColor),
+                            cursorPos, cursorPos + 1, spannable)
+                    }
+                }
             }
         }
 
         return sb
+    }
+
+    private fun darkenColor(color: Int): Int {
+        val r = (Color.red(color) * 0.5f).toInt()
+        val g = (Color.green(color) * 0.5f).toInt()
+        val b = (Color.blue(color) * 0.5f).toInt()
+        return Color.rgb(r, g, b)
+    }
+
+    private fun brightenColor(color: Int): Int {
+        val r = (Color.red(color) + (255 - Color.red(color)) * 0.5f).toInt().coerceAtMost(255)
+        val g = (Color.green(color) + (255 - Color.green(color)) * 0.5f).toInt().coerceAtMost(255)
+        val b = (Color.blue(color) + (255 - Color.blue(color)) * 0.5f).toInt().coerceAtMost(255)
+        return Color.rgb(r, g, b)
     }
 
     /** Preto ou branco, o que tiver melhor contraste sobre [bg]. */
@@ -441,6 +559,9 @@ class TerminalEmulator(
         cursorCol = 0
         curFg = defaultFg
         curBold = false
+        curDim = false
+        curUnderline = false
+        curBlink = false
         curReverse = false
         curBgSet = false
         curConceal = false

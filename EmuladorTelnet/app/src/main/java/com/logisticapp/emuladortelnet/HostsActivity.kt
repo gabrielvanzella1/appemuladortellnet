@@ -140,7 +140,7 @@ class HostsActivity : AppCompatActivity() {
             R.id.menu_help     -> { menuHelp(); true }
             R.id.menu_import   -> { menuImport(); true }
             R.id.menu_export   -> { menuExport(); true }
-            R.id.menu_templates   -> { toast("Modelos: em breve"); true }
+            R.id.menu_templates   -> { startActivity(Intent(this, TemplatesActivity::class.java)); true }
             R.id.menu_calculadora -> { abrirCalculadora(); true }
             R.id.menu_options  -> { startActivity(Intent(this, GeneralOptionsActivity::class.java)); true }
             R.id.menu_about    -> { menuAbout(); true }

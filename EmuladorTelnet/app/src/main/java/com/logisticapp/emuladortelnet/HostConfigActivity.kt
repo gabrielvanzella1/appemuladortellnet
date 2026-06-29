@@ -26,6 +26,9 @@ class HostConfigActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_HOST_ID = "host_id"
+        const val EXTRA_PREFILL_NAME = "prefill_name"
+        const val EXTRA_PREFILL_HOST = "prefill_host"
+        const val EXTRA_PREFILL_PORT = "prefill_port"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,6 +55,11 @@ class HostConfigActivity : AppCompatActivity() {
             loadExistingHost(hostId)
         } else {
             supportActionBar?.title = "Novo Host"
+            // Pre-fill from template (if launched from TemplatesActivity)
+            intent.getStringExtra(EXTRA_PREFILL_NAME)?.let { inputName.setText(it) }
+            intent.getStringExtra(EXTRA_PREFILL_HOST)?.let { inputHost.setText(it) }
+            val prefillPort = intent.getIntExtra(EXTRA_PREFILL_PORT, -1)
+            if (prefillPort > 0) inputPort.setText(prefillPort.toString())
         }
 
         btnSave.setOnClickListener { saveHost() }

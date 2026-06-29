@@ -12,6 +12,7 @@ import com.logisticapp.emuladortelnet.database.TelnetRepository
 import com.logisticapp.emuladortelnet.network.TelnetClient
 import com.logisticapp.emuladortelnet.settings.GeneralEmulationOptions
 import com.logisticapp.emuladortelnet.settings.TransliterationOptions
+import com.logisticapp.emuladortelnet.settings.VtAttrMapOptions
 import com.logisticapp.emuladortelnet.settings.VtOptions
 import com.logisticapp.emuladortelnet.terminal.TerminalEmulator
 import com.logisticapp.emuladortelnet.terminal.InputHistoryManager
@@ -55,6 +56,37 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     /** Define o tipo de terminal informado ao servidor (Telnet Opcoes). */
     fun setTerminalType(type: String) {
         telnetClient.setTerminalType(type)
+    }
+
+    /** Define tipo e cor do cursor (Opções de tela). */
+    fun setCursorSettings(type: String, color: Int) {
+        emulator.cursorDisplayType  = type
+        emulator.cursorDisplayColor = color
+    }
+
+    /** Define o modo de exibição dos campos variáveis 3D (Opções de tela). */
+    fun setFields3dMode(mode: String) {
+        emulator.fields3dMode = mode
+    }
+
+    /** Define as cores de ajuste (dim/bright/fundo) para o emulador (Ajuste de cor). */
+    fun setColorAdjust(dimColor: Int, brightColor: Int, bgAdjust: Int) {
+        emulator.dimFgColor    = dimColor
+        emulator.brightFgColor = brightColor
+        emulator.bgAdjustColor = bgAdjust
+    }
+
+    /** Aplica o mapeamento de atributos VT ao emulador (VT Mapeamento de atributos). */
+    fun setVtAttrMap(opts: VtAttrMapOptions) {
+        emulator.boldMode         = opts.boldMode
+        emulator.underlineEnabled = opts.underlineEnabled
+        emulator.blinkMode        = opts.blinkMode
+    }
+
+    /** Alterna visibilidade do cursor para efeito de piscada. Chamar no main thread. */
+    fun toggleCursor() {
+        emulator.showCursor = !emulator.showCursor
+        _terminalOutputStyled.value = emulator.renderSpannable()
     }
 
     // ---- VT Options ----
@@ -490,9 +522,10 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
      */
     fun sendCommand(command: String) {
         if (_connectionState.value == ConnectionState.CONNECTED) {
-            // Adicionar ao histórico
+            // Adicionar ao histórico de input e persistir no log de sessão
             inputHistory.add(command)
-            
+            saveCommandToHistory(command)
+
             viewModelScope.launch(Dispatchers.IO) {
                 try {
                     // Sem echo local: num terminal de tela cheia o servidor ecoa e redesenha
@@ -551,6 +584,11 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
      */
     fun clearTerminal() {
         emulator.reset()
+        _terminalOutputStyled.postValue(emulator.renderSpannable())
+    }
+
+    /** Re-renderiza a tela atual sem alterar o conteúdo (usado após mudança de configurações). */
+    fun refreshDisplay() {
         _terminalOutputStyled.postValue(emulator.renderSpannable())
     }
 

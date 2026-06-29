@@ -57,10 +57,28 @@ Ações que valem para o app / sessões:
 | **Ajuda** | Texto de ajuda rápida |
 | **Importação** | Importa sessões de um arquivo (.json) |
 | **Exportação** | Compartilha/salva as sessões num arquivo (.json) — backup |
-| **Modelos** | 🔧 Modelos prontos de sessão |
+| **Modelos** | Abre o gerenciador de modelos de sessão (ver seção 3.1) |
 | **Calculadora** | Abre a calculadora flutuante (ver seção 11) |
 | **Opções gerais** | Configurações de comportamento do app (ver seção 7) |
 | **Sobre ScanTE** | Versão e informações do app |
+
+### 3.1. Modelos de sessão ✅
+
+Modelos são presets de conexão que agilizam a criação de novas sessões sem precisar digitar o endereço e a porta toda vez.
+
+**Como usar:**
+1. Menu (3 pontos) → **Modelos**
+2. Toque em **+** para criar um novo modelo: informe nome, host, porta e uma descrição opcional.
+3. Para usar um modelo: toque no item da lista ou use o menu do modelo → **Usar modelo**.  
+   O formulário "Novo Host" será aberto já preenchido com os dados do modelo — basta confirmar ou ajustar.
+4. O modelo não é excluído ao ser usado; fica salvo para uso futuro.
+
+**Gerenciar modelos** (menu de 3 pontos em cada item da lista):
+| Ação | O que faz |
+|---|---|
+| **Usar modelo** | Abre "Novo Host" pré-preenchido |
+| **Editar** | Permite alterar nome, host, porta e descrição |
+| **Excluir** | Remove o modelo permanentemente |
 
 ---
 
@@ -79,13 +97,24 @@ Ações que valem para o app / sessões:
 - **⇄ Badge de sessão:** aparece quando há **2 sessões ativas** simultaneamente. Toque
   para voltar à lista de Sessões e escolher qual sessão operar.
 - **Barras de ferramentas:** botões de atalho (setas, Enter, Ctrl+letra, etc.) configuráveis
-  (ver seção 6.3).
+  (ver seção 6.3). Inclui os botões **Copiar** e **Colar** para interação com a área de transferência.
 - **Campos de preenchimento destacados:** os campos editáveis do sistema (ex: Usuário,
   Senha) aparecem com cor de fundo, para você ver onde digitar.
 - **Menu 3 pontos → Sessões (manter conexão):** volta às Sessões sem desconectar (igual
   ao botão ◀).
 
-### 4.1 Múltiplas sessões simultâneas ✅
+### 4.1 Copiar e colar ✅
+
+Os botões **Copy** e **Paste** da barra de ferramentas permitem integrar o terminal com a área de transferência do Android.
+
+| Botão | O que faz |
+|---|---|
+| **Copy** | Copia o conteúdo atual da tela do terminal para a área de transferência (texto puro) |
+| **Paste** | Envia o texto da área de transferência diretamente ao servidor (como se tivesse digitado) |
+
+> **Dica:** Para adicionar esses botões à barra, vá em Configurações → Barras de ferramentas e adicione as ações "Copy" e "Paste".
+
+### 4.2 Múltiplas sessões simultâneas ✅
 
 O ScanTE permite **até 2 conexões Telnet ativas ao mesmo tempo**, em servidores diferentes.
 
@@ -186,20 +215,41 @@ por dentro desse túnel de forma transparente.
 
 ## 6. Configurações → Tela
 
-### 6.1. Opções de tela ✅ (parcial)
-| Item | Para que serve | Status |
-|---|---|---|
-| **Tamanho da fonte** | Tamanho do texto no terminal | ✅ |
-| **Cursor piscando** | Liga/desliga a piscada do cursor | ✅ |
-| **Campos 3D de fundo branco** | Estilo dos campos | ✅ (salvo) |
-| Nome da fonte, Tipo/Cor do cursor, Campos variáveis 3D, Mostrar barra de ferramentas, Limitar visualização, Toque duas vezes | Demais ajustes de exibição | 🔧 |
+### 6.1. Opções de tela ✅
+| Item | Para que serve |
+|---|---|
+| **Tamanho da fonte** | Tamanho do texto no terminal (8 a 24 sp) |
+| **Nome da fonte** | Fonte monoespaçada: Padrão, Courier New, Droid Sans Mono |
+| **Tipo de cursor** | Forma do cursor no terminal: **Bloco** (█), **Barra** (semitransparente), **Sublinhado** (_), **Nenhum** |
+| **Cor do cursor** | Cor do cursor: Verde, Branco, Ciano, Amarelo, Vermelho, Azul, Laranja |
+| **Cursor piscando** | Liga/desliga a piscada do cursor (intervalo: 500 ms) |
+| **Campos 3D de fundo branco** | Fundo branco em campos de preenchimento (complementa Campos variáveis 3D) |
+| **Campos variáveis 3D** | Como exibir os campos de preenchimento: _Ligado sem atributos_ (destaque simples), _Ligado com atributos_ (destaque + sublinhado), _Desligado_ (sem destaque) |
+| **Mostrar barra de ferramentas** | Quando exibir a barra de botões: **Automático** (aparece ao conectar), **Sempre** (sempre visível), **Nunca** (sempre oculta) |
+| **Limitar visualização da tela** | Limita quantas linhas o terminal exibe: Sem limite, 26×20, 40×24, 80×24, 132×24 |
+| **Toque duas vezes** | Ação ao dar duplo toque na tela do terminal: _Redefinir tamanho da tela_, _Zoom in_ (+2 sp), _Zoom out_ (−2 sp), _Nenhum_ |
 
 ### 6.2. Cores da tela ✅
-- **Primeiro plano:** cor do texto do terminal.
-- **Plano de fundo:** cor de fundo do terminal.
-- **Status em primeiro plano / Plano de fundo do status:** cores da barra superior.
-- **Campos de preenchimento:** cor de destaque dos campos editáveis (Usuário, Senha…).
-- *Ajuste de cor (escuro/brilhante):* 🔧
+
+**Seção Seleção de cores**
+
+| Opção | O que controla |
+|---|---|
+| **Primeiro plano** | Cor padrão do texto do terminal |
+| **Plano de fundo** | Cor de fundo do terminal |
+| **Status em primeiro plano** | Cor do texto na barra de status (topo) |
+| **Plano de fundo do status** | Fundo da barra de status |
+| **Campos de preenchimento** | Destaque dos campos editáveis (Usuário, Senha…) |
+
+**Seção Ajuste de cor** ✅
+
+| Opção | O que controla |
+|---|---|
+| **Primeiro plano escuro** | Cor usada para texto *dim* (SGR 2). Padrão automático: escurece 50 % a cor do texto |
+| **Primeiro plano brilhante** | Cor usada para texto *negrito* quando o modo está em "Cor brilhante" ou "Negrito+Cor". Padrão: clareia 50 % |
+| **Plano de fundo** | Cor de fundo aplicada atrás do texto *dim*. Padrão: sem fundo |
+
+> **Dica:** Deixe todas as opções de ajuste em "Automático" (quadrado tracejado vermelho) para o comportamento padrão. Defina uma cor para personalizar como texto escuro ou brilhante é renderizado.
 
 ### 6.3. Configuração da barra de ferramentas ✅
 São até **6 barras** de botões que aparecem no terminal. Cada botão envia uma tecla/comando
@@ -216,7 +266,23 @@ São até **6 barras** de botões que aparecem no terminal. Cada botão envia um
   para "Iniciar" — no terminal aparecerá o rótulo "Iniciar", mas enviará a tecla F1.
 - **✕:** remove o botão da barra.
 
-### 6.4. Opções de tela / VT Mapeamento de atributos 🔧
+### 6.4. VT Mapeamento de atributos ✅
+
+Define como os atributos de vídeo VT100/ANSI são exibidos na tela.
+
+| Atributo | Opções disponíveis | Descrição |
+|---|---|---|
+| **Negrito** (SGR 1) | Negrito / Cor brilhante / Negrito+Cor / Nenhum | Como renderizar texto em negrito |
+| **Sublinhado** (SGR 4) | Ativo / Inativo | Exibe sublinhado em texto com atributo sublinhado |
+| **Piscante** (SGR 5) | Negrito / Cor brilhante / Nenhum | Como renderizar texto com atributo piscante (sem piscar de fato) |
+
+**Opções de Negrito explicadas:**
+- **Negrito** — aplica peso de fonte negrito (padrão, comportamento clássico VT).
+- **Cor brilhante** — clareia a cor do texto em 50 % em vez de usar negrito; útil em fontes que não distinguem peso.
+- **Negrito+Cor** — aplica negrito *e* claria a cor ao mesmo tempo.
+- **Nenhum** — ignora o atributo negrito (texto aparece igual ao normal).
+
+> **Nota:** "Piscante" não pisca de fato (sem suporte em TextView Android), mas pode ser mapeado para negrito ou cor brilhante para indicar visualmente o atributo.
 
 ---
 
@@ -304,6 +370,39 @@ Ajustes de comportamento geral do emulador de terminal.
 | **Adicione texto depois** | Texto fixo inserido depois do código lido ao enviar ao sistema. |
 | **Usar mapeamento de teclado** | Quando ligado, o leitor é tratado como teclado físico — as teclas lidas passam pelo mapeamento configurado no terminal. |
 | **Mostrar na linha de status** | Exibe um indicador na barra de status quando uma leitura é realizada. |
+
+### 9.3. Log de sessão ✅
+
+O ScanTE registra automaticamente todas as conexões realizadas e os comandos enviados ao
+servidor, sem precisar ativar nenhuma configuração.
+
+#### O que é registrado?
+
+| Dado | Descrição |
+|---|---|
+| **Sessão** | Servidor conectado (host:porta), data/hora de início e fim, duração, motivo de desconexão |
+| **Comandos** | Cada texto enviado ao servidor pelo campo de entrada (Enter pressionado) |
+
+#### Onde fica?
+
+As informações são salvas localmente no dispositivo em **SharedPreferences** (`telnet_session_log`).
+Elas permanecem disponíveis entre reinicializações do app, até que sejam apagadas.
+
+#### Limites de armazenamento
+
+| Tipo | Limite |
+|---|---|
+| **Sessões** | Últimas 100 sessões (as mais antigas são removidas automaticamente) |
+| **Comandos** | Últimos 500 comandos enviados em todas as sessões |
+
+#### Ciclo de vida de uma sessão
+
+1. **Conectar** → ScanTE cria um registro de sessão com `startTime` = agora.
+2. **Enviar comandos** → cada texto digitado é salvo vinculado ao `sessionId`.
+3. **Desconectar** → o registro recebe `endTime` e o motivo (ex: "User disconnect", "Connection lost").
+
+> **Nota:** Os dados ficam apenas no dispositivo. Para exportar o histórico, use os recursos de
+> backup do Android ou faça uma exportação de sessões pelo menu de Sessões.
 
 ---
 

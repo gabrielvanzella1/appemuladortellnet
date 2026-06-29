@@ -127,20 +127,94 @@ class TelnetRepository(private val context: Context) {
         prefs.getString(key, defaultValue) ?: defaultValue
 
     // ------------------------------------------------------------------
-    // Session log (stubs - sem persistencia por enquanto)
+    // Session log
     // ------------------------------------------------------------------
 
+    private val sessionPrefs = context.getSharedPreferences("telnet_session_log", Context.MODE_PRIVATE)
+
+    private val _sessionLogs = MutableStateFlow<List<SessionLog>>(emptyList())
+    private val _commandHistory = MutableStateFlow<List<CommandHistory>>(emptyList())
+
+    init {
+        _sessionLogs.value = loadSessionLogs()
+        _commandHistory.value = loadCommandHistory()
+    }
+
+    fun getSessionLogs(): Flow<List<SessionLog>> = _sessionLogs.asStateFlow()
+
+    fun getCommandHistory(sessionId: Int): List<CommandHistory> =
+        _commandHistory.value.filter { it.sessionId == sessionId }
+
     suspend fun startSession(connectionId: Int, host: String, port: Int): Long {
-        Timber.d("Sessao iniciada: $host:$port")
-        return System.currentTimeMillis()
+        val logs = _sessionLogs.value.toMutableList()
+        val newId = (logs.maxOfOrNull { it.id } ?: 0) + 1
+        val session = SessionLog(id = newId, connectionId = connectionId, host = host, port = port)
+        logs.add(session)
+        val pruned = if (logs.size > MAX_SESSION_LOGS) logs.takeLast(MAX_SESSION_LOGS) else logs
+        persistSessionLogs(pruned)
+        _sessionLogs.value = pruned
+        Timber.d("Sessao iniciada: $host:$port (id=$newId)")
+        return newId.toLong()
     }
 
     suspend fun endSession(sessionId: Int, reason: String = "") {
-        Timber.d("Sessao encerrada: $reason")
+        val logs = _sessionLogs.value.toMutableList()
+        val idx = logs.indexOfFirst { it.id == sessionId }
+        if (idx >= 0) {
+            logs[idx] = logs[idx].copy(endTime = System.currentTimeMillis(), reason = reason)
+            persistSessionLogs(logs)
+            _sessionLogs.value = logs
+        }
+        Timber.d("Sessao encerrada: id=$sessionId, motivo=$reason")
     }
 
     suspend fun saveCommand(sessionId: Int, command: String, response: String = "") {
-        Timber.d("Comando: $command")
+        if (command.isBlank()) return
+        val cmds = _commandHistory.value.toMutableList()
+        val newId = (cmds.maxOfOrNull { it.id } ?: 0) + 1
+        cmds.add(CommandHistory(id = newId, sessionId = sessionId, command = command, response = response))
+        val pruned = if (cmds.size > MAX_COMMAND_HISTORY) cmds.takeLast(MAX_COMMAND_HISTORY) else cmds
+        persistCommandHistory(pruned)
+        _commandHistory.value = pruned
+        Timber.d("Comando salvo (sessao $sessionId): $command")
+    }
+
+    /** Remove todos os logs de sessao e historico de comandos. */
+    suspend fun clearSessionLogs() {
+        persistSessionLogs(emptyList())
+        persistCommandHistory(emptyList())
+        _sessionLogs.value = emptyList()
+        _commandHistory.value = emptyList()
+    }
+
+    private fun loadSessionLogs(): List<SessionLog> {
+        val json = sessionPrefs.getString("sessions", null) ?: return emptyList()
+        return try {
+            val type = object : TypeToken<List<SessionLog>>() {}.type
+            gson.fromJson(json, type) ?: emptyList()
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao carregar logs de sessao")
+            emptyList()
+        }
+    }
+
+    private fun persistSessionLogs(list: List<SessionLog>) {
+        sessionPrefs.edit().putString("sessions", gson.toJson(list)).apply()
+    }
+
+    private fun loadCommandHistory(): List<CommandHistory> {
+        val json = sessionPrefs.getString("commands", null) ?: return emptyList()
+        return try {
+            val type = object : TypeToken<List<CommandHistory>>() {}.type
+            gson.fromJson(json, type) ?: emptyList()
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao carregar historico de comandos")
+            emptyList()
+        }
+    }
+
+    private fun persistCommandHistory(list: List<CommandHistory>) {
+        sessionPrefs.edit().putString("commands", gson.toJson(list)).apply()
     }
 
     // ------------------------------------------------------------------
@@ -156,6 +230,9 @@ class TelnetRepository(private val context: Context) {
     // ------------------------------------------------------------------
 
     companion object {
+        private const val MAX_SESSION_LOGS   = 100
+        private const val MAX_COMMAND_HISTORY = 500
+
         @Volatile private var instance: TelnetRepository? = null
 
         fun getInstance(context: Context): TelnetRepository =

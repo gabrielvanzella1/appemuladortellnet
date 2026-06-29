@@ -69,19 +69,19 @@
 
             <LinearLayout android:id="@+id/row_fg_dark" style="@style/ConfigItemRow">
                 <TextView style="@style/ConfigItemText" android:text="Primeiro plano escuro" />
-                <ImageView style="@style/ConfigChevron" />
+                <View android:id="@+id/swatch_fg_dark" style="@style/ConfigSwatch" />
             </LinearLayout>
             <View style="@style/ConfigItemDivider" />
 
             <LinearLayout android:id="@+id/row_fg_bright" style="@style/ConfigItemRow">
                 <TextView style="@style/ConfigItemText" android:text="Primeiro plano brilhante" />
-                <ImageView style="@style/ConfigChevron" />
+                <View android:id="@+id/swatch_fg_bright" style="@style/ConfigSwatch" />
             </LinearLayout>
             <View style="@style/ConfigItemDivider" />
 
             <LinearLayout android:id="@+id/row_adjust_bg" style="@style/ConfigItemRow">
                 <TextView style="@style/ConfigItemText" android:text="Plano de fundo" />
-                <ImageView style="@style/ConfigChevron" />
+                <View android:id="@+id/swatch_adjust_bg" style="@style/ConfigSwatch" />
             </LinearLayout>
 
         </LinearLayout>

@@ -1,6 +1,10 @@
 package com.logisticapp.emuladortelnet
 
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Html
 import android.view.Menu
 import android.view.MenuItem
@@ -44,6 +48,21 @@ class MainActivity : AppCompatActivity() {
     // Receiver para detectar bloqueio de tela
     private var screenOffReceiver: BroadcastReceiver? = null
 
+    // Gerenciador de leitura de código de barras
+    private lateinit var barcodeManager: BarcodeScannerManager
+
+    // Cursor piscando
+    private val cursorBlinkHandler = Handler(Looper.getMainLooper())
+    private val cursorBlinkRunnable = object : Runnable {
+        override fun run() {
+            viewModel.toggleCursor()
+            cursorBlinkHandler.postDelayed(this, 500)
+        }
+    }
+
+    // Detecção de duplo toque
+    private var lastTapTime = 0L
+
     companion object {
         const val EXTRA_HOST    = "extra_host"
         const val EXTRA_PORT    = "extra_port"
@@ -73,8 +92,15 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        // Tamanho da fonte do terminal (Opcoes de tela)
+        // Tamanho e fonte do terminal (Opções de tela)
         binding.terminalOutput.textSize = settings.fontSize.toFloat()
+        binding.terminalOutput.typeface = fontFromName(settings.fontName)
+
+        // Limitar visualização
+        val limitParts = settings.limitView.split(",")
+        val limitLines = limitParts.getOrNull(1)?.trim()?.toIntOrNull()
+        if (limitLines != null) binding.terminalOutput.maxLines = limitLines
+        else binding.terminalOutput.maxLines = Int.MAX_VALUE
 
         // Cores da tela
         binding.terminalOutput.setBackgroundColor(settings.colorBackground)
@@ -102,6 +128,11 @@ class MainActivity : AppCompatActivity() {
             val factory = TelnetViewModelFactory(repository)
             viewModel = ViewModelProvider(this, factory).get(TelnetViewModel::class.java)
         }
+
+        barcodeManager = BarcodeScannerManager(this) { barcode, action ->
+            sendBarcodeToServer(barcode, action)
+        }
+        barcodeManager.updateOptions(settings.barcodeOptions)
 
         applyViewModelSettings()
         setupListeners()
@@ -141,11 +172,16 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         if (slotId >= 0) binding.btnBackSessions.visibility = View.VISIBLE
         updateSessionBadge()
+        // Re-aplica configurações que podem ter sido alteradas em telas de configuração
+        applyViewModelSettings()
+        viewModel.refreshDisplay()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         screenOffReceiver?.let { runCatching { unregisterReceiver(it) } }
+        cursorBlinkHandler.removeCallbacks(cursorBlinkRunnable)
+        barcodeManager.unregister()
     }
 
     private fun updateSessionBadge() {
@@ -196,6 +232,10 @@ class MainActivity : AppCompatActivity() {
         val proxyHostStr = proxyOpts.address.substringBefore(":")
         val proxyPortParsed = proxyOpts.address.substringAfter(":", "").toIntOrNull() ?: proxyPortInt
         viewModel.setProxy(proxyOpts.useServer, proxyHostStr, proxyPortParsed, proxyOpts.secureComm)
+        viewModel.setCursorSettings(settings.cursorType, cursorColorFromName(settings.cursorColor))
+        viewModel.setFields3dMode(settings.fields3D)
+        viewModel.setColorAdjust(settings.colorFgDark, settings.colorFgBright, settings.colorBgAdjust)
+        viewModel.setVtAttrMap(settings.vtAttrMap)
         binding.terminalOutput.lineTerminator = lineTerminatorBytes()
         val vtOpts = settings.vtOptions
         viewModel.setVtOptions(vtOpts)
@@ -233,12 +273,18 @@ class MainActivity : AppCompatActivity() {
         // Botao de mostrar/ocultar teclado (ao lado de Desconectar)
         binding.keyboardToggle.setOnClickListener { toggleKeyboard() }
 
-        // Tocar no terminal abre o teclado e rola para o fim
+        // Toque simples: abre teclado e rola ao fim; duplo toque: ação configurada
         binding.terminalOutput.setOnClickListener {
-            openKeyboard()
-            binding.scrollView.post {
-                binding.scrollView.fullScroll(android.widget.ScrollView.FOCUS_DOWN)
+            val now = System.currentTimeMillis()
+            if (now - lastTapTime < 300) {
+                handleDoubleTap()
+            } else {
+                openKeyboard()
+                binding.scrollView.post {
+                    binding.scrollView.fullScroll(android.widget.ScrollView.FOCUS_DOWN)
+                }
             }
+            lastTapTime = now
         }
     }
 
@@ -246,14 +292,18 @@ class MainActivity : AppCompatActivity() {
         viewModel.connectionState.observe(this) { state ->
             when (state) {
                 ConnectionState.DISCONNECTED -> {
+                    barcodeManager.unregister()
                     binding.statusText.text = getString(R.string.status_disconnected)
                     binding.statusText.setTextColor(getColor(android.R.color.darker_gray))
                     binding.disconnectButton.isEnabled = false
-                    binding.controlKeysBar.visibility = android.view.View.GONE
                     binding.keyboardToggle.visibility = android.view.View.GONE
+                    cursorBlinkHandler.removeCallbacks(cursorBlinkRunnable)
+                    // "Sempre" mantém a barra visível mesmo desconectado
+                    if (settings.showToolbar != "Sempre") {
+                        binding.controlKeysBar.visibility = android.view.View.GONE
+                    }
                     if (hasConnected) {
                         if (!manualDisconnect && settings.autoReconnect && currentHost.isNotEmpty()) {
-                            // Reconexao automatica apos conexao perdida
                             Timber.d("Conexao perdida -> reconectando automaticamente")
                             viewModel.connect(currentHost, currentPort.toString())
                         } else {
@@ -265,16 +315,26 @@ class MainActivity : AppCompatActivity() {
                     binding.statusText.text = getString(R.string.status_connecting)
                     binding.statusText.setTextColor(getColor(android.R.color.holo_orange_dark))
                     binding.disconnectButton.isEnabled = false
-                    binding.controlKeysBar.visibility = android.view.View.GONE
+                    if (settings.showToolbar != "Sempre") {
+                        binding.controlKeysBar.visibility = android.view.View.GONE
+                    }
                 }
                 ConnectionState.CONNECTED -> {
+                    barcodeManager.updateOptions(settings.barcodeOptions)
+                    barcodeManager.register()
                     hasConnected = true
                     manualDisconnect = false
                     binding.statusText.text = getString(R.string.status_connected)
                     binding.statusText.setTextColor(getColor(android.R.color.holo_green_dark))
                     binding.disconnectButton.isEnabled = true
-                    binding.controlKeysBar.visibility = android.view.View.VISIBLE
                     binding.keyboardToggle.visibility = android.view.View.VISIBLE
+                    if (settings.showToolbar != "Nunca") {
+                        binding.controlKeysBar.visibility = android.view.View.VISIBLE
+                    }
+                    if (settings.cursorBlinking) {
+                        cursorBlinkHandler.removeCallbacks(cursorBlinkRunnable)
+                        cursorBlinkHandler.postDelayed(cursorBlinkRunnable, 500)
+                    }
                     buildToolbars()
                     // Teclado habilitado: abre automaticamente ao conectar
                     if (settings.keyboardEnabled) {
@@ -453,9 +513,95 @@ class MainActivity : AppCompatActivity() {
                 val cmd = if (settings.telnetOptions.useIpForBrk) 244 else 243
                 viewModel.sendRaw(byteArrayOf(255.toByte(), cmd.toByte()))
             }
-            "COPY", "PASTE" -> android.widget.Toast.makeText(
-                this, "$action: em breve", android.widget.Toast.LENGTH_SHORT).show()
+            "COPY" -> copyTerminalToClipboard()
+            "PASTE" -> pasteFromClipboard()
             else -> Timber.d("Acao nao tratada: $action")
         }
+    }
+
+    private fun copyTerminalToClipboard() {
+        val text = binding.terminalOutput.text?.toString() ?: ""
+        if (text.isBlank()) {
+            android.widget.Toast.makeText(this, "Nada para copiar", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+        val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Terminal ScanTE", text))
+        android.widget.Toast.makeText(this, "Copiado para a área de transferência", android.widget.Toast.LENGTH_SHORT).show()
+    }
+
+    private fun pasteFromClipboard() {
+        val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        val text = clipboard.primaryClip
+            ?.takeIf { it.itemCount > 0 }
+            ?.getItemAt(0)
+            ?.coerceToText(this)
+            ?.toString()
+        if (text.isNullOrEmpty()) {
+            android.widget.Toast.makeText(this, "Área de transferência vazia", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+        viewModel.sendRaw(text.toByteArray(Charsets.ISO_8859_1))
+    }
+
+    private fun sendBarcodeToServer(barcode: String, actionAfterScan: String) {
+        if (barcode.isEmpty()) return
+        // Envia o texto do código de barras
+        viewModel.sendRaw(barcode.toByteArray(Charsets.ISO_8859_1))
+        // Ação pós-leitura
+        val actionBytes: ByteArray? = when (actionAfterScan) {
+            "Enter"      -> lineTerminatorBytes()
+            "Tab"        -> byteArrayOf(9)
+            "Enter + Tab" -> lineTerminatorBytes() + byteArrayOf(9)
+            else          -> null
+        }
+        actionBytes?.let { viewModel.sendRaw(it) }
+        // Mostrar na barra de status (se configurado)
+        if (settings.barcodeOptions.showOnStatusBar) {
+            val prev = binding.statusText.text
+            val prevColor = binding.statusText.currentTextColor
+            binding.statusText.text = "▣ $barcode"
+            binding.statusText.setTextColor(android.graphics.Color.CYAN)
+            binding.statusText.postDelayed({
+                binding.statusText.text = prev
+                binding.statusText.setTextColor(prevColor)
+            }, 2000)
+        }
+        Timber.d("Barcode enviado ao servidor: $barcode (ação=$actionAfterScan)")
+    }
+
+    private fun handleDoubleTap() {
+        when (settings.doubleTapAction) {
+            "Zoom in" -> {
+                val sp = binding.terminalOutput.textSize / resources.displayMetrics.scaledDensity
+                binding.terminalOutput.textSize = (sp + 2f).coerceAtMost(24f)
+            }
+            "Zoom out" -> {
+                val sp = binding.terminalOutput.textSize / resources.displayMetrics.scaledDensity
+                binding.terminalOutput.textSize = (sp - 2f).coerceAtLeast(6f)
+            }
+            "Redefinir tamanho da tela" -> {
+                binding.terminalOutput.textSize = settings.fontSize.toFloat()
+            }
+            // "Nenhum" → sem ação
+        }
+    }
+
+    private fun fontFromName(name: String): Typeface = when (name) {
+        "Courier New"    -> Typeface.create("Courier New", Typeface.NORMAL).takeIf { it != Typeface.DEFAULT }
+                             ?: Typeface.MONOSPACE
+        "Droid Sans Mono" -> Typeface.create("Droid Sans Mono", Typeface.NORMAL).takeIf { it != Typeface.DEFAULT }
+                             ?: Typeface.MONOSPACE
+        else             -> Typeface.MONOSPACE
+    }
+
+    private fun cursorColorFromName(name: String): Int = when (name) {
+        "Branco"   -> Color.WHITE
+        "Ciano"    -> Color.CYAN
+        "Amarelo"  -> Color.YELLOW
+        "Vermelho" -> Color.RED
+        "Azul"     -> Color.rgb(64, 128, 255)
+        "Laranja"  -> Color.rgb(255, 128, 0)
+        else       -> Color.rgb(0, 200, 100)   // "Verde" / "Padrão"
     }
 }
