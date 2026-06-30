@@ -30,6 +30,88 @@
             android:orientation="vertical"
             android:paddingBottom="32dp">
 
+            <!-- ===== CONEXÃO ===== -->
+            <TextView style="@style/ConfigSection" android:text="Conexão" />
+
+            <!-- Tipo de conexão -->
+            <LinearLayout android:id="@+id/row_connection_type" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Tipo de conexão" />
+                <TextView android:id="@+id/val_connection_type" style="@style/TnValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- Secao Bluetooth -->
+            <LinearLayout
+                android:id="@+id/section_bluetooth"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout android:id="@+id/row_bt_device" style="@style/TnRow">
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+                        <TextView style="@style/TnLabel" android:text="Dispositivo Bluetooth" />
+                        <TextView
+                            android:id="@+id/val_bt_device"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="13sp"
+                            android:textColor="@color/text_secondary"
+                            android:text="Nenhum selecionado" />
+                    </LinearLayout>
+                    <ImageView style="@style/ConfigChevron" />
+                </LinearLayout>
+                <View style="@style/TnDivider" />
+
+            </LinearLayout>
+
+            <!-- Secao WiFi -->
+            <LinearLayout
+                android:id="@+id/section_wifi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout style="@style/TnRow">
+                    <TextView style="@style/TnLabel" android:text="Endereço IP" />
+                    <EditText
+                        android:id="@+id/et_wifi_host"
+                        android:layout_width="160dp"
+                        android:layout_height="wrap_content"
+                        android:inputType="textUri"
+                        android:gravity="end"
+                        android:textSize="14sp"
+                        android:background="@null"
+                        android:hint="192.168.1.100"
+                        android:padding="4dp" />
+                </LinearLayout>
+                <View style="@style/TnDivider" />
+
+                <LinearLayout style="@style/TnRow">
+                    <TextView style="@style/TnLabel" android:text="Porta" />
+                    <EditText
+                        android:id="@+id/et_wifi_port"
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:gravity="end"
+                        android:textSize="14sp"
+                        android:background="@null"
+                        android:hint="9100"
+                        android:padding="4dp" />
+                </LinearLayout>
+                <View style="@style/TnDivider" />
+
+            </LinearLayout>
+
+            <!-- ===== IMPRESSORA ===== -->
+            <TextView style="@style/ConfigSection" android:text="Impressora" />
+
             <!-- Tipo de impressora -->
             <LinearLayout android:id="@+id/row_printer_type" style="@style/TnRow">
                 <TextView style="@style/TnLabel" android:text="Tipo de impressora" />
@@ -38,9 +120,9 @@
             </LinearLayout>
             <View style="@style/TnDivider" />
 
-            <!-- Tempo limite da impressora -->
-            <LinearLayout android:id="@+id/row_timeout" style="@style/TnRow">
-                <TextView style="@style/TnLabel" android:text="Tempo limite da impressora (s)" />
+            <!-- Tempo limite -->
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Timeout de conexão (s)" />
                 <EditText
                     android:id="@+id/et_timeout"
                     android:layout_width="80dp"
@@ -52,6 +134,14 @@
                     android:padding="4dp" />
             </LinearLayout>
             <View style="@style/TnDivider" />
+
+            <!-- Botão Testar conexão -->
+            <TextView style="@style/ConfigSection" android:text="Teste" />
+
+            <LinearLayout android:id="@+id/row_test_print" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Imprimir página de teste" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>

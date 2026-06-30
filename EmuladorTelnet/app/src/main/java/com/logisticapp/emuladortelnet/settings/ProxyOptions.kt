@@ -5,11 +5,12 @@ package com.logisticapp.emuladortelnet.settings
  * Persistido como JSON em AppSettings.
  */
 data class ProxyOptions(
-    var useServer: Boolean = false,
-    var address: String = "",
-    var port: String = "30855",
-    var secureComm: Boolean = false,
-    // Proxy mantem conexao com o host em segundos quando:
-    var keepOnUserDisconnect: String = "0",
-    var keepOnConnectionLost: String = "300"
+    val useServer: Boolean = false,
+    val address: String = "",
+    val port: String = "3128",
+    val secureComm: Boolean = false,
+    val username: String = "",                // usuario para autenticacao Basic no proxy
+    val password: String = "",                // senha para autenticacao Basic no proxy
+    val keepOnUserDisconnect: String = "0",   // segundos para manter sessao apos desconexao
+    val keepOnConnectionLost: String = "300"  // segundos para manter sessao se conexao cair
 )

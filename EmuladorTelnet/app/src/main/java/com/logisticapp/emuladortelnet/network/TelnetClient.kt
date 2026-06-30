@@ -45,8 +45,10 @@ class TelnetClient {
     // Proxy
     private var useProxy = false
     private var proxyHost = ""
-    private var proxyPort = 30855
-    private var proxySecure = false   // HTTPS CONNECT em vez de HTTP CONNECT
+    private var proxyPort = 3128
+    private var proxySecure = false       // HTTPS CONNECT em vez de HTTP CONNECT
+    private var proxyUsername = ""        // usuario Basic auth (vazio = sem autenticacao)
+    private var proxyPassword = ""        // senha Basic auth
 
     // SSH
     private var useSsh = false
@@ -131,11 +133,20 @@ class TelnetClient {
     }
 
     /** Configura proxy HTTP/HTTPS CONNECT para rotear a conexão. */
-    fun setProxy(enabled: Boolean, host: String, port: Int, secure: Boolean) {
+    fun setProxy(
+        enabled: Boolean,
+        host: String,
+        port: Int,
+        secure: Boolean,
+        username: String = "",
+        password: String = ""
+    ) {
         useProxy = enabled
         proxyHost = host
-        proxyPort = if (port > 0) port else 30855
+        proxyPort = if (port > 0) port else 3128
         proxySecure = secure
+        proxyUsername = username
+        proxyPassword = password
     }
 
     /**
@@ -152,8 +163,20 @@ class TelnetClient {
         rawProxy.soTimeout = 20_000
         val out = rawProxy.getOutputStream()
         val inp = rawProxy.getInputStream()
-        // Envia HTTP CONNECT
-        val req = "CONNECT $destHost:$destPort HTTP/1.1\r\nHost: $destHost:$destPort\r\n\r\n"
+        // Monta cabeçalho HTTP CONNECT (com Basic auth se configurado)
+        val req = buildString {
+            append("CONNECT $destHost:$destPort HTTP/1.1\r\n")
+            append("Host: $destHost:$destPort\r\n")
+            if (proxyUsername.isNotBlank()) {
+                val credentials = android.util.Base64.encodeToString(
+                    "$proxyUsername:$proxyPassword".toByteArray(Charsets.UTF_8),
+                    android.util.Base64.NO_WRAP
+                )
+                append("Proxy-Authorization: Basic $credentials\r\n")
+                Timber.d("Proxy: usando autenticacao Basic para usuario '$proxyUsername'")
+            }
+            append("\r\n")
+        }
         out.write(req.toByteArray(Charsets.US_ASCII))
         out.flush()
         // Lê resposta HTTP (até linha em branco)

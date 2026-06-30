@@ -251,8 +251,11 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     }
 
     /** Configura proxy HTTP CONNECT para rotear a conexão Telnet/SSL. */
-    fun setProxy(enabled: Boolean, host: String, port: Int, secure: Boolean) {
-        telnetClient.setProxy(enabled, host, port, secure)
+    fun setProxy(
+        enabled: Boolean, host: String, port: Int, secure: Boolean,
+        username: String = "", password: String = ""
+    ) {
+        telnetClient.setProxy(enabled, host, port, secure, username, password)
     }
 
     /** Configura SSH: ativa conexão via protocolo SSH. */
@@ -591,6 +594,9 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     fun refreshDisplay() {
         _terminalOutputStyled.postValue(emulator.renderSpannable())
     }
+
+    /** Retorna o conteúdo atual da tela como lista de strings (para impressão). */
+    fun getScreenLines(): List<String> = emulator.getScreenText()
 
     /**
      * Salvar conexão atual no banco de dados

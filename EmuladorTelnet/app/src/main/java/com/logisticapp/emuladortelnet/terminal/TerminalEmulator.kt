@@ -553,6 +553,11 @@ class TerminalEmulator(
         return out.toString()
     }
 
+    /** Retorna o conteúdo atual da tela como lista de strings (uma por linha), sem trailing spaces. */
+    fun getScreenText(): List<String> {
+        return (0 until rows).map { r -> String(chars[r]).trimEnd() }
+    }
+
     fun reset() {
         for (r in 0 until rows) clearRow(r)
         cursorRow = 0

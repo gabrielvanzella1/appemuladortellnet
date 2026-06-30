@@ -198,18 +198,43 @@ Conexão via protocolo SSH — canal criptografado e autenticado, alternativa ao
 Conectar através de um servidor intermediário (proxy). Útil quando o dispositivo está numa
 rede que não acessa o servidor Telnet/SSH diretamente e exige passagem por um proxy corporativo.
 
+#### Servidor proxy
+
 | Campo | Para que serve |
 |---|---|
 | **Usar servidor proxy** | Liga/desliga o redirecionamento pelo proxy. |
-| **Endereço do proxy** | IP ou nome do servidor proxy (ex: `192.168.1.1` ou `proxy.empresa.com`). Para especificar a porta direto no endereço, use `host:porta`. |
-| **Porta** | Porta do proxy (padrão: 30855). Usada se não informada no campo de endereço. |
-| **Comunicação segura** | Usa HTTPS ao conectar no proxy (em vez de HTTP simples). |
-| **Manter conexão quando usuário desconectar** | Segundos que o proxy mantém o canal com o servidor após você desconectar (0 = fecha imediatamente). |
-| **Manter conexão quando conexão for perdida** | Segundos que o proxy aguarda antes de encerrar o canal quando a conexão cai inesperadamente (padrão: 300). |
+| **Endereço (IP ou hostname)** | IP ou nome do servidor proxy (ex: `192.168.1.1` ou `proxy.empresa.com`). |
+| **Porta** | Porta do proxy (padrão: **3128**). |
+| **Comunicação segura (HTTPS CONNECT)** | Usa TLS ao se conectar ao proxy em vez de HTTP simples. |
+
+#### Autenticação (opcional)
+
+| Campo | Para que serve |
+|---|---|
+| **Usuário** | Nome de usuário exigido pelo proxy. Deixe vazio se o proxy não exige autenticação. |
+| **Senha** | Senha correspondente ao usuário do proxy. |
+
+Quando usuário e senha são informados, o app inclui automaticamente o cabeçalho
+`Proxy-Authorization: Basic <credenciais>` na requisição `HTTP CONNECT` — compatível
+com proxies Squid, Nginx, ISA Server e similares.
+
+#### Manutenção de conexão
+
+| Campo | Para que serve |
+|---|---|
+| **Ao desconectar manualmente** | Segundos que o proxy mantém o canal com o servidor após você desconectar (0 = fecha imediatamente). |
+| **Se conexão cair** | Segundos que o proxy aguarda antes de encerrar o canal quando a conexão cai inesperadamente (padrão: 300). |
+
+#### Diagnóstico
+
+Toque em **Testar conexão ao proxy** para verificar se o app consegue alcançar o proxy pelo
+endereço e porta configurados. O resultado aparece como notificação na tela:
+- ✓ Proxy alcançável em `host:porta`
+- ✗ Proxy inacessível + descrição do erro
 
 **Como funciona:** O app abre uma conexão TCP com o proxy e envia um comando `HTTP CONNECT` pedindo
 ao proxy para abrir um túnel até o servidor destino. A partir daí, o tráfego Telnet ou SSL passa
-por dentro desse túnel de forma transparente.
+por dentro desse túnel de forma transparente. Proxies com autenticação Basic são suportados.
 
 ---
 
@@ -353,10 +378,39 @@ Ajustes de comportamento geral do emulador de terminal.
 
 ### 9.1. Configuração de impressão ✅
 
+O ScanTE imprime o conteúdo da tela do terminal diretamente em impressoras térmicas via
+**ESC/POS** — o protocolo padrão de impressoras Epson, Star, Citizen, Bixolon e similares.
+A conexão pode ser por **Bluetooth** (impressora pareada com o coletor) ou **Wi-Fi/TCP**
+(impressora de rede no galpão).
+
+#### Conexão
+
 | Campo | Para que serve |
 |---|---|
-| **Tipo de impressora** | Modelo/fabricante da impressora utilizada: Padrão, Epson ESC/POS, Star, Zebra ZPL, Citizen ou Bixolon. |
-| **Tempo limite da impressora (s)** | Segundos que o app aguarda a impressora responder antes de cancelar a operação (padrão: 5). |
+| **Tipo de conexão** | **Bluetooth** — impressora pareada via BT clássico (SPP). **Wi-Fi** — impressora de rede (protocolo JetDirect, porta 9100). |
+| **Dispositivo Bluetooth** | Seleciona qual impressora BT pareada usar. Pare a impressora no Android antes de selecionar aqui. |
+| **Endereço IP** | IP da impressora na rede local (somente modo Wi-Fi). Exemplo: `192.168.1.100`. |
+| **Porta** | Porta TCP da impressora — padrão **9100** (JetDirect). Alterar somente se a impressora usar outra porta. |
+
+#### Impressora
+
+| Campo | Para que serve |
+|---|---|
+| **Tipo de impressora** | Fabricante/modelo: Padrão, Epson ESC/POS, Star, Zebra ZPL, Citizen, Bixolon. Afeta o comando de corte (ZPL usa corte total; os demais usam corte parcial). |
+| **Timeout de conexão (s)** | Segundos que o app aguarda a impressora responder antes de cancelar (padrão: 5). |
+
+#### Como imprimir a tela do terminal
+
+1. Configure a impressora em **Configurações → Dispositivos → Configuração de impressão**.
+2. Pare a impressora no Android (se Bluetooth) ou verifique o IP (se Wi-Fi).
+3. No terminal conectado, adicione o botão **PRINT** na barra de ferramentas
+   (**Configurações → Tela → Barras de ferramentas**) ou use-o quando disponível.
+4. Toque em **PRINT** — o app conecta, envia a tela atual e corta o papel automaticamente.
+
+#### Imprimir página de teste
+
+Na tela de configuração, toque em **Imprimir página de teste** para verificar se a
+conexão com a impressora está funcionando corretamente.
 
 ### 9.2. Configuração do leitor de código de barras ✅
 

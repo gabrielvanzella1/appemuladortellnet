@@ -27,7 +27,10 @@ import com.logisticapp.emuladortelnet.databinding.ActivityMainBinding
 import com.logisticapp.emuladortelnet.settings.AppSettings
 import com.logisticapp.emuladortelnet.ui.TelnetViewModel
 import com.logisticapp.emuladortelnet.ui.TelnetViewModelFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
@@ -228,10 +231,11 @@ class MainActivity : AppCompatActivity() {
             sslOpts.sshKeepAlive.toIntOrNull() ?: 0
         )
         val proxyOpts = settings.proxyOptions
-        val proxyPortInt = proxyOpts.port.toIntOrNull() ?: 30855
-        val proxyHostStr = proxyOpts.address.substringBefore(":")
-        val proxyPortParsed = proxyOpts.address.substringAfter(":", "").toIntOrNull() ?: proxyPortInt
-        viewModel.setProxy(proxyOpts.useServer, proxyHostStr, proxyPortParsed, proxyOpts.secureComm)
+        val proxyPortParsed = proxyOpts.port.toIntOrNull() ?: 3128
+        viewModel.setProxy(
+            proxyOpts.useServer, proxyOpts.address.trim(), proxyPortParsed,
+            proxyOpts.secureComm, proxyOpts.username, proxyOpts.password
+        )
         viewModel.setCursorSettings(settings.cursorType, cursorColorFromName(settings.cursorColor))
         viewModel.setFields3dMode(settings.fields3D)
         viewModel.setColorAdjust(settings.colorFgDark, settings.colorFgBright, settings.colorBgAdjust)
@@ -513,8 +517,9 @@ class MainActivity : AppCompatActivity() {
                 val cmd = if (settings.telnetOptions.useIpForBrk) 244 else 243
                 viewModel.sendRaw(byteArrayOf(255.toByte(), cmd.toByte()))
             }
-            "COPY" -> copyTerminalToClipboard()
+            "COPY"  -> copyTerminalToClipboard()
             "PASTE" -> pasteFromClipboard()
+            "PRINT" -> printTerminalScreen()
             else -> Timber.d("Acao nao tratada: $action")
         }
     }
@@ -542,6 +547,49 @@ class MainActivity : AppCompatActivity() {
             return
         }
         viewModel.sendRaw(text.toByteArray(Charsets.ISO_8859_1))
+    }
+
+    private fun printTerminalScreen() {
+        val opts = settings.printOptions
+        if (opts.connectionType == "Bluetooth" && opts.bluetoothAddress.isBlank()) {
+            android.widget.Toast.makeText(this,
+                "Configure a impressora em Configurações → Dispositivos → Impressão",
+                android.widget.Toast.LENGTH_LONG).show()
+            return
+        }
+        if (opts.connectionType == "WiFi" && opts.wifiHost.isBlank()) {
+            android.widget.Toast.makeText(this,
+                "Configure o IP da impressora em Configurações → Dispositivos → Impressão",
+                android.widget.Toast.LENGTH_LONG).show()
+            return
+        }
+        val lines = viewModel.getScreenLines()
+        val printer = EscPosPrinter()
+        android.widget.Toast.makeText(this, "Enviando para a impressora…", android.widget.Toast.LENGTH_SHORT).show()
+        MainScope().launch(Dispatchers.IO) {
+            try {
+                if (printer.connect(opts)) {
+                    printer.printLines(lines, opts)
+                    printer.disconnect()
+                    withContext(Dispatchers.Main) {
+                        android.widget.Toast.makeText(this@MainActivity,
+                            "Impressão enviada!", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        android.widget.Toast.makeText(this@MainActivity,
+                            "Não foi possível conectar na impressora", android.widget.Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Erro ao imprimir tela")
+                withContext(Dispatchers.Main) {
+                    android.widget.Toast.makeText(this@MainActivity,
+                        "Erro: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                }
+                printer.disconnect()
+            }
+        }
     }
 
     private fun sendBarcodeToServer(barcode: String, actionAfterScan: String) {

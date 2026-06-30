@@ -30,45 +30,79 @@
             android:orientation="vertical"
             android:paddingBottom="32dp">
 
-            <!-- ===== SERVIDOR PROXY ===== -->
-            <TextView style="@style/TnSection" android:text="ScanTE Servidor proxy" />
+            <!-- ===== CONEXÃO AO PROXY ===== -->
+            <TextView style="@style/TnSection" android:text="Servidor proxy" />
 
             <LinearLayout android:id="@+id/row_use_server" style="@style/TnRow">
-                <TextView style="@style/TnLabel" android:text="Usar servidor" />
+                <TextView style="@style/TnLabel" android:text="Usar servidor proxy" />
                 <CheckBox android:id="@+id/ck_use_server" style="@style/TnCheck" />
             </LinearLayout>
             <View style="@style/TnDivider" />
 
             <LinearLayout style="@style/TnRow">
-                <TextView style="@style/TnLabel" android:text="Endereço" />
-                <EditText android:id="@+id/in_address" style="@style/TnInput" android:inputType="textUri" />
+                <TextView style="@style/TnLabel" android:text="Endereço (IP ou hostname)" />
+                <EditText android:id="@+id/in_address" style="@style/TnInput"
+                    android:inputType="textUri"
+                    android:hint="192.168.1.100" />
             </LinearLayout>
             <View style="@style/TnDivider" />
 
             <LinearLayout style="@style/TnRow">
                 <TextView style="@style/TnLabel" android:text="Porta" />
-                <EditText android:id="@+id/in_port" style="@style/TnInput" android:inputType="number" />
+                <EditText android:id="@+id/in_port" style="@style/TnInput"
+                    android:inputType="number"
+                    android:hint="3128" />
             </LinearLayout>
             <View style="@style/TnDivider" />
 
             <LinearLayout android:id="@+id/row_secure" style="@style/TnRow">
-                <TextView style="@style/TnLabel" android:text="Comunicação segura" />
+                <TextView style="@style/TnLabel" android:text="Comunicação segura (HTTPS CONNECT)" />
                 <CheckBox android:id="@+id/ck_secure" style="@style/TnCheck" />
             </LinearLayout>
 
-            <!-- ===== MANTER CONEXAO ===== -->
-            <TextView style="@style/TnSection"
-                android:text="Proxy mantém conexão com o host em segundos quando" />
+            <!-- ===== AUTENTICAÇÃO ===== -->
+            <TextView style="@style/TnSection" android:text="Autenticação (opcional)" />
 
             <LinearLayout style="@style/TnRow">
-                <TextView style="@style/TnLabel" android:text="Desconexão do usuário" />
-                <EditText android:id="@+id/in_keep_user" style="@style/TnInput" android:inputType="number" />
+                <TextView style="@style/TnLabel" android:text="Usuário" />
+                <EditText android:id="@+id/in_username" style="@style/TnInput"
+                    android:inputType="text"
+                    android:hint="deixe vazio se não exigido" />
             </LinearLayout>
             <View style="@style/TnDivider" />
 
             <LinearLayout style="@style/TnRow">
-                <TextView style="@style/TnLabel" android:text="Conexão perdida" />
-                <EditText android:id="@+id/in_keep_lost" style="@style/TnInput" android:inputType="number" />
+                <TextView style="@style/TnLabel" android:text="Senha" />
+                <EditText android:id="@+id/in_password" style="@style/TnInput"
+                    android:inputType="textPassword"
+                    android:hint="••••••" />
+            </LinearLayout>
+
+            <!-- ===== MANTER CONEXAO ===== -->
+            <TextView style="@style/TnSection"
+                android:text="Proxy mantém conexão com o host (segundos)" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Ao desconectar manualmente" />
+                <EditText android:id="@+id/in_keep_user" style="@style/TnInput"
+                    android:inputType="number"
+                    android:hint="0" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <LinearLayout style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Se conexão cair" />
+                <EditText android:id="@+id/in_keep_lost" style="@style/TnInput"
+                    android:inputType="number"
+                    android:hint="300" />
+            </LinearLayout>
+
+            <!-- ===== TESTE ===== -->
+            <TextView style="@style/TnSection" android:text="Diagnóstico" />
+
+            <LinearLayout android:id="@+id/row_test_proxy" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Testar conexão ao proxy" />
+                <ImageView style="@style/ConfigChevron" />
             </LinearLayout>
 
         </LinearLayout>
