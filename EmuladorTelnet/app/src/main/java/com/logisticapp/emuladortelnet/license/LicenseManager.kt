@@ -263,6 +263,42 @@ class LicenseManager(private val context: Context) {
         }
     }
 
+    // ----------------------------------------------------------------
+    // Utilitários de DEBUG — usar apenas em builds de desenvolvimento
+    // ----------------------------------------------------------------
+
+    /** Expira o trial imediatamente (define end_date = 1 ms atrás). */
+    fun debugExpireTrial() {
+        prefs.edit().apply {
+            putString(KEY_LICENSE_TYPE, "TRIAL")
+            putLong(KEY_TRIAL_END_DATE, System.currentTimeMillis() - 1)
+            putBoolean(KEY_IS_ACTIVE, true)
+            apply()
+        }
+    }
+
+    /** Reseta o trial para N dias a partir de agora. */
+    fun debugSetTrialDays(days: Int) {
+        val ms = days.toLong() * 24 * 60 * 60 * 1000
+        prefs.edit().apply {
+            putString(KEY_LICENSE_TYPE, "TRIAL")
+            putLong(KEY_TRIAL_START_DATE, System.currentTimeMillis())
+            putLong(KEY_TRIAL_END_DATE, System.currentTimeMillis() + ms)
+            putBoolean(KEY_IS_ACTIVE, true)
+            putBoolean(KEY_IS_INITIALIZED, true)
+            // Remove licença premium se houver
+            remove(KEY_LICENSE_KEY)
+            remove(KEY_LICENSE_SUBTYPE)
+            remove(KEY_MERCADO_PAGO_PAYMENT_ID)
+            apply()
+        }
+    }
+
+    /** Apaga tudo — próxima abertura reinicia como primeira instalação. */
+    fun debugClearAll() {
+        prefs.edit().clear().apply()
+    }
+
     /**
      * Formatar timestamp para data legível
      */

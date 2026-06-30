@@ -263,4 +263,96 @@
         android:gravity="center"
         android:layout_marginTop="12dp" />
 
+    <!-- ===== PAINEL DEBUG (oculto em produção) ===== -->
+    <LinearLayout
+        android:id="@+id/debug_panel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#1A2A1A"
+        android:padding="12dp"
+        android:layout_marginTop="16dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🛠 DEBUG — Licença"
+            android:textSize="11sp"
+            android:textColor="#4CAF50"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Linha 1: expirar e resetar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <Button
+                android:id="@+id/btn_debug_expire"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:text="Expirar agora"
+                android:textSize="11sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#C62828" />
+
+            <Button
+                android:id="@+id/btn_debug_reset"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:text="Reset (7 dias)"
+                android:textSize="11sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#1565C0" />
+        </LinearLayout>
+
+        <!-- Linha 2: N dias customizados -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/debug_days_input"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:hint="dias"
+                android:textColorHint="#4A6070"
+                android:textColor="#F8F9FA"
+                android:textSize="13sp"
+                android:inputType="number"
+                android:background="@drawable/input_dark_bg"
+                android:paddingHorizontal="10dp" />
+
+            <Button
+                android:id="@+id/btn_debug_set_days"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Definir dias"
+                android:textSize="11sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#2E7D32" />
+        </LinearLayout>
+
+        <!-- Linha 3: limpar tudo -->
+        <Button
+            android:id="@+id/btn_debug_clear"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:layout_marginTop="8dp"
+            android:text="Limpar tudo (simula 1ª instalação)"
+            android:textSize="11sp"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#6A1B9A" />
+
+    </LinearLayout>
+
 </LinearLayout>

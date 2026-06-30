@@ -1,0 +1,3 @@
+[submodule "scante-admin"]
+	path = scante-admin
+	url = https://github.com/gabrielvanzella1/scante-admin.git

@@ -7,11 +7,14 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import com.logisticapp.emuladortelnet.license.LicenseManager
 import com.logisticapp.emuladortelnet.ui.LicenseViewModel
 import timber.log.Timber
 
@@ -59,19 +62,20 @@ class LicenseActivity : AppCompatActivity() {
 
         when (data.host) {
             "payment" -> {
-                val path = data.pathSegments.firstOrNull()
-                val paymentId = data.getQueryParameter("payment_id")
-                val status = data.getQueryParameter("status")
+                val path      = data.pathSegments.firstOrNull()
+                val chave     = data.getQueryParameter("chave")       // retorno do scante-admin
+                val paymentId = data.getQueryParameter("payment_id")  // retorno do Mercado Pago
+                val status    = data.getQueryParameter("status")
 
-                Timber.d("Path=$path paymentId=$paymentId status=$status")
+                Timber.d("Path=$path chave=$chave paymentId=$paymentId status=$status")
 
                 when (path) {
+                    "sucesso",   // rota do scante-admin
                     "success" -> {
-                        if (!paymentId.isNullOrEmpty()) {
-                            viewModel.verifyAndActivateLicense(paymentId)
-                        } else {
-                            // MP às vezes não envia payment_id no back_url, ativa via status
-                            viewModel.activateLicenseByStatus(status ?: "approved")
+                        when {
+                            !chave.isNullOrEmpty()     -> viewModel.activateByKey(chave)
+                            !paymentId.isNullOrEmpty() -> viewModel.verifyAndActivateLicense(paymentId)
+                            else                       -> viewModel.activateLicenseByStatus(status ?: "approved")
                         }
                     }
                     "failure" -> {
@@ -176,6 +180,51 @@ class LicenseActivity : AppCompatActivity() {
             val chave = inputLicenseKey.text.toString()
             tvActivationResult.visibility = View.GONE
             viewModel.activateByKey(chave)
+        }
+
+        // Painel de debug — só aparece em builds DEBUG
+        if (BuildConfig.DEBUG) {
+            val debugPanel = findViewById<LinearLayout>(R.id.debug_panel)
+            debugPanel.visibility = View.VISIBLE
+
+            val licenseManager = LicenseManager(this)
+
+            findViewById<Button>(R.id.btn_debug_expire).setOnClickListener {
+                licenseManager.debugExpireTrial()
+                viewModel.loadLicenseInfo()
+                Toast.makeText(this, "Trial expirado!", Toast.LENGTH_SHORT).show()
+            }
+
+            findViewById<Button>(R.id.btn_debug_reset).setOnClickListener {
+                licenseManager.debugSetTrialDays(7)
+                viewModel.loadLicenseInfo()
+                Toast.makeText(this, "Trial resetado para 7 dias", Toast.LENGTH_SHORT).show()
+            }
+
+            val debugDaysInput = findViewById<EditText>(R.id.debug_days_input)
+            findViewById<Button>(R.id.btn_debug_set_days).setOnClickListener {
+                val days = debugDaysInput.text.toString().toIntOrNull() ?: 0
+                if (days <= 0) {
+                    Toast.makeText(this, "Informe um número de dias válido", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                licenseManager.debugSetTrialDays(days)
+                viewModel.loadLicenseInfo()
+                Toast.makeText(this, "Trial definido para $days dias", Toast.LENGTH_SHORT).show()
+            }
+
+            findViewById<Button>(R.id.btn_debug_clear).setOnClickListener {
+                AlertDialog.Builder(this)
+                    .setTitle("Limpar tudo?")
+                    .setMessage("Isso apaga a licença e simula uma primeira instalação. Confirma?")
+                    .setPositiveButton("Limpar") { _, _ ->
+                        licenseManager.debugClearAll()
+                        Toast.makeText(this, "Dados apagados — reinicie o app", Toast.LENGTH_LONG).show()
+                        finishAffinity()
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            }
         }
     }
 

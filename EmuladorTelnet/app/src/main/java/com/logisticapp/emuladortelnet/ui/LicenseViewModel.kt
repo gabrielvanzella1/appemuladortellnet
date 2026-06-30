@@ -145,27 +145,16 @@ class LicenseViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /**
-     * Inicia o fluxo de compra: cria preferência no MP e emite a URL do checkout.
+     * Abre a página de checkout do scante-admin no browser, passando device_id e device_nome.
+     * Após o pagamento, o scante-admin redireciona para emuladortelnet://payment/sucesso?chave=SCTE-XXX.
      */
     fun startPayment() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val deviceId = licenseManager.getDeviceId()
-                val result = mpManager.createPreference(deviceId)
-                if (result.isSuccess) {
-                    _checkoutUrl.value = result.getOrNull()
-                } else {
-                    _errorMessage.value = result.exceptionOrNull()?.message
-                        ?: "Erro ao iniciar pagamento. Verifique sua conexão."
-                }
-            } catch (e: Exception) {
-                Timber.e(e, "Erro ao iniciar pagamento")
-                _errorMessage.value = "Erro ao iniciar pagamento."
-            } finally {
-                _isLoading.value = false
-            }
-        }
+        val deviceId   = licenseManager.getDeviceId()
+        val deviceNome = "${Build.MANUFACTURER} ${Build.MODEL}"
+        val url = "${LicenseApiService.BASE_URL}/checkout" +
+            "?device_id=${android.net.Uri.encode(deviceId)}" +
+            "&device_nome=${android.net.Uri.encode(deviceNome)}"
+        _checkoutUrl.value = url
     }
 
     /**
