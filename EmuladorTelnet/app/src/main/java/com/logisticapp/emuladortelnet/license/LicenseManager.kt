@@ -50,30 +50,18 @@ class LicenseManager(private val context: Context) {
     }
 
     /**
-     * Inicializar licença na primeira execução
+     * Inicializar na primeira execução — apenas salva o device ID.
+     * Não cria trial automático; o usuário precisa ativar via chave.
      */
     fun initializeLicense() {
-        if (prefs.getBoolean(KEY_IS_INITIALIZED, false)) {
-            Timber.d("Licença já foi inicializada")
-            return
-        }
-
-        val deviceId = getDeviceId()
-        val now = System.currentTimeMillis()
-        val trialEndDate = now + (7L * 24 * 60 * 60 * 1000)
+        if (prefs.getBoolean(KEY_IS_INITIALIZED, false)) return
 
         prefs.edit().apply {
-            putString(KEY_DEVICE_ID, deviceId)
-            putString(KEY_LICENSE_TYPE, "TRIAL")
-            putLong(KEY_TRIAL_START_DATE, now)
-            putLong(KEY_TRIAL_END_DATE, trialEndDate)
-            putLong(KEY_PURCHASE_DATE, 0L)
-            putBoolean(KEY_IS_ACTIVE, true)
+            putString(KEY_DEVICE_ID, getDeviceId())
             putBoolean(KEY_IS_INITIALIZED, true)
             apply()
         }
-
-        Timber.d("Licença TRIAL criada - 30 dias grátis")
+        Timber.d("LicenseManager inicializado — aguardando ativação")
     }
 
     /**
@@ -109,23 +97,15 @@ class LicenseManager(private val context: Context) {
     }
 
     /**
-     * Verificar se tem acesso ao app
+     * Retorna true somente se a licença for PREMIUM ativa e não expirada.
      */
     fun hasAccess(): Boolean {
-        val licenseType = prefs.getString(KEY_LICENSE_TYPE, "TRIAL") ?: "TRIAL"
-        val isActive = prefs.getBoolean(KEY_IS_ACTIVE, true)
-
-        // Premium ativo
-        if (licenseType == "PREMIUM" && isActive) {
-            return true
-        }
-
-        // Trial válido
-        if (licenseType == "TRIAL" && isTrialValid()) {
-            return true
-        }
-
-        return false
+        val licenseType = prefs.getString(KEY_LICENSE_TYPE, "") ?: ""
+        val isActive = prefs.getBoolean(KEY_IS_ACTIVE, false)
+        if (licenseType != "PREMIUM" || !isActive) return false
+        // Verifica expiração para licenças com prazo
+        val expiryDate = prefs.getLong(KEY_TRIAL_END_DATE, 0L)
+        return expiryDate == 0L || System.currentTimeMillis() <= expiryDate
     }
 
     /**

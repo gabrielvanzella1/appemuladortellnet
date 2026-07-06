@@ -2,149 +2,134 @@ package com.logisticapp.emuladortelnet
 
 import android.content.Intent
 import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.Button
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.ViewModelProvider
-import com.logisticapp.emuladortelnet.license.LicenseManager
 import com.logisticapp.emuladortelnet.ui.LicenseViewModel
-import timber.log.Timber
+import com.google.android.material.textfield.TextInputEditText
 
 class LicenseActivity : AppCompatActivity() {
 
-    private lateinit var viewModel: LicenseViewModel
+    private enum class Screen { NOT_ACTIVATED, FORM, HELP }
 
-    private lateinit var licenseStatus: TextView
-    private lateinit var licenseMessage: TextView
-    private lateinit var daysRemaining: TextView
-    private lateinit var licenseType: TextView
-    private lateinit var deviceInfo: TextView
-    private lateinit var btnContinue: Button
-    private lateinit var btnBuyLicense: Button
+    private lateinit var viewModel: LicenseViewModel
+    private lateinit var toolbar: Toolbar
+
+    private lateinit var screenNotActivated: LinearLayout
+    private lateinit var screenForm: LinearLayout
+    private lateinit var screenHelp: ScrollView
+    private lateinit var inputLicenseKey: TextInputEditText
+    private lateinit var inputDeviceName: TextInputEditText
+    private lateinit var btnAtivarAgora: Button
     private lateinit var progressBar: ProgressBar
-    private lateinit var inputLicenseKey: EditText
-    private lateinit var btnActivateKey: Button
     private lateinit var tvActivationResult: TextView
+
+    private var currentScreen = Screen.NOT_ACTIVATED
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         com.logisticapp.emuladortelnet.settings.AppSettings.get(this).applyOrientation(this)
         setContentView(R.layout.activity_license)
 
-        initializeViews()
+        toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+
+        screenNotActivated = findViewById(R.id.screen_not_activated)
+        screenForm = findViewById(R.id.screen_form)
+        screenHelp = findViewById(R.id.screen_help)
+        inputLicenseKey = findViewById(R.id.input_license_key)
+        inputDeviceName = findViewById(R.id.input_device_name)
+        btnAtivarAgora = findViewById(R.id.btn_ativar_agora)
+        progressBar = findViewById(R.id.progress_bar)
+        tvActivationResult = findViewById(R.id.tv_activation_result)
+
         viewModel = ViewModelProvider(this).get(LicenseViewModel::class.java)
-        observeLicenseState()
+        observeViewModel()
         setupClickListeners()
 
-        // Chegou aqui via deep link (pagamento concluído)?
-        handleDeepLink(intent)
+        viewModel.checkOnStartup()
     }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        // Recebe o deep link quando a activity já estava aberta (singleTop)
-        handleDeepLink(intent)
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_license, menu)
+        menu.findItem(R.id.menu_ativar)?.actionView
+            ?.findViewById<View>(R.id.btn_toolbar_ativar)
+            ?.setOnClickListener { showScreen(Screen.FORM) }
+        return true
     }
 
-    private fun handleDeepLink(intent: Intent) {
-        val data: Uri? = intent.data
-        if (data == null || data.scheme != "emuladortelnet") return
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        menu.findItem(R.id.menu_ativar)?.isVisible = (currentScreen == Screen.NOT_ACTIVATED)
+        menu.findItem(R.id.menu_ajuda)?.isVisible = (currentScreen == Screen.FORM)
+        return true
+    }
 
-        Timber.d("Deep link recebido: $data")
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> { navigateBack(); true }
+            R.id.menu_ajuda -> { showScreen(Screen.HELP); true }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
 
-        when (data.host) {
-            "payment" -> {
-                val path      = data.pathSegments.firstOrNull()
-                val chave     = data.getQueryParameter("chave")       // retorno do scante-admin
-                val paymentId = data.getQueryParameter("payment_id")  // retorno do Mercado Pago
-                val status    = data.getQueryParameter("status")
+    @Suppress("OVERRIDE_DEPRECATION")
+    override fun onBackPressed() {
+        if (!navigateBack()) super.onBackPressed()
+    }
 
-                Timber.d("Path=$path chave=$chave paymentId=$paymentId status=$status")
+    private fun navigateBack(): Boolean {
+        return when (currentScreen) {
+            Screen.FORM -> { showScreen(Screen.NOT_ACTIVATED); true }
+            Screen.HELP -> { showScreen(Screen.FORM); true }
+            Screen.NOT_ACTIVATED -> false
+        }
+    }
 
-                when (path) {
-                    "sucesso",   // rota do scante-admin
-                    "success" -> {
-                        when {
-                            !chave.isNullOrEmpty()     -> viewModel.activateByKey(chave)
-                            !paymentId.isNullOrEmpty() -> viewModel.verifyAndActivateLicense(paymentId)
-                            else                       -> viewModel.activateLicenseByStatus(status ?: "approved")
-                        }
-                    }
-                    "failure" -> {
-                        Toast.makeText(this, "Pagamento não aprovado. Tente novamente.", Toast.LENGTH_LONG).show()
-                    }
-                    "pending" -> {
-                        Toast.makeText(this, "Pagamento pendente. Aguarde a confirmação.", Toast.LENGTH_LONG).show()
-                    }
-                }
+    private fun showScreen(screen: Screen) {
+        currentScreen = screen
+        screenNotActivated.visibility = if (screen == Screen.NOT_ACTIVATED) View.VISIBLE else View.GONE
+        screenForm.visibility = if (screen == Screen.FORM) View.VISIBLE else View.GONE
+        screenHelp.visibility = if (screen == Screen.HELP) View.VISIBLE else View.GONE
+
+        when (screen) {
+            Screen.NOT_ACTIVATED -> {
+                supportActionBar?.title = "ScanTE não está ativado"
+                supportActionBar?.setDisplayHomeAsUpEnabled(false)
+            }
+            Screen.FORM -> {
+                supportActionBar?.title = "Ativação"
+                supportActionBar?.setDisplayHomeAsUpEnabled(true)
+                tvActivationResult.visibility = View.GONE
+            }
+            Screen.HELP -> {
+                supportActionBar?.title = "AJUDA"
+                supportActionBar?.setDisplayHomeAsUpEnabled(true)
             }
         }
+        invalidateOptionsMenu()
     }
 
-    private fun initializeViews() {
-        licenseStatus = findViewById(R.id.license_status)
-        licenseMessage = findViewById(R.id.license_message)
-        daysRemaining = findViewById(R.id.days_remaining)
-        licenseType = findViewById(R.id.license_type)
-        deviceInfo = findViewById(R.id.device_info)
-        btnContinue = findViewById(R.id.btn_continue)
-        btnBuyLicense = findViewById(R.id.btn_buy_license)
-        progressBar = findViewById(R.id.progress_bar)
-        inputLicenseKey = findViewById(R.id.input_license_key)
-        btnActivateKey = findViewById(R.id.btn_activate_key)
-        tvActivationResult = findViewById(R.id.tv_activation_result)
-    }
-
-    private fun observeLicenseState() {
-        viewModel.licenseStatus.observe(this) { status ->
-            licenseStatus.text = "Status: $status"
-        }
-
-        viewModel.licenseMessage.observe(this) { message ->
-            licenseMessage.text = message
-        }
-
-        viewModel.daysRemaining.observe(this) { days ->
-            daysRemaining.text = if (days >= 0) days.toString() else "∞"
-        }
-
-        viewModel.licenseType.observe(this) { type ->
-            licenseType.text = type
-        }
-
-        viewModel.deviceInfo.observe(this) { info ->
-            deviceInfo.text = info
-        }
-
-        viewModel.canContinue.observe(this) { canContinue ->
-            btnContinue.isEnabled = canContinue
-            btnContinue.alpha = if (canContinue) 1f else 0.5f
-        }
-
+    private fun observeViewModel() {
         viewModel.isLoading.observe(this) { loading ->
             progressBar.visibility = if (loading) View.VISIBLE else View.GONE
-            btnBuyLicense.isEnabled = !loading
+            btnAtivarAgora.isEnabled = !loading
         }
 
         viewModel.navigateToMain.observe(this) { navigate ->
             if (navigate) {
+                viewModel.onNavigated()
                 startActivity(Intent(this, HostsActivity::class.java))
                 finish()
-            }
-        }
-
-        viewModel.checkoutUrl.observe(this) { url ->
-            if (!url.isNullOrEmpty()) {
-                openCheckout(url)
-                viewModel.onCheckoutOpened()
             }
         }
 
@@ -162,83 +147,62 @@ class LicenseActivity : AppCompatActivity() {
             tvActivationResult.setTextColor(
                 if (result.first) Color.parseColor("#4CAF50") else Color.parseColor("#F44336")
             )
-            if (result.first) inputLicenseKey.setText("")
             viewModel.onActivationResultShown()
         }
     }
 
     private fun setupClickListeners() {
-        btnContinue.setOnClickListener {
-            viewModel.continueToApp()
-        }
-
-        btnBuyLicense.setOnClickListener {
-            viewModel.startPayment()
-        }
-
-        btnActivateKey.setOnClickListener {
-            val chave = inputLicenseKey.text.toString()
+        btnAtivarAgora.setOnClickListener {
+            val chave = inputLicenseKey.text?.toString().orEmpty()
+            val deviceName = inputDeviceName.text?.toString().orEmpty()
             tvActivationResult.visibility = View.GONE
-            viewModel.activateByKey(chave)
+            viewModel.activateByKey(chave, deviceName)
         }
 
-        // Painel de debug — só aparece em builds DEBUG
         if (BuildConfig.DEBUG) {
-            val debugPanel = findViewById<LinearLayout>(R.id.debug_panel)
-            debugPanel.visibility = View.VISIBLE
-
-            val licenseManager = LicenseManager(this)
-
-            findViewById<Button>(R.id.btn_debug_expire).setOnClickListener {
-                licenseManager.debugExpireTrial()
-                viewModel.loadLicenseInfo()
-                Toast.makeText(this, "Trial expirado!", Toast.LENGTH_SHORT).show()
-            }
-
-            findViewById<Button>(R.id.btn_debug_reset).setOnClickListener {
-                licenseManager.debugSetTrialDays(7)
-                viewModel.loadLicenseInfo()
-                Toast.makeText(this, "Trial resetado para 7 dias", Toast.LENGTH_SHORT).show()
-            }
-
-            val debugDaysInput = findViewById<EditText>(R.id.debug_days_input)
-            findViewById<Button>(R.id.btn_debug_set_days).setOnClickListener {
-                val days = debugDaysInput.text.toString().toIntOrNull() ?: 0
-                if (days <= 0) {
-                    Toast.makeText(this, "Informe um número de dias válido", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                licenseManager.debugSetTrialDays(days)
-                viewModel.loadLicenseInfo()
-                Toast.makeText(this, "Trial definido para $days dias", Toast.LENGTH_SHORT).show()
-            }
-
-            findViewById<Button>(R.id.btn_debug_clear).setOnClickListener {
-                AlertDialog.Builder(this)
-                    .setTitle("Limpar tudo?")
-                    .setMessage("Isso apaga a licença e simula uma primeira instalação. Confirma?")
-                    .setPositiveButton("Limpar") { _, _ ->
-                        licenseManager.debugClearAll()
-                        Toast.makeText(this, "Dados apagados — reinicie o app", Toast.LENGTH_LONG).show()
-                        finishAffinity()
-                    }
-                    .setNegativeButton("Cancelar", null)
-                    .show()
-            }
+            setupDebugPanel()
         }
     }
 
-    private fun openCheckout(url: String) {
-        try {
-            // Abre o checkout do Mercado Pago no browser padrão
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-        } catch (e: Exception) {
-            Toast.makeText(this, "Não foi possível abrir o navegador.", Toast.LENGTH_SHORT).show()
+    private fun setupDebugPanel() {
+        // Panel de debug acessível via toque longo no título da tela 1
+        screenNotActivated.setOnLongClickListener {
+            showDebugDialog()
+            true
         }
+    }
+
+    private fun showDebugDialog() {
+        val manager = com.logisticapp.emuladortelnet.license.LicenseManager(this)
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("DEBUG — Licença")
+            .setItems(arrayOf(
+                "Simular licença PREMIUM ativa",
+                "Limpar tudo (1ª instalação)",
+                "Ver device ID"
+            )) { _, which ->
+                when (which) {
+                    0 -> {
+                        manager.upgradeToPremiumByKey("SCTE-DEBUG-000000-000000", "debug", -1)
+                        Toast.makeText(this, "PREMIUM simulado", Toast.LENGTH_SHORT).show()
+                        viewModel.checkOnStartup()
+                    }
+                    1 -> {
+                        manager.debugClearAll()
+                        Toast.makeText(this, "Dados apagados — reinicie o app", Toast.LENGTH_LONG).show()
+                        finishAffinity()
+                    }
+                    2 -> {
+                        Toast.makeText(this, "Device ID: ${manager.getDeviceId()}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+            .setNegativeButton("Fechar", null)
+            .show()
     }
 
     override fun onResume() {
         super.onResume()
-        viewModel.loadLicenseInfo()
+        showScreen(currentScreen)
     }
 }

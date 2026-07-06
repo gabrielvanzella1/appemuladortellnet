@@ -1,364 +1,229 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_brand_dark"
-    android:fillViewport="true">
-
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#FFFFFF">
 
-    <!-- Header com Logo -->
-    <LinearLayout
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/primary" />
+
+    <!-- ===== TELA 1: NÃO ATIVADO ===== -->
+    <LinearLayout
+        android:id="@+id/screen_not_activated"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
-        android:paddingVertical="24dp">
-
-        <FrameLayout
-            android:layout_width="84dp"
-            android:layout_height="84dp"
-            android:background="@drawable/circle_logo_dark">
-
-            <ImageView
-                android:layout_width="52dp"
-                android:layout_height="52dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_scante_logo"
-                android:contentDescription="ScanTE" />
-        </FrameLayout>
-
-        <!-- Nome: Scan (branco) + TE (verde) -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="14dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Scan"
-                android:textSize="32sp"
-                android:textColor="#F8F9FA"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="TE"
-                android:textSize="32sp"
-                android:textColor="@color/brand_green"
-                android:textStyle="bold" />
-        </LinearLayout>
+        android:padding="32dp"
+        android:visibility="visible">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Conecta · Sincroniza · Simplifica"
-            android:textSize="12sp"
-            android:textColor="#8DA2B0"
+            android:text="Ainda não possui uma licença?"
+            android:textSize="18sp"
+            android:textColor="#555555"
             android:gravity="center"
-            android:letterSpacing="0.04"
-            android:layout_marginTop="4dp" />
-    </LinearLayout>
-
-    <!-- Status Card -->
-    <LinearLayout
-        android:id="@+id/status_card"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@drawable/card_dark"
-        android:padding="16dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginBottom="24dp">
+            android:layout_marginBottom="16dp" />
 
         <TextView
-            android:id="@+id/license_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Status: Teste Gratuito"
-            android:textSize="16sp"
+            android:text="Solicite uma licença trial gratuita por 30 dias"
+            android:textSize="15sp"
+            android:textColor="#777777"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="E-mail: scante@scante.com.br"
+            android:textSize="15sp"
             android:textColor="@color/brand_green"
+            android:gravity="center"
             android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/license_message"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="30 dias grátis para testar"
-            android:textSize="14sp"
-            android:textColor="#E0E6EA"
-            android:layout_marginTop="8dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="12dp">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Dias Restantes"
-                    android:textSize="12sp"
-                    android:textColor="#8DA2B0" />
-
-                <TextView
-                    android:id="@+id/days_remaining"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="30"
-                    android:textSize="20sp"
-                    android:textColor="@color/brand_green"
-                    android:textStyle="bold"
-                    android:layout_marginTop="4dp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Tipo"
-                    android:textSize="12sp"
-                    android:textColor="#8DA2B0" />
-
-                <TextView
-                    android:id="@+id/license_type"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Trial"
-                    android:textSize="20sp"
-                    android:textColor="@color/brand_green"
-                    android:textStyle="bold"
-                    android:layout_marginTop="4dp" />
-            </LinearLayout>
-        </LinearLayout>
     </LinearLayout>
 
-    <!-- Ativar licença com chave -->
+    <!-- ===== TELA 2: FORMULÁRIO DE ATIVAÇÃO ===== -->
     <LinearLayout
+        android:id="@+id/screen_form"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:background="@drawable/card_dark"
-        android:padding="16dp"
-        android:layout_marginBottom="16dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Já tem uma licença?"
-            android:textSize="13sp"
-            android:textColor="#8DA2B0"
-            android:layout_marginBottom="8dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <EditText
-                android:id="@+id/input_license_key"
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_weight="1"
-                android:hint="SCTE-XXXXXX-XXXXXX-XXXXXX"
-                android:textColorHint="#4A6070"
-                android:textColor="#F8F9FA"
-                android:textSize="13sp"
-                android:inputType="textCapCharacters|textNoSuggestions"
-                android:background="@drawable/input_dark_bg"
-                android:paddingHorizontal="12dp"
-                android:layout_marginEnd="8dp" />
-
-            <Button
-                android:id="@+id/btn_activate_key"
-                android:layout_width="wrap_content"
-                android:layout_height="44dp"
-                android:text="Ativar"
-                android:textColor="@color/brand_petrol"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:background="@drawable/button_accent_bg"
-                android:paddingHorizontal="16dp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/tv_activation_result"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="12sp"
-            android:textColor="@color/brand_green"
-            android:layout_marginTop="8dp"
-            android:visibility="gone" />
-    </LinearLayout>
-
-    <!-- Loading indicator durante criação/verificação de pagamento -->
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginBottom="8dp"
-        android:indeterminateTint="@color/brand_green"
-        android:visibility="gone" />
-
-    <!-- Botões de Ação -->
-    <Button
-        android:id="@+id/btn_continue"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:text="Continuar"
-        android:textColor="@color/brand_petrol"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:background="@drawable/button_accent_bg"
-        android:layout_marginBottom="12dp" />
-
-    <Button
-        android:id="@+id/btn_buy_license"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:text="Comprar Licença"
-        android:textColor="@color/brand_green"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:background="@drawable/card_dark"
-        android:layout_marginBottom="24dp" />
-
-    <!-- Info Text -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="📌 A licença é vitalícia após o pagamento\n\n💳 Aceita Mercado Pago\n\n✅ 7 dias grátis para testar"
-        android:textSize="13sp"
-        android:textColor="#8DA2B0"
-        android:gravity="center"
-        android:layout_marginTop="24dp"
-        android:padding="16dp" />
-
-    <!-- Device Info (Debug) -->
-    <TextView
-        android:id="@+id/device_info"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:textSize="10sp"
-        android:textColor="#5A6B78"
-        android:gravity="center"
-        android:layout_marginTop="12dp" />
-
-    <!-- ===== PAINEL DEBUG (oculto em produção) ===== -->
-    <LinearLayout
-        android:id="@+id/debug_panel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="#1A2A1A"
-        android:padding="12dp"
-        android:layout_marginTop="16dp"
+        android:padding="24dp"
         android:visibility="gone">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="🛠 DEBUG — Licença"
-            android:textSize="11sp"
-            android:textColor="#4CAF50"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:text="Digite sua chave de ativação. Se precisar de ajuda, consulte a seção AJUDA para mais informações."
+            android:textSize="14sp"
+            android:textColor="#777777"
+            android:layout_marginBottom="32dp" />
 
-        <!-- Linha 1: expirar e resetar -->
-        <LinearLayout
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="8dp">
+            android:hint="Chave de ativação"
+            android:layout_marginBottom="24dp">
 
-            <Button
-                android:id="@+id/btn_debug_expire"
-                android:layout_width="0dp"
-                android:layout_height="36dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="6dp"
-                android:text="Expirar agora"
-                android:textSize="11sp"
-                android:textColor="#FFFFFF"
-                android:backgroundTint="#C62828" />
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/input_license_key"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textCapCharacters|textNoSuggestions"
+                android:textSize="15sp" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-            <Button
-                android:id="@+id/btn_debug_reset"
-                android:layout_width="0dp"
-                android:layout_height="36dp"
-                android:layout_weight="1"
-                android:text="Reset (7 dias)"
-                android:textSize="11sp"
-                android:textColor="#FFFFFF"
-                android:backgroundTint="#1565C0" />
-        </LinearLayout>
-
-        <!-- Linha 2: N dias customizados -->
-        <LinearLayout
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:hint="Nome de identificação (ex: número de série)"
+            android:layout_marginBottom="40dp">
 
-            <EditText
-                android:id="@+id/debug_days_input"
-                android:layout_width="0dp"
-                android:layout_height="36dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="6dp"
-                android:hint="dias"
-                android:textColorHint="#4A6070"
-                android:textColor="#F8F9FA"
-                android:textSize="13sp"
-                android:inputType="number"
-                android:background="@drawable/input_dark_bg"
-                android:paddingHorizontal="10dp" />
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/input_device_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:textSize="15sp" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-            <Button
-                android:id="@+id/btn_debug_set_days"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="Definir dias"
-                android:textSize="11sp"
-                android:textColor="#FFFFFF"
-                android:backgroundTint="#2E7D32" />
-        </LinearLayout>
-
-        <!-- Linha 3: limpar tudo -->
         <Button
-            android:id="@+id/btn_debug_clear"
+            android:id="@+id/btn_ativar_agora"
             android:layout_width="match_parent"
-            android:layout_height="36dp"
-            android:layout_marginTop="8dp"
-            android:text="Limpar tudo (simula 1ª instalação)"
-            android:textSize="11sp"
+            android:layout_height="52dp"
+            android:text="ATIVAR AGORA"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#6A1B9A" />
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:backgroundTint="#212121"
+            android:layout_marginBottom="16dp" />
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:indeterminateTint="@color/brand_green"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_activation_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:gravity="center"
+            android:layout_marginTop="8dp"
+            android:visibility="gone" />
 
     </LinearLayout>
 
-</LinearLayout>
+    <!-- ===== TELA 3: AJUDA ===== -->
+    <ScrollView
+        android:id="@+id/screen_help"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
 
-</ScrollView>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ATIVAÇÃO"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:gravity="center"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Chave de Ativação"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Este aplicativo ScanTE requer uma chave de ativação para funcionar. Se você possui uma chave, insira-a para ativar o ScanTE.\n\nSe você recebeu o código por e-mail, copie-o para a área de transferência e cole no campo de chave de ativação."
+                android:textSize="13sp"
+                android:textColor="#555555"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Nome de ativação"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Insira um nome para identificar este dispositivo. Recomendamos que você use o número de série do dispositivo, pois ele é permanente e resiste tanto à restauração de fábrica quanto à substituição da placa-mãe.\n\nAo inserir um nome exclusivo, você poderá solicitar a liberação de uma nova licença caso seu dispositivo quebre ou passe por uma restauração de fábrica."
+                android:textSize="13sp"
+                android:textColor="#555555"
+                android:layout_marginBottom="24dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#EEEEEE"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Adquirir o ScanTE"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Para adquirir uma licença do ScanTE, entre em contato conosco:"
+                android:textSize="13sp"
+                android:textColor="#555555"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="www.scante.com.br"
+                android:textSize="13sp"
+                android:textColor="@color/brand_green"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="scante@scante.com.br"
+                android:textSize="13sp"
+                android:textColor="@color/brand_green"
+                android:layout_marginBottom="24dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
