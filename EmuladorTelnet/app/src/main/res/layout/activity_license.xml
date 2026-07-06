@@ -67,35 +67,45 @@
             android:textColor="#777777"
             android:layout_marginBottom="32dp" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Chave de ativação"
-            android:layout_marginBottom="24dp">
+            android:text="Chave de ativação"
+            android:textSize="12sp"
+            android:textColor="#888888"
+            android:layout_marginBottom="4dp" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/input_license_key"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textCapCharacters|textNoSuggestions"
-                android:textSize="15sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+        <EditText
+            android:id="@+id/input_license_key"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nome de identificação (ex: número de série)"
-            android:layout_marginBottom="40dp">
+            android:hint="SCTE-XXXXXX-XXXXXX-XXXXXX"
+            android:inputType="textCapCharacters|textNoSuggestions"
+            android:textSize="15sp"
+            android:textColor="#212121"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:layout_marginBottom="28dp" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/input_device_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text"
-                android:textSize="15sp" />
-        </com.google.android.material.textfield.TextInputLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nome de identificação"
+            android:textSize="12sp"
+            android:textColor="#888888"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/input_device_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Ex: número de série do dispositivo"
+            android:inputType="text"
+            android:textSize="15sp"
+            android:textColor="#212121"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:layout_marginBottom="40dp" />
 
         <Button
             android:id="@+id/btn_ativar_agora"

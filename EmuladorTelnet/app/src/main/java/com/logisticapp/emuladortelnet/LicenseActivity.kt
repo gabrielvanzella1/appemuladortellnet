@@ -16,7 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.ViewModelProvider
 import com.logisticapp.emuladortelnet.ui.LicenseViewModel
-import com.google.android.material.textfield.TextInputEditText
+import android.widget.EditText
 
 class LicenseActivity : AppCompatActivity() {
 
@@ -28,8 +28,8 @@ class LicenseActivity : AppCompatActivity() {
     private lateinit var screenNotActivated: LinearLayout
     private lateinit var screenForm: LinearLayout
     private lateinit var screenHelp: ScrollView
-    private lateinit var inputLicenseKey: TextInputEditText
-    private lateinit var inputDeviceName: TextInputEditText
+    private lateinit var inputLicenseKey: EditText
+    private lateinit var inputDeviceName: EditText
     private lateinit var btnAtivarAgora: Button
     private lateinit var progressBar: ProgressBar
     private lateinit var tvActivationResult: TextView
@@ -47,8 +47,8 @@ class LicenseActivity : AppCompatActivity() {
         screenNotActivated = findViewById(R.id.screen_not_activated)
         screenForm = findViewById(R.id.screen_form)
         screenHelp = findViewById(R.id.screen_help)
-        inputLicenseKey = findViewById(R.id.input_license_key)
-        inputDeviceName = findViewById(R.id.input_device_name)
+        inputLicenseKey = findViewById<EditText>(R.id.input_license_key)
+        inputDeviceName = findViewById<EditText>(R.id.input_device_name)
         btnAtivarAgora = findViewById(R.id.btn_ativar_agora)
         progressBar = findViewById(R.id.progress_bar)
         tvActivationResult = findViewById(R.id.tv_activation_result)
@@ -153,8 +153,8 @@ class LicenseActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         btnAtivarAgora.setOnClickListener {
-            val chave = inputLicenseKey.text?.toString().orEmpty()
-            val deviceName = inputDeviceName.text?.toString().orEmpty()
+            val chave = inputLicenseKey.text.toString()
+            val deviceName = inputDeviceName.text.toString()
             tvActivationResult.visibility = View.GONE
             viewModel.activateByKey(chave, deviceName)
         }
