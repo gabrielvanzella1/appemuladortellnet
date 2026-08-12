@@ -27,6 +27,24 @@ android {
         }
     }
 
+    flavorDimensions += "env"
+    productFlavors {
+        create("production") {
+            dimension = "env"
+            buildConfigField("String", "BASE_URL", "\"https://scante.com.br/scante-admin/public\"")
+            buildConfigField("String", "API_SECRET", "\"eab28be7c8536e7f5979e5a46b5ec65ba34fdf891d23c5f772e65a4d07057faf\"")
+            resValue("string", "app_name", "ScanTE")
+        }
+        create("sandbox") {
+            dimension = "env"
+            applicationIdSuffix = ".sandbox"
+            versionNameSuffix = "-sandbox"
+            buildConfigField("String", "BASE_URL", "\"https://sandbox.scante.com.br/scante-admin/public\"")
+            buildConfigField("String", "API_SECRET", "\"c9ce24d6a1e9a583036278736526a82d144e9955b04c9ea490f215f230f592cf\"")
+            resValue("string", "app_name", "ScanTE Sandbox")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -45,6 +63,7 @@ android {
     buildFeatures {
         compose = false
         viewBinding = true
+        buildConfig = true
     }
 }
 

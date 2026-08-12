@@ -1,19 +1,24 @@
 # ============================================================
 #  TellX - Build e execucao no emulador Android
-#  Uso: .\run.ps1                        (build + instala + abre)
+#  Uso: .\run.ps1                        (build sandbox + instala + abre)
+#       .\run.ps1 -Flavor production     (build produção + instala + abre)
 #       .\run.ps1 -SkipBuild             (instala + abre, sem compilar)
 #       .\run.ps1 -SkipBuild -SkipInstall (so abre o app)
 # ============================================================
 
 param(
+    [ValidateSet("sandbox", "production")]
+    [string]$Flavor = "sandbox",
     [switch]$SkipBuild,
     [switch]$SkipInstall
 )
 
+$FLAVOR_CAP  = $Flavor.Substring(0,1).ToUpper() + $Flavor.Substring(1)
+$NAMESPACE   = "com.logisticapp.emuladortelnet"
 $PROJECT_DIR = "$PSScriptRoot\EmuladorTelnet"
-$APK_PATH    = "$PROJECT_DIR\app\build\outputs\apk\debug\app-debug.apk"
-$PACKAGE     = "com.logisticapp.emuladortelnet"
-$ACTIVITY    = "$PACKAGE/.LicenseActivity"
+$APK_PATH    = "$PROJECT_DIR\app\build\outputs\apk\$Flavor\debug\app-$Flavor-debug.apk"
+$PACKAGE     = if ($Flavor -eq "sandbox") { "$NAMESPACE.sandbox" } else { $NAMESPACE }
+$ACTIVITY    = "$PACKAGE/$NAMESPACE.LicenseActivity"
 $AVD_NAME    = "Pixel_7"
 $SDK         = "$env:LOCALAPPDATA\Android\Sdk"
 $ADB         = "$SDK\platform-tools\adb.exe"
@@ -62,13 +67,13 @@ if ($phys) {
 # 2. Build
 # ------------------------------------------------------------------
 if (-not $SkipBuild) {
-    Write-Step "Compilando projeto (assembleDebug)..."
+    Write-Step "Compilando projeto (assemble${FLAVOR_CAP}Debug)..."
     Push-Location $PROJECT_DIR
-    & ".\gradlew.bat" assembleDebug --no-daemon
+    & ".\gradlew.bat" "assemble${FLAVOR_CAP}Debug" --no-daemon
     $code = $LASTEXITCODE
     Pop-Location
     if ($code -ne 0) { Write-Fail "Build falhou. Verifique os erros acima." }
-    Write-Ok "Build concluido: $APK_PATH"
+    Write-Ok "Build concluido ($Flavor): $APK_PATH"
 } else {
     Write-Ok "Build ignorado (-SkipBuild)."
 }
@@ -91,9 +96,9 @@ if (-not $SkipInstall) {
 # ------------------------------------------------------------------
 # 4. Abrir app
 # ------------------------------------------------------------------
-Write-Step "Abrindo TellX no dispositivo..."
+Write-Step "Abrindo TellX ($Flavor) no dispositivo..."
 & $ADB -s $SERIAL shell am start -n $ACTIVITY | Out-Null
 Write-Ok "App iniciado!"
 Write-Host ""
-Write-Host "  TellX rodando. Bom desenvolvimento!" -ForegroundColor Yellow
+Write-Host "  TellX ($Flavor) rodando. Bom desenvolvimento!" -ForegroundColor Yellow
 Write-Host ""

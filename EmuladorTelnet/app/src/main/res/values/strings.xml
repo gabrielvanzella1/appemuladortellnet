@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ScanTE</string>
+    <!-- app_name vem do flavor (production/sandbox) via resValue, ver app/build.gradle.kts -->
     <string name="app_version">1.0.0</string>
 
     <!-- Main Activity -->

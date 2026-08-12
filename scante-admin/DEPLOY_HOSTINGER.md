@@ -65,3 +65,28 @@ define('APP_URL', 'https://scante.com.br');
 - [ ] `.htaccess` (raiz e public) no servidor
 - [ ] SSL ativo (cadeado) no domínio
 - [ ] Login OK e senha do admin trocada
+
+## 6. Ambiente de SANDBOX (sandbox.scante.com.br)
+
+O objetivo do sandbox é testar o sistema completo (app Android + painel admin) sem
+tocar nos dados/licenças reais de produção.
+
+1. Na Hostinger, crie o subdomínio `sandbox.scante.com.br` apontando pra uma pasta
+   separada (ex: `public_html/sandbox/scante-admin/`) — **não** reaproveite a pasta
+   de produção.
+2. Crie um banco **separado** (hPanel → Bancos de dados), ex: `u508103998_scante_sandbox`,
+   e importe `database_hostinger.sql` nele (mesmo processo do passo 1, banco diferente).
+3. Copie o código do `scante-admin` pra essa pasta (git clone/pull ou FTP).
+4. Copie `config/config.sandbox.example.php` para `config/config.php` **dentro dessa
+   pasta de sandbox** e preencha `DB_NAME`/`DB_USER`/`DB_PASS` com o banco do passo 2.
+   O `API_SECRET` já vem preenchido igual ao do flavor `sandbox` do app Android — não
+   precisa trocar, a menos que você regenere os dois juntos.
+5. Envie `.htaccess` (raiz e `public/`) também nessa pasta.
+6. No app Android, gere o APK com o flavor `sandbox` (`.\run.ps1` já usa sandbox por
+   padrão, ou `.\gradlew.bat assembleSandboxDebug`) — ele aponta pra
+   `https://sandbox.scante.com.br/scante-admin/public` automaticamente
+   (`app/build.gradle.kts`, flavor `sandbox`). O APK de sandbox instala como app
+   separado (`com.logisticapp.emuladortelnet.sandbox`, nome "ScanTE Sandbox"), então
+   dá pra ter produção e sandbox no mesmo aparelho ao mesmo tempo.
+7. Quando o teste em sandbox validar a mudança, gere a versão de produção com
+   `.\run.ps1 -Flavor production` (ou `assembleProductionDebug`/`assembleRelease`).

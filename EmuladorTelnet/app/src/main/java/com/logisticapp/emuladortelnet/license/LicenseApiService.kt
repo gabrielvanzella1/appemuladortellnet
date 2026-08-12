@@ -1,5 +1,6 @@
 package com.logisticapp.emuladortelnet.license
 
+import com.logisticapp.emuladortelnet.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -12,10 +13,10 @@ import java.net.URL
 class LicenseApiService {
 
     companion object {
-        // Produção: scante-admin em scante.com.br (subpasta /scante-admin/public)
-        const val BASE_URL = "https://scante.com.br/scante-admin/public"
-        // DEVE ser idêntico ao API_SECRET do config.php em produção
-        private const val API_SECRET = "eab28be7c8536e7f5979e5a46b5ec65ba34fdf891d23c5f772e65a4d07057faf"
+        // BASE_URL e API_SECRET vêm do flavor (production/sandbox) — ver app/build.gradle.kts.
+        // DEVEM ser idênticos ao API_SECRET do config.php do respectivo servidor.
+        const val BASE_URL = BuildConfig.BASE_URL
+        private const val API_SECRET = BuildConfig.API_SECRET
         private const val TIMEOUT_MS = 15_000
     }
 
