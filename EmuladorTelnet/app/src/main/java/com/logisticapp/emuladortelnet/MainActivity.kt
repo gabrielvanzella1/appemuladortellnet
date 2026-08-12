@@ -290,6 +290,7 @@ class MainActivity : AppCompatActivity() {
         // Botao de mostrar/ocultar teclado (ao lado de Desconectar)
         binding.keyboardToggle.setOnClickListener { toggleKeyboard() }
         binding.keysToggle.setOnClickListener { toggleKeysBar() }
+        binding.calculatorButton.setOnClickListener { abrirCalculadora() }
 
         // Toque simples: abre teclado e rola ao fim; duplo toque: ação configurada
         binding.terminalOutput.setOnClickListener {
@@ -316,6 +317,7 @@ class MainActivity : AppCompatActivity() {
                     binding.disconnectButton.isEnabled = false
                     binding.keyboardToggle.visibility = android.view.View.GONE
                     binding.keysToggle.visibility = android.view.View.GONE
+                    binding.calculatorButton.visibility = android.view.View.GONE
                     cursorBlinkHandler.removeCallbacks(cursorBlinkRunnable)
                     // "Sempre" mantém a barra visível mesmo desconectado
                     if (settings.showToolbar != "Sempre") {
@@ -348,6 +350,7 @@ class MainActivity : AppCompatActivity() {
                     binding.disconnectButton.isEnabled = true
                     binding.keyboardToggle.visibility = android.view.View.VISIBLE
                     binding.keysToggle.visibility = android.view.View.VISIBLE
+                    binding.calculatorButton.visibility = android.view.View.VISIBLE
                     binding.keysToggle.alpha = if (toolbarHidden) 0.5f else 1f
                     if (settings.showToolbar != "Nunca") {
                         // Respeita a escolha manual do usuário (botão de ocultar teclas)
