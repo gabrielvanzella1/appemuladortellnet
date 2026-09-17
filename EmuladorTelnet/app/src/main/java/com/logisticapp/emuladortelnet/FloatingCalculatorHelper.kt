@@ -48,6 +48,7 @@ class FloatingCalculatorHelper(
         tvExpr    = fullView.findViewById(R.id.tv_expression)
 
         wireButtons(fullView)
+        applyResponsiveSizing(fullView)
 
         fullView.findViewById<ImageButton>(R.id.fl_minimize).setOnClickListener { showMini() }
         fullView.findViewById<ImageButton>(R.id.fl_close).setOnClickListener    { dismiss() }
@@ -59,23 +60,78 @@ class FloatingCalculatorHelper(
             btnSend.setOnClickListener { onSendResult.invoke(current); dismiss() }
         }
 
-        val lp = FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.WRAP_CONTENT,
-            FrameLayout.LayoutParams.WRAP_CONTENT
-        )
+        val lp = FrameLayout.LayoutParams(panelWidthPx(), FrameLayout.LayoutParams.WRAP_CONTENT)
         root.addView(fullView, lp)
 
-        // Posicionar no canto superior direito após o layout ser medido
+        // Posicionar no canto superior direito, logo abaixo da barra de ferramentas
         fullView.post {
             val dp = activity.resources.displayMetrics.density
-            val margin = (16 * dp).toInt()
-            // status bar + action bar ~= 100dp; coloca a 140dp do topo
+            val margin = (12 * dp).toInt()
             fullView.x = (root.width - fullView.width - margin).toFloat()
-            fullView.y = (140 * dp)
+            fullView.y = (64 * dp)
         }
 
         // Arrastar apenas pela área do título (não interfere nos botões)
         makeDraggable(fullView.findViewById(R.id.fl_title), fullView)
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Tamanho responsivo — calculado a partir da tela real do device, sem
+    // precisar de ajuste manual por modelo de coletor.
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /** Fator de escala com teto em 1x (não cresce em telas grandes) e piso em telas bem pequenas. */
+    private fun scaleFactor(): Float {
+        val dm = activity.resources.displayMetrics
+        val smallestDp = minOf(dm.widthPixels, dm.heightPixels) / dm.density
+        return (smallestDp / 360f).coerceIn(0.78f, 1f)
+    }
+
+    /** Largura do painel: uma fração da largura real da tela, com limites de conforto. */
+    private fun panelWidthPx(): Int {
+        val dm = activity.resources.displayMetrics
+        val widthDp = (dm.widthPixels / dm.density * 0.62f).coerceIn(190f, 240f)
+        return (widthDp * dm.density).toInt()
+    }
+
+    private fun applyResponsiveSizing(v: View) {
+        val dp = activity.resources.displayMetrics.density
+        val scale = scaleFactor()
+
+        fun px(baseDp: Float) = (baseDp * scale * dp).toInt()
+
+        val header = v.findViewById<View>(R.id.fl_header)
+        header.layoutParams = header.layoutParams.apply { height = px(38f) }
+
+        tvExpr?.apply {
+            minimumHeight = px(18f)
+            textSize = 11f * scale
+        }
+        tvDisplay?.apply {
+            minimumHeight = px(40f)
+            textSize = 26f * scale
+        }
+
+        val buttonHeightPx = px(42f)
+        val buttonTextSizeSp = 17f * scale
+        val buttonIds = intArrayOf(
+            R.id.btn_clear, R.id.btn_sign, R.id.btn_percent, R.id.btn_div,
+            R.id.btn_7, R.id.btn_8, R.id.btn_9, R.id.btn_mul,
+            R.id.btn_4, R.id.btn_5, R.id.btn_6, R.id.btn_sub,
+            R.id.btn_1, R.id.btn_2, R.id.btn_3, R.id.btn_add,
+            R.id.btn_0, R.id.btn_dot, R.id.btn_equals
+        )
+        buttonIds.forEach { id ->
+            v.findViewById<Button>(id)?.apply {
+                layoutParams = layoutParams.apply { height = buttonHeightPx }
+                textSize = buttonTextSizeSp
+            }
+        }
+
+        v.findViewById<Button>(R.id.btn_send_terminal)?.apply {
+            layoutParams = layoutParams.apply { height = px(38f) }
+            textSize = 12f * scale
+        }
     }
 
     private fun buildMiniView() {
