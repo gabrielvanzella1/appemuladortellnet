@@ -12,8 +12,7 @@ import java.net.URL
 class LicenseApiService {
 
     companion object {
-        // Altere para a URL de produção após o deploy do scante-admin
-        const val BASE_URL = "http://172.23.3.37:8099"
+        const val BASE_URL = "https://scante.com.br/scante-admin/public"
         private const val API_SECRET = "SCANTE_API_SECRET_MUDE_ISSO_2026"
         private const val TIMEOUT_MS = 15_000
     }
