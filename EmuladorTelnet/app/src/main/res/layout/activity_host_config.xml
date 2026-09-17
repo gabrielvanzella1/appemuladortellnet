@@ -56,49 +56,130 @@
                 android:textColor="@color/text_primary"
                 android:layout_marginBottom="20dp" />
 
-            <!-- IP / Host -->
+            <!-- Tipo de conexao: oculto nesta build (modo Browser sai do ScanTE, vira app separado) -->
             <TextView
+                android:visibility="gone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="IP / Host"
+                android:text="Tipo de conexao"
                 android:textSize="13sp"
                 android:textColor="@color/primary"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
 
-            <EditText
-                android:id="@+id/input_host"
+            <RadioGroup
+                android:id="@+id/radio_connection_type"
+                android:visibility="gone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="192.168.0.1"
-                android:inputType="text"
-                android:background="@drawable/edit_text_bg"
-                android:padding="12dp"
-                android:textSize="15sp"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="20dp" />
+                android:orientation="horizontal"
+                android:layout_marginBottom="20dp">
 
-            <!-- Porta -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Porta"
-                android:textSize="13sp"
-                android:textColor="@color/primary"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
+                <RadioButton
+                    android:id="@+id/radio_telnet"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Telnet"
+                    android:checked="true" />
 
-            <EditText
-                android:id="@+id/input_port"
+                <RadioButton
+                    android:id="@+id/radio_browser"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Browser (Web)" />
+
+            </RadioGroup>
+
+            <!-- Campos Telnet -->
+            <LinearLayout
+                android:id="@+id/group_telnet_fields"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="23"
-                android:inputType="number"
-                android:background="@drawable/edit_text_bg"
-                android:padding="12dp"
-                android:textSize="15sp"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="32dp" />
+                android:orientation="vertical">
+
+                <!-- IP / Host -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="IP / Host"
+                    android:textSize="13sp"
+                    android:textColor="@color/primary"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp" />
+
+                <EditText
+                    android:id="@+id/input_host"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="192.168.0.1"
+                    android:inputType="text"
+                    android:background="@drawable/edit_text_bg"
+                    android:padding="12dp"
+                    android:textSize="15sp"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="20dp" />
+
+                <!-- Porta -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Porta"
+                    android:textSize="13sp"
+                    android:textColor="@color/primary"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp" />
+
+                <EditText
+                    android:id="@+id/input_port"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="23"
+                    android:inputType="number"
+                    android:background="@drawable/edit_text_bg"
+                    android:padding="12dp"
+                    android:textSize="15sp"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="12dp" />
+
+            </LinearLayout>
+
+            <!-- Campos Browser -->
+            <LinearLayout
+                android:id="@+id/group_browser_fields"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- URL -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="URL"
+                    android:textSize="13sp"
+                    android:textColor="@color/primary"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp" />
+
+                <EditText
+                    android:id="@+id/input_url"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="http://192.168.0.10:8080/app"
+                    android:inputType="textUri"
+                    android:background="@drawable/edit_text_bg"
+                    android:padding="12dp"
+                    android:textSize="15sp"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="12dp" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="20dp" />
 
             <!-- Botao Salvar -->
             <Button

@@ -86,6 +86,11 @@ class HostAdvancedActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val host = repository.getConnectionById(id)
             if (host != null) {
+                if (host.connectionType == "BROWSER") {
+                    Toast.makeText(this@HostAdvancedActivity, "Configuracao avancada nao se aplica a hosts Browser", Toast.LENGTH_SHORT).show()
+                    finish()
+                    return@launch
+                }
                 currentHost = host
                 inputUsername.setText(host.username)
                 inputPassword.setText(host.password)

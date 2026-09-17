@@ -274,7 +274,9 @@ class HostsActivity : AppCompatActivity() {
         val connectLabel = if (SessionStore.isActive(host.id)) "Retomar" else "Conectar"
         popup.menu.add(0, 1, 0, connectLabel)
         popup.menu.add(0, 2, 1, "Editar")
-        popup.menu.add(0, 3, 2, "Configuracao")
+        if (host.connectionType != "BROWSER") {
+            popup.menu.add(0, 3, 2, "Configuracao")
+        }
         popup.menu.add(0, 4, 3, "Remover")
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
@@ -289,6 +291,18 @@ class HostsActivity : AppCompatActivity() {
     }
 
     private fun connectToHost(host: SavedConnection) {
+        if (host.connectionType == "BROWSER") {
+            val result = SessionStore.openOrResumeBrowser(this, host.id, host.name, host.url)
+            if (result == null) {
+                toast("Máximo de 2 sessões ativas. Desconecte uma para abrir outra.")
+                return
+            }
+            val (slotId, _) = result
+            startActivity(Intent(this, BrowserActivity::class.java).apply {
+                putExtra(BrowserActivity.EXTRA_SLOT_ID, slotId)
+            })
+            return
+        }
         val result = SessionStore.openOrResume(this, host.id, host.name, host.host, host.port)
         if (result == null) {
             toast("Máximo de 2 sessões ativas. Desconecte uma para abrir outra.")
@@ -356,10 +370,20 @@ class HostsAdapter(
         private val address: TextView = view.findViewById(R.id.host_address)
         private val badge: TextView = view.findViewById(R.id.tv_active_badge)
         private val btnMenu: ImageButton = view.findViewById(R.id.btn_menu)
+        private val iconBg: View = view.findViewById(R.id.host_icon_bg)
+        private val iconLetter: TextView = view.findViewById(R.id.host_icon_letter)
 
         fun bind(host: SavedConnection) {
             name.text = host.name
-            address.text = "${host.host}:${host.port}"
+            if (host.connectionType == "BROWSER") {
+                address.text = host.url
+                iconBg.setBackgroundResource(R.drawable.circle_blue)
+                iconLetter.text = "W"
+            } else {
+                address.text = "${host.host}:${host.port}"
+                iconBg.setBackgroundResource(R.drawable.circle_green)
+                iconLetter.text = "H"
+            }
             badge.visibility = if (SessionStore.isActive(host.id)) View.VISIBLE else View.GONE
             itemView.setOnClickListener { onItemClick(host) }
             btnMenu.setOnClickListener { onMenuClick(host, btnMenu) }

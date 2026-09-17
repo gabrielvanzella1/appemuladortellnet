@@ -75,6 +75,7 @@ class TelnetOptionsActivity : AppCompatActivity() {
     private fun setupServerAddress() {
         val recent = TelnetRepository.getInstance(this)
             .currentConnections()
+            .filter { it.connectionType == "TELNET" }
             .maxByOrNull { it.lastUsed }
         if (recent != null) {
             inServerAddress.setText("${recent.host}:${recent.port}")

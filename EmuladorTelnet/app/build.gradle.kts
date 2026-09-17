@@ -67,6 +67,9 @@ dependencies {
     // Network
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
 
+    // WebView (modo Browser)
+    implementation("androidx.webkit:webkit:1.12.1")
+
     // SSH
     implementation("com.jcraft:jsch:0.1.55")
 

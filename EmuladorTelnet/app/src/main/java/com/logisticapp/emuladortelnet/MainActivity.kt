@@ -117,7 +117,7 @@ class MainActivity : AppCompatActivity() {
 
         // Determina a origem da sessão: SessionStore (multi-sessão) ou intent direto
         slotId = intent.getIntExtra(EXTRA_SLOT_ID, -1)
-        val slot = if (slotId >= 0) SessionStore.get(slotId) else null
+        val slot = if (slotId >= 0) SessionStore.get(slotId) as? SessionStore.ActiveSession.Telnet else null
 
         if (slot != null) {
             currentHost = slot.host
@@ -264,7 +264,9 @@ class MainActivity : AppCompatActivity() {
         binding.tvSessionBadge.setOnClickListener {
             val other = SessionStore.otherSession(slotId)
             if (other != null) {
-                startActivity(Intent(this, MainActivity::class.java).apply {
+                val targetClass = if (other is SessionStore.ActiveSession.Browser)
+                    BrowserActivity::class.java else MainActivity::class.java
+                startActivity(Intent(this, targetClass).apply {
                     putExtra(EXTRA_SLOT_ID, other.slotId)
                 })
             }
@@ -553,46 +555,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun printTerminalScreen() {
-        val opts = settings.printOptions
-        if (opts.connectionType == "Bluetooth" && opts.bluetoothAddress.isBlank()) {
-            android.widget.Toast.makeText(this,
-                "Configure a impressora em Configurações → Dispositivos → Impressão",
-                android.widget.Toast.LENGTH_LONG).show()
-            return
-        }
-        if (opts.connectionType == "WiFi" && opts.wifiHost.isBlank()) {
-            android.widget.Toast.makeText(this,
-                "Configure o IP da impressora em Configurações → Dispositivos → Impressão",
-                android.widget.Toast.LENGTH_LONG).show()
-            return
-        }
-        val lines = viewModel.getScreenLines()
-        val printer = EscPosPrinter()
-        android.widget.Toast.makeText(this, "Enviando para a impressora…", android.widget.Toast.LENGTH_SHORT).show()
-        MainScope().launch(Dispatchers.IO) {
-            try {
-                if (printer.connect(opts)) {
-                    printer.printLines(lines, opts)
-                    printer.disconnect()
-                    withContext(Dispatchers.Main) {
-                        android.widget.Toast.makeText(this@MainActivity,
-                            "Impressão enviada!", android.widget.Toast.LENGTH_SHORT).show()
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        android.widget.Toast.makeText(this@MainActivity,
-                            "Não foi possível conectar na impressora", android.widget.Toast.LENGTH_LONG).show()
-                    }
-                }
-            } catch (e: Exception) {
-                Timber.e(e, "Erro ao imprimir tela")
-                withContext(Dispatchers.Main) {
-                    android.widget.Toast.makeText(this@MainActivity,
-                        "Erro: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
-                }
-                printer.disconnect()
-            }
-        }
+        PrintHelper.printLinesAsync(this, viewModel.getScreenLines(), settings.printOptions)
     }
 
     private fun sendBarcodeToServer(barcode: String, actionAfterScan: String) {

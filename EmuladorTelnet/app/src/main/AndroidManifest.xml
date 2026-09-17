@@ -145,6 +145,12 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- 5b. Terminal Browser (WebView) -->
+        <activity
+            android:name=".BrowserActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- Configuracoes > Teclado > Configurar teclado ScanTE -->
         <activity
             android:name=".KeyboardConfigActivity"

@@ -15,6 +15,9 @@ data class SavedConnection(
     val createdAt: Long = System.currentTimeMillis(),
     val lastUsed: Long = System.currentTimeMillis(),
     val isFavorite: Boolean = false,
+    // Tipo de conexao
+    val connectionType: String = "TELNET", // TELNET | BROWSER
+    val url: String = "",                  // usado somente quando connectionType == "BROWSER"
     // Configuracoes avancadas
     val encoding: String = "UTF-8",         // UTF-8 | ISO-8859-1 | CP850
     val terminalType: String = "VT100",     // VT100 | VT220 | ANSI | XTERM

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <!-- AppBar -->
+    <LinearLayout
+        android:id="@+id/appBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/primary"
+        android:gravity="center_vertical"
+        android:padding="8dp"
+        android:elevation="8dp">
+
+        <ImageButton
+            android:id="@+id/btn_nav_back"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@android:drawable/ic_media_previous"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Voltar na página"
+            android:tint="@color/white" />
+
+        <ImageButton
+            android:id="@+id/btn_nav_forward"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@android:drawable/ic_media_next"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Avançar na página"
+            android:tint="@color/white"
+            android:layout_marginEnd="4dp" />
+
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/app_name"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <ImageButton
+            android:id="@+id/btn_reload"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@android:drawable/ic_popup_sync"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Recarregar"
+            android:tint="@color/white" />
+
+        <TextView
+            android:id="@+id/btn_print"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Imprimir"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+
+        <ImageButton
+            android:id="@+id/btn_close"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Fechar sessão"
+            android:tint="@color/white" />
+
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:max="100"
+        android:visibility="gone" />
+
+    <FrameLayout
+        android:id="@+id/web_view_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+</LinearLayout>
