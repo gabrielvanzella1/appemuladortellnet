@@ -13,7 +13,7 @@ class LicenseApiService {
 
     companion object {
         const val BASE_URL = "https://scante.com.br/scante-admin/public"
-        private const val API_SECRET = "SCANTE_API_SECRET_MUDE_ISSO_2026"
+        private const val API_SECRET = "eab28be7c8536e7f5979e5a46b5ec65ba34fdf891d23c5f772e65a4d07057faf"
         private const val TIMEOUT_MS = 15_000
     }
 
@@ -99,7 +99,7 @@ class LicenseApiService {
                 Result.success(
                     ValidacaoResult(
                         sucesso = false,
-                        erro = json.optString("mensagem", "Chave inválida ou já vinculada a outro dispositivo.")
+                        erro = json.optString("mensagem", json.optString("erro", "Chave inválida ou já vinculada a outro dispositivo."))
                     )
                 )
             }
