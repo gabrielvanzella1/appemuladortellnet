@@ -3,6 +3,8 @@ package com.logisticapp.emuladortelnet
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -56,8 +58,44 @@ class LicenseActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this).get(LicenseViewModel::class.java)
         observeViewModel()
         setupClickListeners()
+        setupLicenseKeyMask()
 
         viewModel.checkOnStartup()
+    }
+
+    /**
+     * Formata a chave automaticamente no padrão SCTE-XXXXXX-XXXXXX-XXXXXX enquanto o
+     * usuário digita: insere os hífens sozinho e ignora qualquer hífen digitado manualmente,
+     * pra evitar erro de digitação (a causa mais comum de "chave inválida" na ativação).
+     */
+    private fun setupLicenseKeyMask() {
+        val groupSizes = intArrayOf(4, 6, 6, 6) // SCTE-XXXXXX-XXXXXX-XXXXXX
+        var formatting = false
+
+        inputLicenseKey.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                if (formatting || s == null) return
+                formatting = true
+
+                val raw = s.toString().uppercase().filter { it.isLetterOrDigit() }
+                val groups = mutableListOf<String>()
+                var idx = 0
+                for (size in groupSizes) {
+                    if (idx >= raw.length) break
+                    val end = minOf(idx + size, raw.length)
+                    groups.add(raw.substring(idx, end))
+                    idx = end
+                }
+                val formatted = groups.joinToString("-")
+
+                if (formatted != s.toString()) {
+                    s.replace(0, s.length, formatted)
+                }
+                formatting = false
+            }
+        })
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
