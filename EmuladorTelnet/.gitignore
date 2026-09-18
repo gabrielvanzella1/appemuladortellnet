@@ -13,6 +13,11 @@ build/
 # Local configuration file (sdk path, etc)
 local.properties
 
+# Chave de assinatura de release — nunca versionar
+keystore.properties
+*.jks
+*.keystore
+
 # Log/OS files
 *.log
 *.DS_Store
