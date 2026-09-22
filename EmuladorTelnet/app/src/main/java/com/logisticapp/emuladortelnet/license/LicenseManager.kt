@@ -103,7 +103,7 @@ class LicenseManager(private val context: Context) {
     }
 
     /**
-     * Verificar se tem acesso ao app
+     * Retorna true somente se a licença for PREMIUM ativa e não expirada.
      */
     fun hasAccess(): Boolean {
         val licenseType = prefs.getString(KEY_LICENSE_TYPE, "") ?: ""

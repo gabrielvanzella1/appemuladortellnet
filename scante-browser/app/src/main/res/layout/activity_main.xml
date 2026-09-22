@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <!-- Barra superior: seletor de portal -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/primary"
+        android:gravity="center_vertical"
+        android:padding="4dp">
+
+        <Spinner
+            android:id="@+id/spinner_portal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:spinnerMode="dropdown" />
+
+        <ImageButton
+            android:id="@+id/btn_toggle_keyboard"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="4dp"
+            android:padding="5dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_keyboard_toggle"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Mostrar/ocultar teclas de função" />
+
+        <ImageButton
+            android:id="@+id/btn_reload"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="4dp"
+            android:padding="5dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_refresh"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Recarregar" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:max="100"
+        android:visibility="gone" />
+
+    <FrameLayout
+        android:id="@+id/web_view_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Barra de teclas de função — populada em runtime conforme o portal ativo -->
+    <HorizontalScrollView
+        android:id="@+id/function_key_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/primary_dark">
+
+        <LinearLayout
+            android:id="@+id/function_key_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="4dp" />
+
+    </HorizontalScrollView>
+
+</LinearLayout>

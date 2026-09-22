@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@color/surface"
+    android:padding="12dp"
+    android:layout_marginBottom="8dp"
+    android:gravity="center_vertical">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/text_portal_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            tools:text="SAP" />
+
+        <TextView
+            android:id="@+id/text_portal_homepage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            tools:text="https://sap.exemplo.com" />
+
+        <TextView
+            android:id="@+id/text_portal_keys"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            tools:text="2 tecla(s) mapeada(s)" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/btn_delete_portal"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:gravity="center"
+        android:text="✕"
+        android:textColor="@color/danger"
+        android:textSize="18sp"
+        android:background="?attr/selectableItemBackgroundBorderless" />
+
+</LinearLayout>

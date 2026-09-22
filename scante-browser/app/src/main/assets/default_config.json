@@ -1,0 +1,17 @@
+{
+  "portals": [
+    {
+      "id": "teste",
+      "name": "teste",
+      "homepage": "https://www.google.com",
+      "useWideViewport": true,
+      "textScalingPercent": 100
+    }
+  ],
+  "keyActions": {
+    "teste": {
+      "131": "SUBMIT",
+      "132": "RELOAD"
+    }
+  }
+}

@@ -108,7 +108,7 @@ class LicenseApiService {
                 Result.success(
                     ValidacaoResult(
                         sucesso = false,
-                        erro = json.optString("mensagem", "Chave inválida ou já vinculada a outro dispositivo.")
+                        erro = json.optString("mensagem", json.optString("erro", "Chave inválida ou já vinculada a outro dispositivo."))
                     )
                 )
             }

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Exibido na tela 1 (não ativado) -->
+    <item
+        android:id="@+id/menu_ativar"
+        app:showAsAction="always"
+        app:actionLayout="@layout/toolbar_btn_ativar"
+        android:visible="true" />
+
+    <!-- Exibido na tela 2 (formulário) -->
+    <item
+        android:id="@+id/menu_ajuda"
+        android:title="AJUDA"
+        app:showAsAction="always"
+        android:visible="false" />
+
+</menu>

@@ -40,12 +40,6 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="emuladortelnet" android:host="payment" />
-            </intent-filter>
         </activity>
 
         <!-- Ativacao por chave (trial ou vitalicia) -->
@@ -158,6 +152,12 @@
         <!-- 5. Terminal Telnet -->
         <activity
             android:name=".MainActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- 5b. Terminal Browser (WebView) -->
+        <activity
+            android:name=".BrowserActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 

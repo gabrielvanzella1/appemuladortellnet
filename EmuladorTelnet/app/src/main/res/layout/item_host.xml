@@ -9,10 +9,12 @@
 
     <!-- Icone host -->
     <FrameLayout
+        android:id="@+id/host_icon_bg"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:background="@drawable/circle_green">
         <TextView
+            android:id="@+id/host_icon_letter"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:text="H"

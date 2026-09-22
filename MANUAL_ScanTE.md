@@ -24,16 +24,41 @@ permitindo digitar e navegar como num terminal de verdade.
 
 ## 2. Tela de Licença ✅
 
-É a primeira tela ao abrir o app.
+É a primeira tela ao abrir o app. O ScanTE **requer licença ativa** para funcionar —
+não há período de trial automático. Todas as licenças (incluindo trials gratuitos) são
+geradas pelo painel ScanTE Admin e enviadas ao cliente.
 
-- **Status / Dias restantes / Tipo:** mostra a situação da licença (Teste Gratuito por
-  tempo limitado, ou Licença Vitalícia após a compra).
-- **Continuar:** entra no app (disponível durante o teste ou com licença válida).
-- **Comprar Licença:** inicia a compra da licença vitalícia (via Mercado Pago).
-- **Ativar com chave (novo):** campo para inserir a chave de licença no formato
-  `SCTE-XXXXXX-XXXXXX-XXXXXX`. Ao tocar em **Ativar**, o app valida a chave no servidor
-  ScanTE Admin, vincula o dispositivo e ativa a licença imediatamente. Use este campo
-  quando a empresa já gerou e enviou uma chave para o dispositivo.
+### 2.1 Tela "ScanTE não está ativado"
+
+Exibida enquanto não há licença ativa no dispositivo.
+
+- **Clique Aqui para Ativar** (botão verde na barra de título): abre o formulário de
+  ativação.
+- **E-mail de contato:** `scante@scante.com.br` — mostrado para o cliente solicitar
+  uma licença trial gratuita de 30 dias.
+
+### 2.2 Formulário de Ativação
+
+- **Chave de ativação:** campo para a chave no formato `SCTE-XXXXXX-XXXXXX-XXXXXX`,
+  gerada no ScanTE Admin.
+- **Nome de identificação:** nome ou número de série do dispositivo. Usado para
+  vincular a licença ao aparelho — recomenda-se o número de série (resistente a
+  reset de fábrica).
+- **ATIVAR AGORA:** valida a chave no servidor, vincula ao dispositivo e libera acesso.
+- **AJUDA** (botão na barra): abre a tela de ajuda.
+
+### 2.3 Tela AJUDA
+
+Explica o que é a chave de ativação, o nome de identificação, e como adquirir o
+ScanTE (`www.scante.com.br` / `scante@scante.com.br`).
+
+### 2.4 Como gerar uma licença (para o administrador)
+
+1. Acesse o painel ScanTE Admin em `admin.scante.com.br`.
+2. Vá em **Licenças → Nova Licença**.
+3. Selecione o tipo (trial 30 dias, mensal, vitalícia) e preencha os dados do cliente.
+4. Clique em **Gerar** — o sistema cria a chave `SCTE-XXXXXX-XXXXXX-XXXXXX`.
+5. Envie a chave ao cliente por e-mail. O cliente a digita no campo da tela de ativação.
 
 ---
 
