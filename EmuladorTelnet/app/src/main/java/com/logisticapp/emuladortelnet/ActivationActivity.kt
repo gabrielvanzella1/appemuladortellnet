@@ -146,8 +146,11 @@ class ActivationActivity : AppCompatActivity() {
                         showResult(true, "Licença ativada com sucesso!")
                         // Passa pelo gate: ele manda o ping já com a chave, e o painel
                         // mostra o dispositivo como licenciado na hora (não só na próxima abertura).
-                        startActivity(Intent(this@ActivationActivity, LicenseActivity::class.java))
-                        finishAffinity()
+                        // CLEAR_TASK recomeça a pilha de telas de forma limpa — startActivity +
+                        // finishAffinity() na mesma hora deixava a lista de sessões em branco.
+                        startActivity(Intent(this@ActivationActivity, LicenseActivity::class.java).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        })
                     } else {
                         showResult(false, validacao.erro)
                     }
