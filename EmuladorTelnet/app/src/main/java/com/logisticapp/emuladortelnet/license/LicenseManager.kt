@@ -30,8 +30,6 @@ class LicenseManager(private val context: Context) {
         private const val KEY_TRIAL_END_DATE = "trial_end_date"
         private const val KEY_PURCHASE_DATE = "purchase_date"
         private const val KEY_IS_ACTIVE = "is_active"
-        private const val KEY_MERCADO_PAGO_ORDER_ID = "mercado_pago_order_id"
-        private const val KEY_MERCADO_PAGO_PAYMENT_ID = "mercado_pago_payment_id"
         private const val KEY_IS_INITIALIZED = "is_initialized"
     }
 
@@ -127,37 +125,6 @@ class LicenseManager(private val context: Context) {
     }
 
     /**
-     * Gerar chave de licença vitalícia
-     */
-    fun generateLicenseKey(): String {
-        val timestamp = System.currentTimeMillis()
-        val deviceId = getDeviceId().take(12).uppercase()
-        return "LIC-${timestamp}-${deviceId}"
-    }
-
-    /**
-     * Upgrade para Premium após pagamento
-     */
-    fun upgradeToPremium(
-        mercadoPagoOrderId: String,
-        mercadoPagoPaymentId: String
-    ) {
-        val licenseKey = generateLicenseKey()
-
-        prefs.edit().apply {
-            putString(KEY_LICENSE_KEY, licenseKey)
-            putString(KEY_LICENSE_TYPE, "PREMIUM")
-            putLong(KEY_PURCHASE_DATE, System.currentTimeMillis())
-            putString(KEY_MERCADO_PAGO_ORDER_ID, mercadoPagoOrderId)
-            putString(KEY_MERCADO_PAGO_PAYMENT_ID, mercadoPagoPaymentId)
-            putBoolean(KEY_IS_ACTIVE, true)
-            apply()
-        }
-
-        Timber.d("Licença atualizada para PREMIUM - Ordem: $mercadoPagoOrderId")
-    }
-
-    /**
      * Ativa Premium via chave fornecida pelo servidor scante-admin.
      */
     fun upgradeToPremiumByKey(chave: String, tipo: String, diasRestantes: Int) {
@@ -198,13 +165,6 @@ class LicenseManager(private val context: Context) {
     fun getSavedLicenseKey(): String? = prefs.getString(KEY_LICENSE_KEY, null)?.takeIf { it.startsWith("SCTE-") }
 
     fun getLicenseSubtype(): String = prefs.getString(KEY_LICENSE_SUBTYPE, "vitalicia") ?: "vitalicia"
-
-    /**
-     * Atualizar ID do pedido Mercado Pago
-     */
-    fun setMercadoPagoOrderId(orderId: String) {
-        prefs.edit().putString(KEY_MERCADO_PAGO_ORDER_ID, orderId).apply()
-    }
 
     /**
      * Obter informações formatadas da licença
@@ -300,7 +260,6 @@ class LicenseManager(private val context: Context) {
             // Remove licença premium se houver
             remove(KEY_LICENSE_KEY)
             remove(KEY_LICENSE_SUBTYPE)
-            remove(KEY_MERCADO_PAGO_PAYMENT_ID)
             apply()
         }
     }

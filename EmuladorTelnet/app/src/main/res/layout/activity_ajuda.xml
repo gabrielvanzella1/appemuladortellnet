@@ -115,7 +115,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Para comprar o ScanTE, visite a loja virtual da ScanTE em www.scante.com.br ou envie um e-mail para scante@scante.com.br."
+                android:text="Para comprar o ScanTE, envie um e-mail para scante@scante.com.br. O pagamento é feito por transferência bancária e a chave de ativação é enviada por e-mail."
                 android:textSize="14sp"
                 android:textColor="@color/text_secondary"
                 android:autoLink="web|email"
