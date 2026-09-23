@@ -4,6 +4,8 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -54,6 +56,8 @@ class ActivationActivity : AppCompatActivity() {
         // Sugere o modelo do dispositivo como nome de ativação (editável)
         inputName.setText(Build.MODEL)
 
+        setupLicenseKeyMask()
+
         barcodeManager = BarcodeScannerManager(this) { barcode, _ ->
             runOnUiThread { inputKey.setText(barcode) }
         }
@@ -63,6 +67,41 @@ class ActivationActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.btn_ajuda).setOnClickListener {
             startActivity(Intent(this, AjudaActivity::class.java))
         }
+    }
+
+    /**
+     * Formata a chave automaticamente no padrão SCTE-XXXXXX-XXXXXX-XXXXXX enquanto o
+     * usuário digita (ou bipa): insere os hífens sozinho e ignora qualquer hífen digitado
+     * manualmente, pra evitar erro de digitação (a causa mais comum de "chave inválida").
+     */
+    private fun setupLicenseKeyMask() {
+        val groupSizes = intArrayOf(4, 6, 6, 6) // SCTE-XXXXXX-XXXXXX-XXXXXX
+        var formatting = false
+
+        inputKey.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                if (formatting || s == null) return
+                formatting = true
+
+                val raw = s.toString().uppercase().filter { it.isLetterOrDigit() }
+                val groups = mutableListOf<String>()
+                var idx = 0
+                for (size in groupSizes) {
+                    if (idx >= raw.length) break
+                    val end = minOf(idx + size, raw.length)
+                    groups.add(raw.substring(idx, end))
+                    idx = end
+                }
+                val formatted = groups.joinToString("-")
+
+                if (formatted != s.toString()) {
+                    s.replace(0, s.length, formatted)
+                }
+                formatting = false
+            }
+        })
     }
 
     override fun onResume() {
@@ -105,7 +144,9 @@ class ActivationActivity : AppCompatActivity() {
                         com.logisticapp.emuladortelnet.settings.CompanyConfigStore
                             .save(applicationContext, validacao.configJson)
                         showResult(true, "Licença ativada com sucesso!")
-                        startActivity(Intent(this@ActivationActivity, HostsActivity::class.java))
+                        // Passa pelo gate: ele manda o ping já com a chave, e o painel
+                        // mostra o dispositivo como licenciado na hora (não só na próxima abertura).
+                        startActivity(Intent(this@ActivationActivity, LicenseActivity::class.java))
                         finishAffinity()
                     } else {
                         showResult(false, validacao.erro)
