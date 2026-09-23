@@ -2,15 +2,14 @@ package com.logisticapp.emuladortelnet
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.RadioGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import com.logisticapp.emuladortelnet.data.ConnectionState
 import com.logisticapp.emuladortelnet.database.SavedConnection
 import com.logisticapp.emuladortelnet.database.TelnetRepository
 import kotlinx.coroutines.launch
@@ -20,24 +19,20 @@ class HostConfigActivity : AppCompatActivity() {
 
     private lateinit var repository: TelnetRepository
     private var existingHost: SavedConnection? = null
+    private var editAllMode = false
 
-    private lateinit var radioConnectionType: RadioGroup
-    private lateinit var radioTelnet: android.widget.RadioButton
-    private lateinit var radioBrowser: android.widget.RadioButton
-    private lateinit var groupTelnetFields: LinearLayout
-    private lateinit var groupBrowserFields: LinearLayout
     private lateinit var inputName: EditText
     private lateinit var inputHost: EditText
     private lateinit var inputPort: EditText
-    private lateinit var inputUrl: EditText
     private lateinit var btnSave: Button
     private lateinit var btnConnect: Button
 
     companion object {
-        const val EXTRA_HOST_ID = "host_id"
         const val EXTRA_PREFILL_NAME = "prefill_name"
         const val EXTRA_PREFILL_HOST = "prefill_host"
         const val EXTRA_PREFILL_PORT = "prefill_port"
+        const val EXTRA_LOCK_HOST_PORT = "lock_host_port"
+        const val EXTRA_EDIT_ALL = "edit_all"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,25 +46,18 @@ class HostConfigActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         toolbar.setNavigationOnClickListener { finish() }
 
-        radioConnectionType = findViewById(R.id.radio_connection_type)
-        radioTelnet = findViewById(R.id.radio_telnet)
-        radioBrowser = findViewById(R.id.radio_browser)
-        groupTelnetFields = findViewById(R.id.group_telnet_fields)
-        groupBrowserFields = findViewById(R.id.group_browser_fields)
         inputName = findViewById(R.id.input_name)
         inputHost = findViewById(R.id.input_host)
         inputPort = findViewById(R.id.input_port)
-        inputUrl = findViewById(R.id.input_url)
         btnSave = findViewById(R.id.btn_save)
         btnConnect = findViewById(R.id.btn_connect)
 
         inputPort.setText("23")
 
-        radioConnectionType.setOnCheckedChangeListener { _, _ -> updateFieldVisibility() }
-
-        val hostId = intent.getIntExtra(EXTRA_HOST_ID, -1)
-        if (hostId > 0) {
-            loadExistingHost(hostId)
+        editAllMode = intent.getBooleanExtra(EXTRA_EDIT_ALL, false)
+        if (editAllMode) {
+            supportActionBar?.title = "Editar Conexão"
+            loadFirstHostForEditAll()
         } else {
             supportActionBar?.title = "Novo Host"
             // Pre-fill from template (if launched from TemplatesActivity)
@@ -77,66 +65,67 @@ class HostConfigActivity : AppCompatActivity() {
             intent.getStringExtra(EXTRA_PREFILL_HOST)?.let { inputHost.setText(it) }
             val prefillPort = intent.getIntExtra(EXTRA_PREFILL_PORT, -1)
             if (prefillPort > 0) inputPort.setText(prefillPort.toString())
+
+            if (intent.getBooleanExtra(EXTRA_LOCK_HOST_PORT, false)) {
+                lockHostAndPort()
+            }
         }
 
-        updateFieldVisibility()
         btnSave.setOnClickListener { saveHost() }
         btnConnect.setOnClickListener { saveAndConnect() }
     }
 
-    private fun updateFieldVisibility() {
-        val isBrowser = radioBrowser.isChecked
-        groupTelnetFields.visibility = if (isBrowser) View.GONE else View.VISIBLE
-        groupBrowserFields.visibility = if (isBrowser) View.VISIBLE else View.GONE
+    /** Host/Porta vêm do host já existente e não podem ser editados — só o Nome fica livre. */
+    private fun lockHostAndPort() {
+        inputHost.isEnabled = false
+        inputHost.isFocusable = false
+        inputHost.alpha = 0.5f
+        inputPort.isEnabled = false
+        inputPort.isFocusable = false
+        inputPort.alpha = 0.5f
     }
 
-    private fun loadExistingHost(id: Int) {
+    private fun loadFirstHostForEditAll() {
         lifecycleScope.launch {
-            val host = repository.getConnectionById(id)
+            val host = repository.currentConnections().firstOrNull()
             if (host != null) {
                 existingHost = host
                 inputName.setText(host.name)
-                if (host.connectionType == "BROWSER") {
-                    radioBrowser.isChecked = true
-                    inputUrl.setText(host.url)
-                } else {
-                    radioTelnet.isChecked = true
-                    inputHost.setText(host.host)
-                    inputPort.setText(host.port.toString())
-                }
-                updateFieldVisibility()
-                supportActionBar?.title = "Editar Host"
+                inputHost.setText(host.host)
+                inputPort.setText(host.port.toString())
+            } else {
+                Toast.makeText(this@HostConfigActivity, "Nenhuma sessão cadastrada ainda", Toast.LENGTH_SHORT).show()
+                finish()
             }
         }
     }
 
     private fun buildConnection(): SavedConnection? {
         val name = inputName.text.toString().trim()
-        if (name.isEmpty()) { showError("Informe o nome do host"); return null }
+        val host = inputHost.text.toString().trim()
+        val portStr = inputPort.text.toString().trim()
 
-        return if (radioBrowser.isChecked) {
-            var url = inputUrl.text.toString().trim()
-            if (url.isEmpty()) { showError("Informe a URL"); return null }
-            if (!url.startsWith("http://") && !url.startsWith("https://")) url = "http://$url"
-            existingHost?.copy(name = name, connectionType = "BROWSER", url = url)
-                ?: SavedConnection(name = name, host = "", connectionType = "BROWSER", url = url)
-        } else {
-            val host = inputHost.text.toString().trim()
-            val portStr = inputPort.text.toString().trim()
-            if (host.isEmpty()) { showError("Informe o IP ou hostname"); return null }
-            if (portStr.isEmpty()) { showError("Informe a porta"); return null }
-            val port = portStr.toIntOrNull() ?: run { showError("Porta invalida"); return null }
-            existingHost?.copy(name = name, connectionType = "TELNET", host = host, port = port)
-                ?: SavedConnection(name = name, connectionType = "TELNET", host = host, port = port)
-        }
+        if (name.isEmpty()) { showError("Informe o nome do host"); return null }
+        if (host.isEmpty()) { showError("Informe o IP ou hostname"); return null }
+        if (portStr.isEmpty()) { showError("Informe a porta"); return null }
+        val port = portStr.toIntOrNull() ?: run { showError("Porta invalida"); return null }
+
+        return SavedConnection(
+            id = existingHost?.id ?: 0,
+            name = name,
+            host = host,
+            port = port,
+            createdAt = existingHost?.createdAt ?: System.currentTimeMillis()
+        )
     }
 
     private fun saveHost(then: ((SavedConnection) -> Unit)? = null) {
         val connection = buildConnection() ?: return
         lifecycleScope.launch {
-            if (existingHost != null) {
-                repository.updateConnection(connection)
-                Timber.d("Host atualizado: ${connection.name}")
+            if (editAllMode) {
+                repository.updateAllConnectionsIdentity(connection.name, connection.host, connection.port)
+                existingHost = connection
+                Timber.d("Nome/Host/Porta aplicados a todas as sessões: ${connection.name}")
             } else {
                 val newId = repository.saveConnection(connection).toInt()
                 existingHost = connection.copy(id = newId)
@@ -153,26 +142,57 @@ class HostConfigActivity : AppCompatActivity() {
 
     private fun saveAndConnect() {
         saveHost { saved ->
-            if (saved.connectionType == "BROWSER") {
-                val result = SessionStore.openOrResumeBrowser(this, saved.id, saved.name, saved.url)
-                if (result == null) {
-                    Toast.makeText(this, "Máximo de 2 sessões ativas. Desconecte uma para abrir outra.", Toast.LENGTH_LONG).show()
-                    return@saveHost
-                }
-                val (slotId, _) = result
-                startActivity(Intent(this, BrowserActivity::class.java).apply {
-                    putExtra(BrowserActivity.EXTRA_SLOT_ID, slotId)
-                })
-            } else {
-                val intent = Intent(this, MainActivity::class.java).apply {
-                    putExtra(MainActivity.EXTRA_HOST, saved.host)
-                    putExtra(MainActivity.EXTRA_PORT, saved.port)
-                    putExtra(MainActivity.EXTRA_NAME, saved.name)
-                    putExtra(MainActivity.EXTRA_HOST_ID, saved.id)
-                }
-                startActivity(intent)
+            setConnectingUi(true)
+
+            val jaAtiva = SessionStore.isActive(saved.id)
+            val result = SessionStore.openOrResume(this, saved.id, saved.name, saved.host, saved.port)
+            if (result == null) {
+                setConnectingUi(false)
+                Toast.makeText(this, "Máximo de 2 sessões ativas. Desconecte uma para abrir outra.", Toast.LENGTH_LONG).show()
+                return@saveHost
             }
+            val (slotId, vm) = result
+
+            // Sessão já ativa/conectada: só retoma, sem validar de novo.
+            if (jaAtiva || vm.connectionState.value == ConnectionState.CONNECTED) {
+                goToMain(slotId)
+                return@saveHost
+            }
+
+            vm.connect(saved.host, saved.port.toString())
+            vm.connectionState.observe(this, object : Observer<ConnectionState> {
+                override fun onChanged(state: ConnectionState) {
+                    when (state) {
+                        ConnectionState.CONNECTED -> {
+                            vm.connectionState.removeObserver(this)
+                            goToMain(slotId)
+                        }
+                        ConnectionState.ERROR -> {
+                            vm.connectionState.removeObserver(this)
+                            SessionStore.close(slotId)
+                            setConnectingUi(false)
+                            Toast.makeText(this@HostConfigActivity,
+                                "Não foi possível conectar a ${saved.host}:${saved.port}", Toast.LENGTH_LONG).show()
+                        }
+                        else -> { /* CONNECTING / DISCONNECTED: aguarda */ }
+                    }
+                }
+            })
         }
+    }
+
+    private fun goToMain(slotId: Int) {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            putExtra(MainActivity.EXTRA_SLOT_ID, slotId)
+        }
+        startActivity(intent)
+        finish()
+    }
+
+    private fun setConnectingUi(connecting: Boolean) {
+        btnConnect.isEnabled = !connecting
+        btnSave.isEnabled = !connecting
+        btnConnect.text = if (connecting) "Conectando..." else "Conectar"
     }
 
     private fun showError(msg: String) {

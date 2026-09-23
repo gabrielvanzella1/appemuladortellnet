@@ -12,7 +12,9 @@ import java.net.URL
 class LicenseApiService {
 
     companion object {
+        // Produção: scante-admin em scante.com.br (subpasta /scante-admin/public)
         const val BASE_URL = "https://scante.com.br/scante-admin/public"
+        // DEVE ser idêntico ao API_SECRET do config.php em produção
         private const val API_SECRET = "eab28be7c8536e7f5979e5a46b5ec65ba34fdf891d23c5f772e65a4d07057faf"
         private const val TIMEOUT_MS = 15_000
     }
@@ -23,7 +25,9 @@ class LicenseApiService {
         val tipo: String = "",
         val diasRestantes: Int = -1,
         val expiraEm: String = "",
-        val erro: String = ""
+        val erro: String = "",
+        // JSON do bloco "config" (personalização da empresa). "" = empresa não personalizou.
+        val configJson: String = ""
     )
 
     suspend fun pingServidor(
@@ -38,6 +42,7 @@ class LicenseApiService {
                 requestMethod = "POST"
                 setRequestProperty("Content-Type", "application/json")
                 setRequestProperty("Authorization", "Bearer $API_SECRET")
+                setRequestProperty("X-API-KEY", API_SECRET)  // fallback: Apache remove o Authorization em hosts compartilhados
                 connectTimeout = TIMEOUT_MS
                 readTimeout = TIMEOUT_MS
                 doOutput = true
@@ -67,6 +72,7 @@ class LicenseApiService {
                 requestMethod = "POST"
                 setRequestProperty("Content-Type", "application/json")
                 setRequestProperty("Authorization", "Bearer $API_SECRET")
+                setRequestProperty("X-API-KEY", API_SECRET)  // fallback: Apache remove o Authorization em hosts compartilhados
                 connectTimeout = TIMEOUT_MS
                 readTimeout = TIMEOUT_MS
                 doOutput = true
@@ -86,13 +92,15 @@ class LicenseApiService {
             val json = JSONObject(response)
 
             if (json.optBoolean("valida", false)) {
+                val config = if (json.isNull("config")) "" else json.optJSONObject("config")?.toString() ?: ""
                 Result.success(
                     ValidacaoResult(
                         sucesso = true,
                         chave = chave.trim().uppercase(),
                         tipo = json.optString("tipo", "vitalicia"),
                         diasRestantes = if (json.isNull("dias_restantes")) -1 else json.optInt("dias_restantes", -1),
-                        expiraEm = json.optString("expira_em")
+                        expiraEm = json.optString("expira_em"),
+                        configJson = config
                     )
                 )
             } else {

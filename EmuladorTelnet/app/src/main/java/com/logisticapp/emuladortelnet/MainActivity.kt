@@ -66,12 +66,23 @@ class MainActivity : AppCompatActivity() {
     // Detecção de duplo toque
     private var lastTapTime = 0L
 
+    // Barra de teclas personalizadas oculta manualmente pelo usuário (botão no topo)
+    private var toolbarHidden = false
+
+    // Redimensionar o terminal com pinça (dois dedos)
+    private lateinit var scaleDetector: android.view.ScaleGestureDetector
+    private var scaling = false
+
     companion object {
         const val EXTRA_HOST    = "extra_host"
         const val EXTRA_PORT    = "extra_port"
         const val EXTRA_NAME    = "extra_name"
         const val EXTRA_HOST_ID = "extra_host_id"
         const val EXTRA_SLOT_ID = "extra_slot_id"
+
+        // Faixa de tamanho de fonte do terminal (sp)
+        private const val MIN_FONT_SP = 6f
+        private const val MAX_FONT_SP = 72f
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,6 +109,7 @@ class MainActivity : AppCompatActivity() {
         // Tamanho e fonte do terminal (Opções de tela)
         binding.terminalOutput.textSize = settings.fontSize.toFloat()
         binding.terminalOutput.typeface = fontFromName(settings.fontName)
+        setupPinchZoom()
 
         // Limitar visualização
         val limitParts = settings.limitView.split(",")
@@ -105,13 +117,14 @@ class MainActivity : AppCompatActivity() {
         if (limitLines != null) binding.terminalOutput.maxLines = limitLines
         else binding.terminalOutput.maxLines = Int.MAX_VALUE
 
-        // Cores da tela
-        binding.terminalOutput.setBackgroundColor(settings.colorBackground)
-        binding.scrollView.setBackgroundColor(settings.colorBackground)
-        binding.statusText.setTextColor(settings.colorStatusForeground)
-        if (settings.colorStatusBackground != 0) {
-            binding.appBar.setBackgroundColor(settings.colorStatusBackground)
+        // Cores da tela (a personalização da empresa, quando ativa, sobrepõe)
+        binding.terminalOutput.setBackgroundColor(effBg())
+        binding.scrollView.setBackgroundColor(effBg())
+        binding.statusText.setTextColor(effStatusFg())
+        if (effStatusBg() != 0) {
+            binding.appBar.setBackgroundColor(effStatusBg())
         }
+        aplicarCabecalhoEmpresa()
 
         repository = TelnetRepository.getInstance(this)
 
@@ -197,8 +210,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applyViewModelSettings() {
-        viewModel.setForegroundColor(settings.colorForeground)
-        viewModel.setFieldColor(settings.colorInputField)
+        viewModel.setForegroundColor(effFg())
+        viewModel.setFieldColor(effField())
         viewModel.setTerminalType(settings.telnetOptions.terminalType)
         viewModel.setBinaryMode(settings.telnetOptions.binaryMode)
         viewModel.setSimulateParity(settings.telnetOptions.simulateParity)
@@ -278,6 +291,7 @@ class MainActivity : AppCompatActivity() {
 
         // Botao de mostrar/ocultar teclado (ao lado de Desconectar)
         binding.keyboardToggle.setOnClickListener { toggleKeyboard() }
+        binding.keysToggle.setOnClickListener { toggleKeysBar() }
 
         // Toque simples: abre teclado e rola ao fim; duplo toque: ação configurada
         binding.terminalOutput.setOnClickListener {
@@ -303,6 +317,7 @@ class MainActivity : AppCompatActivity() {
                     binding.statusText.setTextColor(getColor(android.R.color.darker_gray))
                     binding.disconnectButton.isEnabled = false
                     binding.keyboardToggle.visibility = android.view.View.GONE
+                    binding.keysToggle.visibility = android.view.View.GONE
                     cursorBlinkHandler.removeCallbacks(cursorBlinkRunnable)
                     // "Sempre" mantém a barra visível mesmo desconectado
                     if (settings.showToolbar != "Sempre") {
@@ -334,14 +349,26 @@ class MainActivity : AppCompatActivity() {
                     binding.statusText.setTextColor(getColor(android.R.color.holo_green_dark))
                     binding.disconnectButton.isEnabled = true
                     binding.keyboardToggle.visibility = android.view.View.VISIBLE
+                    binding.keysToggle.visibility = android.view.View.VISIBLE
+                    binding.keysToggle.alpha = if (toolbarHidden) 0.5f else 1f
                     if (settings.showToolbar != "Nunca") {
-                        binding.controlKeysBar.visibility = android.view.View.VISIBLE
+                        // Respeita a escolha manual do usuário (botão de ocultar teclas)
+                        binding.controlKeysBar.visibility =
+                            if (toolbarHidden) android.view.View.GONE else android.view.View.VISIBLE
                     }
                     if (settings.cursorBlinking) {
                         cursorBlinkHandler.removeCallbacks(cursorBlinkRunnable)
                         cursorBlinkHandler.postDelayed(cursorBlinkRunnable, 500)
                     }
                     buildToolbars()
+                    // Tamanho da fonte ao conectar:
+                    //  - Pinça ligada e ainda sem tamanho fixado pelo usuário → auto-ajusta à tela.
+                    //  - Caso contrário (pinça desligada, ou usuário já definiu) → usa o tamanho salvo.
+                    if (settings.pinchZoomEnabled && settings.fontAutoFit) {
+                        applyAutoFitFontSize()
+                    } else {
+                        binding.terminalOutput.textSize = settings.fontSize.toFloat()
+                    }
                     // Teclado habilitado: abre automaticamente ao conectar
                     if (settings.keyboardEnabled) {
                         openKeyboard()
@@ -437,13 +464,23 @@ class MainActivity : AppCompatActivity() {
         imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
     }
 
+    /** Mostra/oculta a barra de teclas personalizadas (botão no topo, ao lado do teclado). */
+    private fun toggleKeysBar() {
+        toolbarHidden = !toolbarHidden
+        binding.controlKeysBar.visibility =
+            if (toolbarHidden) android.view.View.GONE else android.view.View.VISIBLE
+        // Feedback visual no botão: meio apagado quando a barra está oculta
+        binding.keysToggle.alpha = if (toolbarHidden) 0.5f else 1f
+    }
+
     /** Gera as barras de ferramentas com scroll horizontal quando há muitos botões. */
     private fun buildToolbars() {
         binding.controlKeysBar.removeAllViews()
-        val bars = settings.toolbars
+        // Teclas da empresa (quando definidas) têm prioridade sobre as locais
+        val bars = cc().toolbars(this) ?: settings.toolbars
         val density = resources.displayMetrics.density
         val screenW = resources.displayMetrics.widthPixels
-        val btnH = (36 * density).toInt()
+        val btnH = (44 * density).toInt()
         val margin = (2 * density).toInt()
         val minBtnW = (72 * density).toInt()
 
@@ -584,20 +621,134 @@ class MainActivity : AppCompatActivity() {
         Timber.d("Barcode enviado ao servidor: $barcode (ação=$actionAfterScan)")
     }
 
+    /**
+     * Configura o gesto de pinça (dois dedos) pra redimensionar a fonte do terminal.
+     * Só age quando "Redimensionar com pinça" está ligado nas Opções de tela.
+     */
+    private fun setupPinchZoom() {
+        scaleDetector = android.view.ScaleGestureDetector(this,
+            object : android.view.ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                override fun onScaleBegin(detector: android.view.ScaleGestureDetector): Boolean {
+                    if (!settings.pinchZoomEnabled) return false
+                    scaling = true
+                    return true
+                }
+                override fun onScale(detector: android.view.ScaleGestureDetector): Boolean {
+                    if (!settings.pinchZoomEnabled) return false
+                    val currentSp = binding.terminalOutput.textSize / resources.displayMetrics.scaledDensity
+                    val newSp = (currentSp * detector.scaleFactor).coerceIn(MIN_FONT_SP, MAX_FONT_SP)
+                    binding.terminalOutput.textSize = newSp
+                    return true
+                }
+                override fun onScaleEnd(detector: android.view.ScaleGestureDetector) {
+                    if (!settings.pinchZoomEnabled) return
+                    val finalSp = (binding.terminalOutput.textSize / resources.displayMetrics.scaledDensity)
+                        .toInt().coerceIn(MIN_FONT_SP.toInt(), MAX_FONT_SP.toInt())
+                    settings.fontSize = finalSp        // guarda o tamanho escolhido pelos dedos
+                    settings.fontAutoFit = false       // fixa: o auto-fit não sobrescreve mais
+                    // pequeno atraso pra o ACTION_UP do gesto não disparar o clique (abrir teclado)
+                    binding.terminalOutput.postDelayed({ scaling = false }, 120)
+                }
+            })
+
+        binding.terminalOutput.setOnTouchListener { v, event ->
+            if (settings.pinchZoomEnabled) {
+                // Com 2+ dedos, impede que os ScrollViews pais roubem o gesto de pinça.
+                if (event.pointerCount >= 2) v.parent?.requestDisallowInterceptTouchEvent(true)
+                scaleDetector.onTouchEvent(event)
+                if (scaling) return@setOnTouchListener true  // consome: não rola nem clica
+            }
+            false  // toque simples/scroll seguem normais (click e scroll preservados)
+        }
+    }
+
     private fun handleDoubleTap() {
         when (settings.doubleTapAction) {
             "Zoom in" -> {
                 val sp = binding.terminalOutput.textSize / resources.displayMetrics.scaledDensity
-                binding.terminalOutput.textSize = (sp + 2f).coerceAtMost(24f)
+                binding.terminalOutput.textSize = (sp + 2f).coerceAtMost(MAX_FONT_SP)
+                settings.fontSize = binding.terminalOutput.textSize.let { (it / resources.displayMetrics.scaledDensity).toInt() }
+                settings.fontAutoFit = false
             }
             "Zoom out" -> {
                 val sp = binding.terminalOutput.textSize / resources.displayMetrics.scaledDensity
-                binding.terminalOutput.textSize = (sp - 2f).coerceAtLeast(6f)
+                binding.terminalOutput.textSize = (sp - 2f).coerceAtLeast(MIN_FONT_SP)
+                settings.fontSize = binding.terminalOutput.textSize.let { (it / resources.displayMetrics.scaledDensity).toInt() }
+                settings.fontAutoFit = false
             }
             "Redefinir tamanho da tela" -> {
-                binding.terminalOutput.textSize = settings.fontSize.toFloat()
+                settings.fontAutoFit = true    // volta ao ajuste automático à tela
+                applyAutoFitFontSize()
             }
             // "Nenhum" → sem ação
+        }
+    }
+
+    /**
+     * Calcula o tamanho de fonte ideal para que a grade fixa (largura x altura
+     * definidas em Opções gerais de emulação) preencha a área real disponível na
+     * tela do aparelho, em vez de usar sempre o mesmo tamanho fixo. Roda após o
+     * primeiro layout, quando as dimensões reais da tela já estão disponíveis.
+     */
+    private fun applyAutoFitFontSize() {
+        // Espera o layout realmente terminar (barra de ferramentas já visível) antes de medir —
+        // um post{} simples pode rodar antes da barra entrar, medindo uma altura maior do que a real.
+        val scrollView = binding.scrollView
+        scrollView.viewTreeObserver.addOnGlobalLayoutListener(object : android.view.ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                scrollView.viewTreeObserver.removeOnGlobalLayoutListener(this)
+
+                val rows = settings.generalEmulationOptions.initialHeight.coerceAtLeast(1)
+
+                val availableHeightPx = (scrollView.height -
+                    binding.terminalOutput.paddingTop - binding.terminalOutput.paddingBottom).toFloat()
+                if (availableHeightPx <= 0f) return
+
+                val paint = android.graphics.Paint().apply {
+                    typeface = binding.terminalOutput.typeface
+                    textSize = 100f
+                }
+                val fm = paint.fontMetrics
+                val lineHeightAt100 = fm.descent - fm.ascent
+                if (lineHeightAt100 <= 0f) return
+
+                // Prioriza preencher a altura (24 linhas): a largura (80 colunas) quase sempre é a
+                // dimensão mais apertada num celular estreito, e forçar caber nela deixa a fonte
+                // minúscula. A HorizontalScrollView já existe pra rolar o excesso horizontal.
+                val idealPx = availableHeightPx / rows / lineHeightAt100 * 100f
+                val idealSp = (idealPx / resources.displayMetrics.scaledDensity).coerceIn(8f, MAX_FONT_SP)
+                binding.terminalOutput.textSize = idealSp
+                // Reflete o tamanho calculado no painel (útil se o cliente desligar a pinça depois).
+                // Não mexe em fontAutoFit: o cálculo é determinístico (altura fixa), então não "encolhe" a cada vez.
+                settings.fontSize = idealSp.toInt()
+            }
+        })
+    }
+
+    // ------------------------------------------------------------------
+    // Personalização da empresa (CompanyConfigStore) — quando ativa, sobrepõe
+    // as cores locais e mostra o cabeçalho com a marca.
+    // ------------------------------------------------------------------
+    private fun cc() = com.logisticapp.emuladortelnet.settings.CompanyConfigStore
+    private fun effFg()       = cc().colorForeground(this)       ?: settings.colorForeground
+    private fun effBg()       = cc().colorBackground(this)       ?: settings.colorBackground
+    private fun effField()    = cc().colorField(this)            ?: settings.colorInputField
+    private fun effStatusFg() = cc().colorStatusForeground(this) ?: settings.colorStatusForeground
+    private fun effStatusBg() = cc().colorStatusBackground(this) ?: settings.colorStatusBackground
+
+    /** Mostra logo + nome da empresa no topo, se ela configurou o cabeçalho. */
+    private fun aplicarCabecalhoEmpresa() {
+        val logo = binding.companyLogo
+        if (cc().headerShow(this)) {
+            val file = cc().logoFile(this)
+            if (file != null) {
+                logo.setImageURI(android.net.Uri.fromFile(file))
+                logo.visibility = View.VISIBLE
+            } else {
+                logo.visibility = View.GONE
+            }
+        } else {
+            logo.visibility = View.GONE
         }
     }
 
