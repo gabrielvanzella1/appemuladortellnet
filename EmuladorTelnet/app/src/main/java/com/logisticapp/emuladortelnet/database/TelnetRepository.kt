@@ -84,7 +84,7 @@ class TelnetRepository(private val context: Context) {
     suspend fun importJson(json: String): Int {
         val imported: List<SavedConnection> = try {
             val type = object : TypeToken<List<SavedConnection>>() {}.type
-            gson.fromJson<List<SavedConnection>>(json, type)?.map(::normalizeLegacyHost)
+            gson.fromJson(json, type)
         } catch (e: Exception) {
             Timber.e(e, "JSON invalido na importacao")
             null
@@ -115,21 +115,12 @@ class TelnetRepository(private val context: Context) {
         val json = prefs.getString("connections", null) ?: return emptyList()
         return try {
             val type = object : TypeToken<List<SavedConnection>>() {}.type
-            val raw: List<SavedConnection> = gson.fromJson(json, type) ?: emptyList()
-            raw.map(::normalizeLegacyHost)
+            gson.fromJson(json, type) ?: emptyList()
         } catch (e: Exception) {
             Timber.e(e, "Erro ao carregar hosts")
             emptyList()
         }
     }
-
-    /**
-     * Gson aloca data classes via Unsafe, entao um campo ausente em JSON salvo
-     * antes da introducao de [SavedConnection.connectionType] chega como null
-     * em tempo de execucao mesmo com default Kotlin. Normaliza para "TELNET".
-     */
-    private fun normalizeLegacyHost(c: SavedConnection): SavedConnection =
-        if (c.connectionType.isNullOrBlank()) c.copy(connectionType = "TELNET") else c
 
     // ------------------------------------------------------------------
     // Preferences gerais

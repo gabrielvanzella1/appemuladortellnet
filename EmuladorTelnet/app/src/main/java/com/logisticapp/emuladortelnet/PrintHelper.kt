@@ -10,8 +10,8 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
- * Envia linhas de texto para a impressora térmica configurada, reaproveitado
- * tanto pelo modo Telnet (MainActivity) quanto pelo modo Browser (BrowserActivity).
+ * Envia linhas de texto para a impressora térmica configurada (usado pelo
+ * terminal Telnet - MainActivity - para imprimir a tela).
  * Roda numa MainScope própria (não presa ao lifecycle da Activity chamadora)
  * para que o job de impressão não seja cancelado se o usuário navegar antes
  * dele terminar — mesmo comportamento de antes da extração.
