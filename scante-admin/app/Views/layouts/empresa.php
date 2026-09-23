@@ -32,15 +32,22 @@
 
 <div class="sidebar">
   <div class="brand">Scan<span>TE</span></div>
-  <?php $emp = \App\Core\Auth::nome(); ?>
+  <?php
+    $emp    = \App\Core\Auth::nome();
+    $empRow = \App\Core\Auth::empresaId() ? (new \App\Models\Empresa())->findById((int)\App\Core\Auth::empresaId()) : null;
+  ?>
   <div class="empresa-nome"><i class="bi bi-building me-1"></i><?= htmlspecialchars($emp) ?></div>
   <nav>
     <a href="<?= APP_URL ?>/empresa" class="nav-link"><i class="bi bi-speedometer2"></i> Início</a>
     <a href="<?= APP_URL ?>/empresa/licencas" class="nav-link"><i class="bi bi-key"></i> Minhas Licenças</a>
+    <?php if (!empty($empRow['rastreamento_ativo'])): ?>
+    <a href="<?= APP_URL ?>/empresa/cerca" class="nav-link"><i class="bi bi-bounding-box-circles"></i> Cerca digital</a>
+    <?php endif; ?>
     <span class="nav-link em-dev" title="Em desenvolvimento"><i class="bi bi-palette"></i> Aparência <span class="badge text-bg-warning ms-auto">Desenvolvimento</span></span>
     <span class="nav-link em-dev" title="Em desenvolvimento"><i class="bi bi-keyboard"></i> Teclas <span class="badge text-bg-warning ms-auto">Desenvolvimento</span></span>
     <a href="<?= APP_URL ?>/empresa/chamados" class="nav-link"><i class="bi bi-headset"></i> Chamados</a>
-    <a href="<?= APP_URL ?>/logout" class="nav-link mt-4"><i class="bi bi-box-arrow-right"></i> Sair</a>
+    <a href="<?= APP_URL ?>/conta/senha" class="nav-link mt-4"><i class="bi bi-shield-lock"></i> Alterar senha</a>
+    <a href="<?= APP_URL ?>/logout" class="nav-link"><i class="bi bi-box-arrow-right"></i> Sair</a>
   </nav>
 </div>
 

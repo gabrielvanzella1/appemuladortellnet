@@ -92,6 +92,23 @@ class EmpresasController extends Controller {
         ], 'admin');
     }
 
+    /** Liga/desliga a cerca digital (rastreamento por Wi-Fi) da empresa. */
+    public function rastreamento(string $id): void {
+        Auth::requireAdmin();
+        $model   = new Empresa();
+        $empresa = $model->findById((int)$id);
+        if (!$empresa) { $this->redirect('/admin/empresas'); }
+
+        if ($this->isPost()) {
+            $ativo = $this->input('ativo', 0) ? 1 : 0;
+            $model->setRastreamento((int)$id, (bool)$ativo);
+            $this->flash('success', $ativo
+                ? "Cerca digital ativada para {$empresa['nome']}. O menu \"Cerca digital\" já aparece no painel da empresa."
+                : "Cerca digital desativada para {$empresa['nome']}.");
+        }
+        $this->redirect('/admin/empresas/' . (int)$id);
+    }
+
     public function gerarLicencas(string $id): void {
         Auth::requireAdmin();
         $empresa = (new Empresa())->findById((int)$id);

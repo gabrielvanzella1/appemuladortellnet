@@ -60,6 +60,26 @@
   </div>
 </div>
 
+<!-- Cerca digital (rastreamento por Wi-Fi) -->
+<?php $rastreando = !empty($empresa['rastreamento_ativo']); ?>
+<div class="card mb-3">
+  <div class="card-body d-flex flex-wrap align-items-center gap-3">
+    <div class="me-auto">
+      <h6 class="fw-bold mb-1"><i class="bi bi-bounding-box-circles me-2"></i>Cerca digital (Wi-Fi)
+        <span class="badge <?= $rastreando ? 'bg-success' : 'bg-secondary' ?> ms-1"><?= $rastreando ? 'Ativa' : 'Desativada' ?></span>
+      </h6>
+      <small class="text-muted">Rastreia os coletores pela rede Wi-Fi do CD (sem GPS). Quando ativa, o menu
+        "Cerca digital" aparece no painel da empresa.</small>
+    </div>
+    <form method="post" action="<?= APP_URL ?>/admin/empresas/<?= $empresa['id'] ?>/rastreamento">
+      <input type="hidden" name="ativo" value="<?= $rastreando ? 0 : 1 ?>">
+      <button class="btn btn-sm <?= $rastreando ? 'btn-outline-danger' : 'btn-accent' ?>">
+        <i class="bi <?= $rastreando ? 'bi-toggle-off' : 'bi-toggle-on' ?> me-1"></i><?= $rastreando ? 'Desativar' : 'Ativar' ?>
+      </button>
+    </form>
+  </div>
+</div>
+
 <!-- Licenças da empresa -->
 <div class="card">
   <div class="card-body">
