@@ -11,7 +11,7 @@
 | P-07 | O funcionário consegue forçar parada ou desinstalar o Monitor pelo Android. Solução: modo Device Owner [PLANEJADO] | Segurança da frota | ScanTE | Pós-apresentação |
 | P-08 | Licenciamento do Monitor: hoje ele usa uma licença ScanTE da empresa. No coletor que também roda o Emulador, é a mesma licença; num coletor só com o Monitor, consome uma licença. Definir se vira produto próprio | Comercial | Gabriel | Pós-apresentação |
 | P-09 | A tela do Monitor diz "monitoramento desativado para esta empresa" também quando a licença foi desvinculada (mensagem enganosa) | Suporte | ScanTE | Pós-apresentação |
-| P-10 | [SEGREDO ENCONTRADO — NÃO EXPOR] Segredo da API fixo no código dos apps. Solução: token por dispositivo emitido na ativação | Segurança | ScanTE | Pós-apresentação |
+| P-10 | [SEGREDO ENCONTRADO — NÃO EXPOR] Segredo da API fixo no código dos apps e **público no GitHub desde 18/09** (commit `5a21b44`, repositório público). Trocar o segredo no servidor e nos apps (Emulador e Monitor, com novo APK para os coletores). Solução definitiva: token por dispositivo emitido na ativação | Segurança | ScanTE | **Logo após a apresentação** |
 | P-11 | Código atual ainda não enviado ao GitHub (branch `unificacao`, fora da pasta principal) | Rastreabilidade | Gabriel | Hoje |
 | P-12 | Apagar os dados simulados (SIM-*) da empresa "Scan TE Produção" depois da apresentação (`seed_cerca_demo.php --empresa=4 --limpar`) | Limpeza | ScanTE | Pós-apresentação |
 | P-13 | Implantar em ~500 MC33 sem MDM exige instalar, ativar (digitar chave) e dar 5 permissões em cada aparelho. Avaliar instalação em massa (ex.: Zebra StageNow) e ativação sem digitar chave [NAO CONFIRMADO] | Implantação em escala | ScanTE | Pós-apresentação |
