@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
 -- Licenças
 CREATE TABLE IF NOT EXISTS licencas (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  chave         VARCHAR(24) NOT NULL UNIQUE,      -- SCTE-XXXXXX-XXXXXX-XXXXXX
+  chave         VARCHAR(32) NOT NULL UNIQUE,      -- SCTE-XXXXXX-XXXXXX-XXXXXX (25 chars; 32 da folga)
   empresa_id    INT UNSIGNED NULL,
   tipo          ENUM('trial','mensal','anual','vitalicia') NOT NULL DEFAULT 'trial',
   quantidade    INT UNSIGNED NOT NULL DEFAULT 1,  -- nº de licenças do mesmo pedido (checkout em lote)

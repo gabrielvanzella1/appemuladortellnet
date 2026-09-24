@@ -35,6 +35,11 @@ class Empresa extends Model {
         ");
     }
 
+    /** Liga/desliga a cerca digital (rastreamento por Wi-Fi). */
+    public function setRastreamento(int $id, bool $ativo): void {
+        $this->db->execute("UPDATE empresas SET rastreamento_ativo = ? WHERE id = ?", [$ativo ? 1 : 0, $id]);
+    }
+
     /** Empresas ativas (para selects de atribuição). */
     public function ativas(): array {
         return $this->db->query("SELECT id, nome FROM empresas WHERE ativo = 1 ORDER BY nome");

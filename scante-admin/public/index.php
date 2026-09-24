@@ -26,6 +26,10 @@ $router->get('/login',  'AuthController', 'login');
 $router->post('/login', 'AuthController', 'login');
 $router->get('/logout', 'AuthController', 'logout');
 
+// Minha conta (admin geral e empresa)
+$router->get( '/conta/senha', 'ContaController', 'senha');
+$router->post('/conta/senha', 'ContaController', 'senha');
+
 // Página pública de download do ScanTE Relay
 $router->get('/scan-relay', 'RelayDownloadController', 'index');
 
@@ -49,6 +53,7 @@ $router->get( '/admin/empresas/{id}/editar',        'Admin/EmpresasController', 
 $router->post('/admin/empresas/{id}/editar',        'Admin/EmpresasController',  'editar');
 $router->get( '/admin/empresas/{id}/excluir',       'Admin/EmpresasController',  'excluir');
 $router->post('/admin/empresas/{id}/gerar-licencas','Admin/EmpresasController',  'gerarLicencas');
+$router->post('/admin/empresas/{id}/rastreamento', 'Admin/EmpresasController',  'rastreamento');
 $router->get( '/admin/manual',                      'Admin/ManualController',       'index');
 $router->get( '/admin/configuracoes',               'Admin/ConfiguracoesController', 'index');
 $router->post('/admin/configuracoes/salvar',         'Admin/ConfiguracoesController', 'salvar');
@@ -84,12 +89,20 @@ $router->get( '/empresa/chamados/novo',                        'Empresa/Chamados
 $router->post('/empresa/chamados/novo',                        'Empresa/ChamadosController',  'criar');
 $router->get( '/empresa/chamados/{id}',                        'Empresa/ChamadosController',  'ver');
 $router->post('/empresa/chamados/{id}/responder',              'Empresa/ChamadosController',  'responder');
+$router->get( '/empresa/cerca',                                'Empresa/CercaController',     'index');
+$router->get( '/empresa/cerca/pontos',                         'Empresa/CercaController',     'pontos');
+$router->post('/empresa/cerca/pontos/salvar',                  'Empresa/CercaController',     'salvarPontos');
+$router->get( '/empresa/cerca/alertas',                        'Empresa/CercaController',     'alertas');
+$router->get( '/empresa/cerca/dispositivo/{deviceId}',         'Empresa/CercaController',     'dispositivo');
+$router->get( '/empresa/cerca/config',                         'Empresa/CercaController',     'config');
+$router->post('/empresa/cerca/config',                         'Empresa/CercaController',     'config');
 
 // API REST (app Android)
 $router->post('/api/licenca/validar',               'Api/LicencaController',      'validar');
 $router->post('/api/webhook/mercadopago',           'Api/LicencaController',         'webhookMercadoPago');
 $router->post('/api/webhook/pagarme',              'Api/PagarmeWebhookController',  'handle');
 $router->post('/api/dispositivo/ping',              'Api/DispositivoController',  'ping');
+$router->post('/api/dispositivo/sinal',             'Api/DispositivoController',  'sinal');
 
 // Admin — Licenças do ScanTE Relay
 $router->get( '/admin/relay-licencas',              'Admin/RelayLicencasController', 'index');

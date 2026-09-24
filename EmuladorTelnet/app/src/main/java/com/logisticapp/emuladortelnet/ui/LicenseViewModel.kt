@@ -4,8 +4,6 @@ import android.app.Application
 import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import com.logisticapp.emuladortelnet.BuildConfig
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.logisticapp.emuladortelnet.license.LicenseApiService
 import com.logisticapp.emuladortelnet.license.LicenseManager
@@ -14,112 +12,57 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+/**
+ * ViewModel da tela de gate (LicenseActivity): em segundo plano, re-valida a
+ * licença salva com o servidor e envia o ping do dispositivo. A ativação é
+ * sempre manual, por chave, na tela "Ativação" (ActivationActivity).
+ *
+ * As duas chamadas rodam em NonCancellable porque o gate costuma fechar logo
+ * em seguida (vai direto pra HostsActivity quando o dispositivo já tem acesso).
+ */
 class LicenseViewModel(application: Application) : AndroidViewModel(application) {
 
     private val licenseManager = LicenseManager(application)
     private val apiService = LicenseApiService()
 
-    private val _isLoading = MutableLiveData(false)
-    val isLoading: LiveData<Boolean> = _isLoading
-
-    private val _navigateToMain = MutableLiveData(false)
-    val navigateToMain: LiveData<Boolean> = _navigateToMain
-
-    private val _errorMessage = MutableLiveData<String?>(null)
-    val errorMessage: LiveData<String?> = _errorMessage
-
-    // Pair(sucesso, mensagem) — consumido uma vez
-    private val _activationResult = MutableLiveData<Pair<Boolean, String>?>(null)
-    val activationResult: LiveData<Pair<Boolean, String>?> = _activationResult
-
     init {
         licenseManager.initializeLicense()
+        syncWithServer()
         pingServidor()
     }
 
     /**
-     * Chamado no onCreate da Activity.
-     * Se já tem licença PREMIUM, verifica com o servidor e navega para o app.
+     * Re-valida a licença salva com o servidor.
+     * Se foi revogada/expirada no admin, atualiza o estado local.
+     * Se o servidor não responder, mantém o estado local (modo offline).
      */
-    fun checkOnStartup() {
-        if (!licenseManager.hasAccess()) return
-        val savedKey = licenseManager.getSavedLicenseKey()
-        if (savedKey == null) {
-            // PREMIUM mas sem chave de servidor (ativação legada) — permite acesso
-            _navigateToMain.value = true
-            return
-        }
+    private fun syncWithServer() {
+        val savedKey = licenseManager.getSavedLicenseKey() ?: return
         viewModelScope.launch {
-            try {
-                val deviceId = licenseManager.getDeviceId()
-                val deviceNome = "${Build.MANUFACTURER} ${Build.MODEL}"
-                val result = apiService.validarChave(savedKey, deviceId, deviceNome)
-                if (result.isSuccess) {
-                    val validacao = result.getOrNull()!!
-                    if (validacao.sucesso) {
-                        licenseManager.upgradeToPremiumByKey(validacao.chave, validacao.tipo, validacao.diasRestantes)
-                        // Aplica/atualiza a personalização da empresa (tema + teclas + logo)
-                        com.logisticapp.emuladortelnet.settings.CompanyConfigStore
-                            .save(getApplication(), validacao.configJson)
-                        _navigateToMain.value = true
-                    } else {
-                        licenseManager.revokeLicense()
-                        Timber.d("Licença revogada no servidor: ${validacao.erro}")
+            withContext(NonCancellable) {
+                try {
+                    val deviceId = licenseManager.getDeviceId()
+                    val deviceNome = "${Build.MANUFACTURER} ${Build.MODEL}"
+                    val result = apiService.validarChave(savedKey, deviceId, deviceNome)
+                    if (result.isSuccess) {
+                        val validacao = result.getOrNull()!!
+                        if (validacao.sucesso) {
+                            licenseManager.upgradeToPremiumByKey(
+                                chave = validacao.chave,
+                                tipo = validacao.tipo,
+                                diasRestantes = validacao.diasRestantes
+                            )
+                            // Aplica/atualiza a personalização da empresa (tema + teclas + logo)
+                            com.logisticapp.emuladortelnet.settings.CompanyConfigStore
+                                .save(getApplication(), validacao.configJson)
+                        } else {
+                            licenseManager.revokeLicense()
+                            Timber.d("Licença inválida no servidor: ${validacao.erro}")
+                        }
                     }
-                } else {
-                    // Servidor inacessível — modo offline, permite acesso
-                    _navigateToMain.value = true
+                } catch (e: Exception) {
+                    Timber.w(e, "Sem conexão com servidor — usando licença local")
                 }
-            } catch (e: Exception) {
-                Timber.w(e, "Sync startup falhou — usando licença local")
-                _navigateToMain.value = true
-            }
-        }
-    }
-
-    /**
-     * Ativa a licença via chave fornecida pelo usuário.
-     * deviceName: nome/serial informado pelo usuário para identificar o dispositivo.
-     */
-    fun activateByKey(chave: String, deviceName: String) {
-        if (chave.isBlank()) {
-            _activationResult.value = Pair(false, "Digite a chave de licença.")
-            return
-        }
-        if (deviceName.isBlank()) {
-            _activationResult.value = Pair(false, "Digite o nome de identificação do dispositivo.")
-            return
-        }
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val deviceId = licenseManager.getDeviceId()
-                val result = apiService.validarChave(chave.trim().uppercase(), deviceId, deviceName.trim())
-                if (result.isSuccess) {
-                    val validacao = result.getOrNull()!!
-                    if (validacao.sucesso) {
-                        licenseManager.upgradeToPremiumByKey(
-                            chave = validacao.chave,
-                            tipo = validacao.tipo,
-                            diasRestantes = validacao.diasRestantes
-                        )
-                        // Aplica/atualiza a personalização da empresa (tema + teclas + logo)
-                        com.logisticapp.emuladortelnet.settings.CompanyConfigStore
-                            .save(getApplication(), validacao.configJson)
-                        _activationResult.value = Pair(true, "Licença ativada com sucesso!")
-                        _navigateToMain.value = true
-                    } else {
-                        _activationResult.value = Pair(false, validacao.erro)
-                    }
-                } else {
-                    val msg = result.exceptionOrNull()?.message ?: "Erro de conexão com o servidor."
-                    _activationResult.value = Pair(false, "Não foi possível validar: $msg")
-                }
-            } catch (e: Exception) {
-                Timber.e(e, "Erro ao ativar licença por chave")
-                _activationResult.value = Pair(false, "Erro ao ativar licença.")
-            } finally {
-                _isLoading.value = false
             }
         }
     }
@@ -135,13 +78,9 @@ class LicenseViewModel(application: Application) : AndroidViewModel(application)
                     apiService.pingServidor(deviceId, deviceNome, appVersion, licenseKey)
                     Timber.d("Ping enviado com sucesso")
                 } catch (e: Exception) {
-                    Timber.w(e, "Ping falhou: ${e.message}")
+                    Timber.w(e, "Ping ao servidor falhou: ${e.message}")
                 }
             }
         }
     }
-
-    fun onActivationResultShown() { _activationResult.value = null }
-    fun onErrorShown() { _errorMessage.value = null }
-    fun onNavigated() { _navigateToMain.value = false }
 }

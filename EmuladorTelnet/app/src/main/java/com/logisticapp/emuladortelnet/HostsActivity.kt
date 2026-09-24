@@ -279,15 +279,11 @@ class HostsActivity : AppCompatActivity() {
         val ativa = SessionStore.isActive(host.id)
         val connectLabel = if (ativa) "Retomar" else "Conectar"
         popup.menu.add(0, 1, 0, connectLabel)
-        popup.menu.add(0, 2, 1, "Editar")
-        if (host.connectionType != "BROWSER") {
-            popup.menu.add(0, 3, 2, "Configuracao")
-        }
+        popup.menu.add(0, 3, 2, "Configuracao")
         popup.menu.add(0, 4, 3, "Remover")
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 1 -> connectToHost(host)
-                2 -> openHostConfig(hostId = host.id)
                 3 -> openHostAdvanced(hostId = host.id)
                 4 -> confirmDelete(host)
             }
@@ -297,18 +293,6 @@ class HostsActivity : AppCompatActivity() {
     }
 
     private fun connectToHost(host: SavedConnection) {
-        if (host.connectionType == "BROWSER") {
-            val result = SessionStore.openOrResumeBrowser(this, host.id, host.name, host.url)
-            if (result == null) {
-                toast("Máximo de 2 sessões ativas. Desconecte uma para abrir outra.")
-                return
-            }
-            val (slotId, _) = result
-            startActivity(Intent(this, BrowserActivity::class.java).apply {
-                putExtra(BrowserActivity.EXTRA_SLOT_ID, slotId)
-            })
-            return
-        }
         val jaAtiva = SessionStore.isActive(host.id)
         val result = SessionStore.openOrResume(this, host.id, host.name, host.host, host.port)
         if (result == null) {
@@ -380,12 +364,6 @@ class HostsActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun openHostConfig(hostId: Int) {
-        val intent = Intent(this, HostConfigActivity::class.java)
-        if (hostId > 0) intent.putExtra(HostConfigActivity.EXTRA_HOST_ID, hostId)
-        startActivity(intent)
-    }
-
     private fun openHostAdvanced(hostId: Int) {
         val intent = Intent(this, HostAdvancedActivity::class.java)
         intent.putExtra(HostAdvancedActivity.EXTRA_HOST_ID, hostId)
@@ -435,20 +413,10 @@ class HostsAdapter(
         private val address: TextView = view.findViewById(R.id.host_address)
         private val badge: TextView = view.findViewById(R.id.tv_active_badge)
         private val btnMenu: ImageButton = view.findViewById(R.id.btn_menu)
-        private val iconBg: View = view.findViewById(R.id.host_icon_bg)
-        private val iconLetter: TextView = view.findViewById(R.id.host_icon_letter)
 
         fun bind(host: SavedConnection) {
             name.text = host.name
-            if (host.connectionType == "BROWSER") {
-                address.text = host.url
-                iconBg.setBackgroundResource(R.drawable.circle_blue)
-                iconLetter.text = "W"
-            } else {
-                address.text = "${host.host}:${host.port}"
-                iconBg.setBackgroundResource(R.drawable.circle_green)
-                iconLetter.text = "H"
-            }
+            address.text = "${host.host}:${host.port}"
             badge.visibility = if (SessionStore.isActive(host.id)) View.VISIBLE else View.GONE
             itemView.setOnClickListener { onItemClick(host) }
             btnMenu.setOnClickListener { onMenuClick(host, btnMenu) }

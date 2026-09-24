@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.ScanTEMonitor" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/primaria</item>
+        <item name="colorPrimaryVariant">@color/primaria</item>
+        <item name="colorSecondary">@color/destaque</item>
+        <item name="android:statusBarColor">@color/primaria</item>
+    </style>
+</resources>

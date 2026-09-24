@@ -130,7 +130,7 @@ class MainActivity : AppCompatActivity() {
 
         // Determina a origem da sessão: SessionStore (multi-sessão) ou intent direto
         slotId = intent.getIntExtra(EXTRA_SLOT_ID, -1)
-        val slot = if (slotId >= 0) SessionStore.get(slotId) as? SessionStore.ActiveSession.Telnet else null
+        val slot = if (slotId >= 0) SessionStore.get(slotId) else null
 
         if (slot != null) {
             currentHost = slot.host
@@ -277,9 +277,7 @@ class MainActivity : AppCompatActivity() {
         binding.tvSessionBadge.setOnClickListener {
             val other = SessionStore.otherSession(slotId)
             if (other != null) {
-                val targetClass = if (other is SessionStore.ActiveSession.Browser)
-                    BrowserActivity::class.java else MainActivity::class.java
-                startActivity(Intent(this, targetClass).apply {
+                startActivity(Intent(this, MainActivity::class.java).apply {
                     putExtra(EXTRA_SLOT_ID, other.slotId)
                 })
             }

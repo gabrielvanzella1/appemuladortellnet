@@ -60,36 +60,23 @@
   </div>
 </div>
 
-<!-- Link de pagamento para o cliente -->
+<!-- Cerca digital (rastreamento por Wi-Fi) -->
+<?php $rastreando = !empty($empresa['rastreamento_ativo']); ?>
 <div class="card mb-3">
-  <div class="card-body">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-      <h6 class="fw-bold mb-0"><i class="bi bi-link-45deg me-2"></i>Link de pagamento</h6>
-      <span class="badge bg-success">Enviar ao cliente</span>
+  <div class="card-body d-flex flex-wrap align-items-center gap-3">
+    <div class="me-auto">
+      <h6 class="fw-bold mb-1"><i class="bi bi-bounding-box-circles me-2"></i>Cerca digital (Wi-Fi)
+        <span class="badge <?= $rastreando ? 'bg-success' : 'bg-secondary' ?> ms-1"><?= $rastreando ? 'Ativa' : 'Desativada' ?></span>
+      </h6>
+      <small class="text-muted">Rastreia os coletores pela rede Wi-Fi do CD (sem GPS). Quando ativa, o menu
+        "Cerca digital" aparece no painel da empresa.</small>
     </div>
-    <p class="text-muted small mb-3">
-      Envie este link para o cliente comprar ou renovar uma licença. O formulário já vem pré-preenchido com os dados da empresa.
-    </p>
-    <?php
-      $linkPagamento = APP_URL . '/checkout?empresa_id=' . $empresa['id']
-        . '&email=' . urlencode($empresa['email']);
-    ?>
-    <div class="input-group mb-2">
-      <input type="text" id="inputLinkPagamento" class="form-control form-control-sm font-monospace"
-             value="<?= htmlspecialchars($linkPagamento) ?>" readonly>
-      <button class="btn btn-sm btn-outline-secondary" onclick="copiarLink()" title="Copiar">
-        <i class="bi bi-clipboard" id="iconeCopiar"></i>
+    <form method="post" action="<?= APP_URL ?>/admin/empresas/<?= $empresa['id'] ?>/rastreamento">
+      <input type="hidden" name="ativo" value="<?= $rastreando ? 0 : 1 ?>">
+      <button class="btn btn-sm <?= $rastreando ? 'btn-outline-danger' : 'btn-accent' ?>">
+        <i class="bi <?= $rastreando ? 'bi-toggle-off' : 'bi-toggle-on' ?> me-1"></i><?= $rastreando ? 'Desativar' : 'Ativar' ?>
       </button>
-    </div>
-    <div class="d-flex gap-2">
-      <a href="https://wa.me/?text=<?= urlencode('Olá! Segue o link para ativar sua licença ScanTE: ' . $linkPagamento) ?>"
-         target="_blank" class="btn btn-sm btn-success">
-        <i class="bi bi-whatsapp me-1"></i>Enviar por WhatsApp
-      </a>
-      <a href="<?= htmlspecialchars($linkPagamento) ?>" target="_blank" class="btn btn-sm btn-outline-primary">
-        <i class="bi bi-box-arrow-up-right me-1"></i>Abrir link
-      </a>
-    </div>
+    </form>
   </div>
 </div>
 
@@ -171,13 +158,4 @@
 document.getElementById('tipoLicenca').addEventListener('change', function () {
   document.getElementById('wrapperDias').style.display = this.value === 'vitalicia' ? 'none' : '';
 });
-
-function copiarLink() {
-  const input = document.getElementById('inputLinkPagamento');
-  navigator.clipboard.writeText(input.value).then(() => {
-    const icon = document.getElementById('iconeCopiar');
-    icon.className = 'bi bi-check-lg text-success';
-    setTimeout(() => icon.className = 'bi bi-clipboard', 2000);
-  });
-}
 </script>

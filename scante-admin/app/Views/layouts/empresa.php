@@ -14,6 +14,8 @@
   .sidebar .brand span { color:var(--accent); }
   .sidebar .nav-link { color:rgba(255,255,255,.7); padding:10px 20px; display:flex; align-items:center; gap:10px; }
   .sidebar .nav-link:hover, .sidebar .nav-link.active { color:#fff; background:rgba(255,255,255,.1); }
+  .sidebar .nav-link.em-dev, .sidebar .nav-link.em-dev:hover { color:rgba(255,255,255,.4); background:none; cursor:not-allowed; }
+  .sidebar .nav-link.em-dev .badge { font-size:.6rem; font-weight:600; }
   .sidebar .empresa-nome { padding:10px 20px; color:rgba(255,255,255,.5); font-size:.78rem; }
   .main { margin-left:230px; padding:24px; }
   .topbar { background:#fff; border-bottom:1px solid #e5e7eb; padding:12px 24px; margin-left:230px; position:sticky; top:0; z-index:99; display:flex; align-items:center; justify-content:space-between; }
@@ -30,15 +32,22 @@
 
 <div class="sidebar">
   <div class="brand">Scan<span>TE</span></div>
-  <?php $emp = \App\Core\Auth::nome(); ?>
+  <?php
+    $emp    = \App\Core\Auth::nome();
+    $empRow = \App\Core\Auth::empresaId() ? (new \App\Models\Empresa())->findById((int)\App\Core\Auth::empresaId()) : null;
+  ?>
   <div class="empresa-nome"><i class="bi bi-building me-1"></i><?= htmlspecialchars($emp) ?></div>
   <nav>
     <a href="<?= APP_URL ?>/empresa" class="nav-link"><i class="bi bi-speedometer2"></i> Início</a>
     <a href="<?= APP_URL ?>/empresa/licencas" class="nav-link"><i class="bi bi-key"></i> Minhas Licenças</a>
-    <a href="<?= APP_URL ?>/empresa/aparencia" class="nav-link"><i class="bi bi-palette"></i> Aparência</a>
-    <a href="<?= APP_URL ?>/empresa/teclas" class="nav-link"><i class="bi bi-keyboard"></i> Teclas</a>
+    <?php if (!empty($empRow['rastreamento_ativo'])): ?>
+    <a href="<?= APP_URL ?>/empresa/cerca" class="nav-link"><i class="bi bi-bounding-box-circles"></i> Cerca digital</a>
+    <?php endif; ?>
+    <span class="nav-link em-dev" title="Em desenvolvimento"><i class="bi bi-palette"></i> Aparência <span class="badge text-bg-warning ms-auto">Desenvolvimento</span></span>
+    <span class="nav-link em-dev" title="Em desenvolvimento"><i class="bi bi-keyboard"></i> Teclas <span class="badge text-bg-warning ms-auto">Desenvolvimento</span></span>
     <a href="<?= APP_URL ?>/empresa/chamados" class="nav-link"><i class="bi bi-headset"></i> Chamados</a>
-    <a href="<?= APP_URL ?>/logout" class="nav-link mt-4"><i class="bi bi-box-arrow-right"></i> Sair</a>
+    <a href="<?= APP_URL ?>/conta/senha" class="nav-link mt-4"><i class="bi bi-shield-lock"></i> Alterar senha</a>
+    <a href="<?= APP_URL ?>/logout" class="nav-link"><i class="bi bi-box-arrow-right"></i> Sair</a>
   </nav>
 </div>
 

@@ -56,6 +56,7 @@
     <a href="<?= APP_URL ?>/admin/manual" class="nav-link" target="_blank"><i class="bi bi-file-earmark-pdf"></i> Manual do App</a>
 
     <div class="nav-section">Conta</div>
+    <a href="<?= APP_URL ?>/conta/senha" class="nav-link"><i class="bi bi-shield-lock"></i> Alterar senha</a>
     <a href="<?= APP_URL ?>/logout" class="nav-link"><i class="bi bi-box-arrow-right"></i> Sair</a>
   </nav>
 </div>
