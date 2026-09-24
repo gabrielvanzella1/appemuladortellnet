@@ -1,0 +1,419 @@
+<title>Suite ScanTE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============ Tokens — light (bare :root) ============ */
+  :root{
+    --paper:#F3F6F6;
+    --surface:#E7EFEF;
+    --ink:#0F2A3D;
+    --ink-mid:#4B6472;
+    --line:#D7E3E3;
+    --accent:#00D67A;
+    --accent-ink:#00854A;
+    --on-accent:#07231A;
+    --navy-fixed:#0F2A3D;   /* masthead/footer stay brand-navy in both themes, on purpose */
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0B1B24;
+      --surface:#122630;
+      --ink:#EAF2F2;
+      --ink-mid:#93AAB4;
+      --line:#213944;
+      --accent:#00D67A;
+      --accent-ink:#00D67A;
+      --on-accent:#07231A;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0B1B24;
+    --surface:#122630;
+    --ink:#EAF2F2;
+    --ink-mid:#93AAB4;
+    --line:#213944;
+    --accent:#00D67A;
+    --accent-ink:#00D67A;
+    --on-accent:#07231A;
+    color-scheme: dark;
+  }
+
+  /* ============ Base ============ */
+  *{box-sizing:border-box}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Manrope','Segoe UI',system-ui,sans-serif;
+    text-wrap:balance;
+    margin:0;
+    color:var(--ink);
+  }
+  p{margin:0}
+  ul{margin:0;padding:0;list-style:none}
+  a{color:var(--accent-ink)}
+  .mono{font-family:'IBM Plex Mono','SFMono-Regular',Consolas,monospace}
+  .wrap{max-width:880px;margin:0 auto;padding-inline:clamp(20px,5vw,32px)}
+
+  /* ============ Masthead (fixed brand navy, both themes) ============ */
+  .masthead{
+    background:var(--navy-fixed);
+    color:#EAF2F2;
+    padding-block:clamp(56px,10vw,88px) clamp(40px,7vw,56px);
+  }
+  .wordmark{
+    font-family:'Manrope',sans-serif;
+    font-weight:800;
+    font-size:clamp(2.3rem,6vw,4rem);
+    letter-spacing:-0.02em;
+    color:#EAF2F2;
+  }
+  .wordmark span{color:var(--accent)}
+  .tagline{
+    margin-top:.9rem;
+    max-width:34ch;
+    font-size:clamp(1.05rem,2.4vw,1.35rem);
+    font-weight:500;
+    color:#C7DADD;
+  }
+  .meta-line{
+    margin-top:1.6rem;
+    font-size:.78rem;
+    letter-spacing:.08em;
+    color:var(--accent);
+    display:flex;
+    align-items:center;
+    gap:.6em;
+    flex-wrap:wrap;
+  }
+  .cursor{
+    display:inline-block;width:.55em;height:1em;background:var(--accent);
+    margin-left:.3em;vertical-align:text-bottom;animation:blink 1.1s steps(1) infinite;
+  }
+  @media (prefers-reduced-motion:reduce){ .cursor{animation:none;opacity:1} }
+  @keyframes blink{50%{opacity:0}}
+
+  /* ============ Sticky quick-nav ============ */
+  .quicknav{
+    position:sticky; top:env(safe-area-inset-top,0px);
+    z-index:5;
+    background:var(--paper);
+    border-bottom:1px solid var(--line);
+  }
+  .quicknav ul{
+    display:flex; gap:clamp(14px,3vw,26px); overflow-x:auto;
+    padding-block:12px;
+  }
+  .quicknav a{
+    white-space:nowrap; text-decoration:none;
+    font-size:.82rem; font-weight:600; color:var(--ink-mid);
+    padding-bottom:2px; border-bottom:2px solid transparent;
+  }
+  .quicknav a:hover{color:var(--ink); border-color:var(--line)}
+  @media (prefers-reduced-motion:no-preference){ html{scroll-behavior:smooth} }
+
+  /* ============ Intro ============ */
+  .intro{padding-block:clamp(36px,7vw,56px) clamp(8px,3vw,16px)}
+  .intro p{font-size:1.05rem; color:var(--ink-mid); max-width:62ch}
+  .intro strong{color:var(--ink)}
+
+  /* ============ Product sections ============ */
+  .product{
+    padding-block:clamp(40px,7vw,64px);
+    border-top:1px solid var(--line);
+    scroll-margin-top:56px;
+  }
+  .product-head{display:flex; gap:14px; align-items:flex-start; margin-bottom:1.1rem}
+  .glyph{flex:none; width:46px; height:46px; color:var(--accent-ink)}
+  .eyebrow{
+    font-size:.72rem; font-weight:600; letter-spacing:.09em;
+    color:var(--accent-ink); text-transform:uppercase;
+  }
+  .product-name{font-size:clamp(1.5rem,3.2vw,2rem); font-weight:700; margin-top:.15rem}
+  .oneliner{font-size:1.05rem; color:var(--ink-mid); max-width:56ch; margin-top:.9rem}
+  .for-tag{
+    margin-top:1rem; font-size:.85rem; color:var(--ink-mid);
+    display:flex; gap:.5em; align-items:baseline;
+  }
+  .for-tag b{color:var(--ink); font-weight:600}
+
+  .product-grid{
+    display:grid; grid-template-columns: 1.1fr 1fr; gap:clamp(20px,4vw,40px);
+    margin-top:1.8rem; align-items:start;
+  }
+  @media (max-width:700px){ .product-grid{grid-template-columns:1fr} }
+
+  .feature-list li{
+    position:relative; padding-left:1.4em; margin-bottom:.7rem;
+    font-size:.96rem;
+  }
+  .feature-list li::before{
+    content:""; position:absolute; left:0; top:.55em;
+    width:7px; height:7px; background:var(--accent); border-radius:2px;
+  }
+
+  .side-note{
+    background:var(--surface); border-radius:10px; padding:1rem 1.15rem;
+    font-size:.88rem; color:var(--ink-mid);
+  }
+  .side-note b{color:var(--ink)}
+  .tag-dev{font-family:'IBM Plex Mono',monospace;font-size:.72rem;font-weight:600;letter-spacing:.04em;color:var(--ink-mid);border:1px solid var(--line);border-radius:4px;padding:1px 6px;margin-left:.35em;white-space:nowrap}
+
+  /* ============ Diagram ============ */
+  figure.diagram{margin:1.8rem 0 0; padding:0}
+  figure.diagram svg{max-width:100%; height:auto; display:block}
+  figcaption{
+    margin-top:.7rem; font-size:.85rem; color:var(--ink-mid); max-width:60ch;
+  }
+  .diagram-box{fill:var(--surface); stroke:var(--line)}
+  .diagram-box-accent{fill:var(--paper); stroke:var(--accent)}
+  .diagram-text{fill:var(--ink); font-family:'IBM Plex Sans',sans-serif}
+  .diagram-label{fill:var(--ink-mid); font-family:'IBM Plex Mono',monospace}
+
+  /* ============ Connect section ============ */
+  .connect{background:var(--surface)}
+  .connect .wrap{padding-block:clamp(40px,7vw,64px)}
+  .hub-list{margin-top:.9rem; display:grid; gap:.35rem}
+  .hub-list li{font-size:.88rem; color:var(--ink-mid)}
+  .hub-list li::before{content:"·"; color:var(--accent-ink); margin-right:.5em; font-weight:700}
+
+  /* ============ Footer (fixed brand navy) ============ */
+  footer{
+    background:var(--navy-fixed); color:#C7DADD;
+    padding-block:clamp(36px,6vw,52px);
+  }
+  footer .wordmark{font-size:1.5rem}
+  footer p{margin-top:.8rem; font-size:.9rem; max-width:46ch}
+  footer .contact{margin-top:1.1rem; font-size:.85rem}
+  footer .contact b{color:var(--accent); font-weight:600; letter-spacing:.02em}
+</style>
+
+<div class="masthead">
+  <div class="wrap">
+    <div class="wordmark">Scan<span>TE</span></div>
+    <p class="tagline">Da tela verde do terminal ao coletor na mão do operador.</p>
+    <p class="meta-line mono">4 APPS ANDROID · 1 SERVIDOR RELAY · 1 PAINEL WEB<span class="cursor" aria-hidden="true"></span></p>
+  </div>
+</div>
+
+<nav class="quicknav" aria-label="Navegação rápida">
+  <div class="wrap">
+    <ul>
+      <li><a href="#emulador">Emulador Telnet</a></li>
+      <li><a href="#browser">Browser &amp; Config</a></li>
+      <li><a href="#relay">Relay</a></li>
+      <li><a href="#monitor">Monitor</a></li>
+      <li><a href="#conexao">Como se conecta</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="intro wrap">
+  <p>O <strong>ScanTE</strong> nasceu para substituir o terminal físico do coletor de dados por um aplicativo Android. Hoje é uma família de <strong>quatro produtos</strong>, cada um resolvendo um problema específico do chão do CD. O <strong>Emulador</strong> e o <strong>Monitor</strong> se reportam ao painel ScanTE Admin; o Browser, o Config e o Relay funcionam por conta própria.</p>
+</div>
+
+<!-- ================= EMULADOR TELNET ================= -->
+<section class="product wrap" id="emulador">
+  <div class="product-head">
+    <svg class="glyph" viewBox="0 0 48 48" role="img" aria-label="Ícone de terminal">
+      <rect x="4" y="6" width="40" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="2"/>
+      <polyline points="12,16 18,21 12,26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="22" y1="26" x2="30" y2="26" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <line x1="14" y1="42" x2="34" y2="42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="eyebrow">App · Sessão Telnet</div>
+      <h2 class="product-name">ScanTE Emulador Telnet</h2>
+    </div>
+  </div>
+  <p class="oneliner">O coletor abre uma sessão Telnet de verdade com o host — o mesmo protocolo do terminal físico que ele substitui, não uma imitação por script.</p>
+  <p class="for-tag"><b>Ideal para</b> coletores dedicados à operação em WMS/ERP via terminal: picking, inventário, recebimento.</p>
+
+  <div class="product-grid">
+    <ul class="feature-list">
+      <li>Cliente Telnet real por socket TCP (RFC 854), com parser de tela ANSI / VT100 / VT220 e cores</li>
+      <li>Login automático: aguarda os prompts do host e envia usuário e senha sozinho</li>
+      <li>Leitor de código de barras integrado — Honeywell, Zebra/Symbol, Urovo, Datalogic, Newland</li>
+      <li>Teclado ScanTE próprio, com páginas de teclas de função e comandos configuráveis</li>
+      <li>Redimensiona a fonte do terminal com o gesto de pinça</li>
+    </ul>
+    <ul class="feature-list">
+      <li>Impressão térmica ESC/POS por Bluetooth ou Wi-Fi</li>
+      <li>Opções de SSH, proxy e SSL para hosts que exigem</li>
+      <li>Calculadora flutuante sobre o terminal, sem trocar de tela</li>
+      <li>Personalização de aparência e teclado pelo painel da empresa <span class="tag-dev">em desenvolvimento</span></li>
+      <li>Ativação por chave de licença emitida no painel; sem cobrança dentro do app</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= BROWSER + CONFIG ================= -->
+<section class="product wrap" id="browser">
+  <div class="product-head">
+    <svg class="glyph" viewBox="0 0 48 48" role="img" aria-label="Ícone de navegador">
+      <rect x="4" y="8" width="40" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="4" y1="16" x2="44" y2="16" stroke="currentColor" stroke-width="2"/>
+      <circle cx="10" cy="12" r="1.4" fill="currentColor"/>
+      <circle cx="15" cy="12" r="1.4" fill="currentColor"/>
+      <rect x="11" y="21" width="10" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+      <rect x="25" y="21" width="10" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    </svg>
+    <div>
+      <div class="eyebrow">2 apps · Portal web</div>
+      <h2 class="product-name">ScanTE Browser &amp; ScanTE Config</h2>
+    </div>
+  </div>
+  <p class="oneliner">Um navegador corporativo para os sistemas que já são web, e um segundo app, no mesmo coletor, que muda os portais e as teclas sem reinstalar nada.</p>
+  <p class="for-tag"><b>Ideal para</b> WMS web, portais internos, qualquer sistema que trocou a tela verde por HTML.</p>
+
+  <div class="product-grid">
+    <ul class="feature-list">
+      <li>Portais pré-configurados: o operador não digita URL, escolhe da lista</li>
+      <li>Teclas de função mapeadas por portal</li>
+      <li>Mesma integração de leitor de código de barras do Emulador</li>
+    </ul>
+    <ul class="feature-list">
+      <li><span class="mono">ScanTE Config</span>: segundo app que edita portais, teclas e zoom</li>
+      <li>Ao salvar no Config, o Browser do mesmo coletor recarrega na hora, sem reiniciar (como o EZConfig da Honeywell)</li>
+      <li>Não depende do painel: hoje não usa licença nem se reporta ao ScanTE Admin</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= RELAY ================= -->
+<section class="product wrap" id="relay">
+  <div class="product-head">
+    <svg class="glyph" viewBox="0 0 48 48" role="img" aria-label="Ícone de ponte de rede">
+      <rect x="4" y="17" width="12" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2"/>
+      <rect x="32" y="17" width="12" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="16" y1="24" x2="32" y2="24" stroke="currentColor" stroke-width="2"/>
+      <circle cx="24" cy="24" r="3" fill="var(--paper)" stroke="currentColor" stroke-width="2"/>
+      <path d="M20 15 a4 4 0 0 1 8 0" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    </svg>
+    <div>
+      <div class="eyebrow">Serviço de rede · Persistência</div>
+      <h2 class="product-name">ScanTE Relay</h2>
+    </div>
+  </div>
+  <p class="oneliner">Um servidor Windows instalado na rede do CD, entre os coletores e o host Telnet. Se a internet até o host cai, o coletor continua conectado e o Relay reconecta ao host sozinho.</p>
+  <p class="for-tag"><b>Ideal para</b> CDs cujo host Telnet/ERP fica fora do prédio (matriz ou nuvem) e a internet até ele oscila.</p>
+
+  <div class="product-grid">
+    <ul class="feature-list">
+      <li>Funciona como proxy HTTP CONNECT: o coletor aponta para o Relay na rede local</li>
+      <li>Nunca fecha o lado do coletor; se o host cai, redisca com espera crescente (1s, 2s, 4s… até o teto configurado)</li>
+      <li>Keepalive por IAC NOP em intervalo configurável, para o host não derrubar a conexão por inatividade</li>
+      <li>A reconexão abre uma conexão nova com o host; se ele exige login de novo, isso depende do host</li>
+    </ul>
+    <div class="side-note">
+      <b>Instalação e licença</b>: instalador Windows próprio, com regra de firewall. Configuração em um arquivo <span class="mono">scante-relay.json</span> (endereço de escuta, sessões máximas, timeout). A licença é gerada no painel e colada no Relay, que a valida localmente, sem consultar o painel.
+    </div>
+  </div>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 640 110" role="img" aria-label="O coletor conecta no Relay pela rede local; o Relay conecta ao host pela internet e reconecta sozinho se a internet cair">
+      <rect class="diagram-box" x="8" y="30" width="140" height="50" rx="8"/>
+      <text class="diagram-text" x="78" y="60" font-size="13" text-anchor="middle">Coletor</text>
+      <rect class="diagram-box-accent" x="250" y="30" width="140" height="50" rx="8"/>
+      <text class="diagram-text" x="320" y="60" font-size="13" text-anchor="middle">ScanTE Relay</text>
+      <rect class="diagram-box" x="492" y="30" width="140" height="50" rx="8"/>
+      <text class="diagram-text" x="562" y="60" font-size="13" text-anchor="middle">Host / WMS</text>
+
+      <defs>
+        <marker id="arrow-relay" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+          <polygon points="0,0 8,4 0,8" fill="currentColor"/>
+        </marker>
+      </defs>
+      <line x1="148" y1="55" x2="246" y2="55" stroke="currentColor" stroke-width="1.6" marker-end="url(#arrow-relay)"/>
+      <text class="diagram-label" x="197" y="42" font-size="10.5" text-anchor="middle">rede local</text>
+      <line x1="390" y1="55" x2="488" y2="55" stroke="currentColor" stroke-width="1.6" marker-end="url(#arrow-relay)"/>
+      <text class="diagram-label" x="439" y="42" font-size="10.5" text-anchor="middle">internet · reconecta</text>
+    </svg>
+    <figcaption>O Relay protege o trecho da internet. Se o Wi-Fi do próprio coletor cai, a sessão termina: o Relay não retoma a conexão de um coletor que saiu da rede.</figcaption>
+  </figure>
+</section>
+
+<!-- ================= MONITOR ================= -->
+<section class="product wrap" id="monitor">
+  <div class="product-head">
+    <svg class="glyph" viewBox="0 0 48 48" role="img" aria-label="Ícone de localização">
+      <path d="M18 8 a2 2 0 0 1 4 0" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M13 8 a2 2 0 0 1 4 0" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".5"/>
+      <circle cx="20" cy="24" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
+      <polygon points="14,29 26,29 20,42" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="20" cy="24" r="2" fill="currentColor"/>
+      <path d="M31 16 a12 12 0 0 1 0 16" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M35 12 a18 18 0 0 1 0 24" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".5"/>
+    </svg>
+    <div>
+      <div class="eyebrow">App · Localização e controle</div>
+      <h2 class="product-name">ScanTE Monitor</h2>
+    </div>
+  </div>
+  <p class="oneliner">Sabe onde cada coletor está mesmo sem GPS — pelo roteador Wi-Fi ao qual ele está conectado — e pede senha para ser desativado.</p>
+  <p class="for-tag"><b>Ideal para</b> frotas sem GPS (Zebra MC33, por exemplo), onde saber a zona do CD já resolve.</p>
+
+  <div class="product-grid">
+    <ul class="feature-list">
+      <li>Roda sempre em primeiro plano; volta sozinho ao ligar o coletor</li>
+      <li>Localiza por roteador Wi-Fi conectado — cerca digital por zona, sem precisar de GPS</li>
+      <li>Usa GPS quando o aparelho tem, ou localização por rede como alternativa</li>
+    </ul>
+    <ul class="feature-list">
+      <li>Envia bateria e status de carregamento junto com a posição</li>
+      <li>Senha própria nas telas do app: sem ela, o operador não desativa o monitoramento pelo app</li>
+      <li>Impedir desinstalar ou forçar parada pelo Android (modo Device Owner) <span class="tag-dev">planejado</span></li>
+      <li>Mesmo painel dos outros apps — um coletor com Monitor e Emulador aparece como um único dispositivo</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= COMO SE CONECTA ================= -->
+<section class="connect" id="conexao">
+  <div class="wrap">
+    <div class="eyebrow">Arquitetura</div>
+    <h2 class="product-name">Como tudo se conecta</h2>
+    <p class="oneliner">Hoje dois apps falam com o painel: o Emulador e o Monitor. Como usam a mesma assinatura, um coletor com os dois aparece como um único dispositivo. Browser, Config e Relay ainda não se reportam ao painel.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 640 170" role="img" aria-label="O Emulador envia versão e licença e o Monitor envia Wi-Fi, localização e bateria para o Painel ScanTE Admin">
+        <rect class="diagram-box" x="8" y="18" width="190" height="46" rx="8"/>
+        <text class="diagram-text" x="103" y="46" font-size="13" text-anchor="middle">Emulador Telnet</text>
+
+        <rect class="diagram-box" x="8" y="106" width="190" height="46" rx="8"/>
+        <text class="diagram-text" x="103" y="134" font-size="13" text-anchor="middle">Monitor</text>
+
+        <rect class="diagram-box-accent" x="430" y="35" width="202" height="100" rx="10"/>
+        <text class="diagram-text" x="531" y="68" font-size="14" font-weight="700" text-anchor="middle">Painel ScanTE Admin</text>
+        <text class="diagram-label" x="531" y="90" font-size="10.5" text-anchor="middle">Dispositivos · Licenças</text>
+        <text class="diagram-label" x="531" y="105" font-size="10.5" text-anchor="middle">Cerca digital · Chamados</text>
+
+        <defs>
+          <marker id="arrow-hub" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+            <polygon points="0,0 8,4 0,8" fill="currentColor"/>
+          </marker>
+        </defs>
+        <path d="M198,41 C300,41 330,62 428,72" fill="none" stroke="currentColor" stroke-width="1.6" marker-end="url(#arrow-hub)"/>
+        <text class="diagram-label" x="240" y="33" font-size="10">versão + licença</text>
+
+        <path d="M198,129 C300,129 330,108 428,98" fill="none" stroke="currentColor" stroke-width="1.6" marker-end="url(#arrow-hub)"/>
+        <text class="diagram-label" x="240" y="152" font-size="10">Wi-Fi + GPS + bateria</text>
+      </svg>
+      <figcaption>O Emulador avisa o painel da versão e da licença; o Monitor envia roteador Wi-Fi, localização e bateria. Os dois chegam na mesma linha de dispositivo.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="wordmark">Scan<span>TE</span></div>
+    <p>Da tela verde do terminal ao controle da frota de coletores.</p>
+    <p class="contact">Contato — <b>scante@scante.com.br</b></p>
+  </div>
+</footer>
