@@ -80,7 +80,9 @@
   </div>
 </div>
 
-<!-- Bloqueio de edição de conexão -->
+<!-- Bloqueio de edição de conexão — só na empresa de teste interna (id 4, Scan TE Produção).
+     Empresas de cliente configuram isso sozinhas em Empresa > Aparência. -->
+<?php if ((int)$empresa['id'] === 4): ?>
 <div class="card mb-3">
   <div class="card-body">
     <h6 class="fw-bold mb-1"><i class="bi bi-lock me-2"></i>Bloqueio de edição de conexão</h6>
@@ -108,6 +110,7 @@
     </form>
   </div>
 </div>
+<?php endif; ?>
 
 <!-- Licenças da empresa -->
 <div class="card">

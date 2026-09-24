@@ -109,9 +109,14 @@ class EmpresasController extends Controller {
         $this->redirect('/admin/empresas/' . (int)$id);
     }
 
-    /** Liga/desliga e configura o bloqueio de edição de conexão (usuário/senha) da empresa. */
+    /**
+     * Liga/desliga e configura o bloqueio de edição de conexão (usuário/senha).
+     * Só pela empresa de teste interna (id 4) — empresas de cliente configuram
+     * isso sozinhas em Empresa > Aparência, não pelo painel geral.
+     */
     public function lockConexao(string $id): void {
         Auth::requireAdmin();
+        if ((int)$id !== 4) { $this->redirect('/admin/empresas'); }
         $model   = new Empresa();
         $empresa = $model->findById((int)$id);
         if (!$empresa) { $this->redirect('/admin/empresas'); }
