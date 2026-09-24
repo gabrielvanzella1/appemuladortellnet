@@ -35,6 +35,9 @@ class HostsActivity : AppCompatActivity() {
     private lateinit var adapter: HostsAdapter
     private var currentHosts: List<SavedConnection> = emptyList()
 
+    // Uma vez digitado certo, não pede de novo até o app fechar (evita repetir a cada ação).
+    private var connectionUnlockedThisSession = false
+
     companion object {
         // Garante a conexao automatica apenas uma vez por inicializacao do app
         private var didAutoConnect = false
@@ -356,7 +359,8 @@ class HostsActivity : AppCompatActivity() {
      * Só se aplica a editar uma conexão já existente, nunca a criar a primeira.
      */
     private fun withConnectionUnlock(action: () -> Unit) {
-        if (!com.logisticapp.emuladortelnet.settings.CompanyConfigStore.isConnectionLocked(this)) {
+        if (connectionUnlockedThisSession ||
+            !com.logisticapp.emuladortelnet.settings.CompanyConfigStore.isConnectionLocked(this)) {
             action()
             return
         }
@@ -365,16 +369,32 @@ class HostsActivity : AppCompatActivity() {
         val inputPass = view.findViewById<EditText>(R.id.input_lock_senha)
         AlertDialog.Builder(this)
             .setTitle("Edição bloqueada")
-            .setMessage("Digite o usuário e a senha da empresa pra editar essa conexão.")
+            .setMessage("Digite o usuário e a senha da empresa pra continuar.")
             .setView(view)
             .setPositiveButton("Confirmar") { _, _ ->
                 val ok = com.logisticapp.emuladortelnet.settings.CompanyConfigStore.checkConnectionLockCredentials(
                     this, inputUser.text.toString(), inputPass.text.toString()
                 )
-                if (ok) action() else toast("Usuário ou senha incorretos.")
+                if (ok) {
+                    connectionUnlockedThisSession = true
+                    action()
+                } else {
+                    toast("Usuário ou senha incorretos.")
+                }
             }
             .setNegativeButton("Cancelar", null)
             .show()
+    }
+
+    /** Pede desbloqueio antes do menu de 3 pontinhos aparecer, quando o bloqueio está ativo. */
+    override fun onMenuOpened(featureId: Int, menu: Menu): Boolean {
+        if (featureId == android.view.Window.FEATURE_OPTIONS_PANEL &&
+            !connectionUnlockedThisSession &&
+            com.logisticapp.emuladortelnet.settings.CompanyConfigStore.isConnectionLocked(this)) {
+            withConnectionUnlock { openOptionsMenu() }
+            return false
+        }
+        return super.onMenuOpened(featureId, menu)
     }
 
     /**
