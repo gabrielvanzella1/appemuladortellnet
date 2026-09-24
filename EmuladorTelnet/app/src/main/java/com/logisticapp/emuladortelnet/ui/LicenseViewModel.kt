@@ -75,11 +75,7 @@ class LicenseViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             withContext(NonCancellable) {
                 try {
-                    // A resposta diz se a empresa usa a cerca digital: liga/desliga o envio de sinais
                     apiService.pingServidor(deviceId, deviceNome, appVersion, licenseKey)
-                        .onSuccess { rastreamento ->
-                            com.logisticapp.emuladortelnet.cerca.CercaReporter.definirAtiva(getApplication(), rastreamento)
-                        }
                     Timber.d("Ping enviado com sucesso")
                 } catch (e: Exception) {
                     Timber.w(e, "Ping ao servidor falhou: ${e.message}")

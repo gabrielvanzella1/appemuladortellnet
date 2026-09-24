@@ -272,7 +272,6 @@ class HostsActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         adapter.notifyDataSetChanged()
-        com.logisticapp.emuladortelnet.cerca.CercaPermissao.verificar(this)
     }
 
     private fun showPopupMenu(host: SavedConnection, anchor: View) {
