@@ -15,4 +15,4 @@
 | P-11 | ~~Código atual ainda não enviado ao GitHub~~ — enviado em 24/09 (`main` em `1aaca9a`). Falta atualizar a pasta principal do trabalho (`appEmuladorTellnet`, ainda com o admin como submódulo) | Rastreabilidade | Gabriel | Feito (push) |
 | P-12 | Apagar os dados simulados (SIM-*) da empresa "Scan TE Produção" depois da apresentação (`seed_cerca_demo.php --empresa=4 --limpar`) | Limpeza | ScanTE | Pós-apresentação |
 | P-13 | Implantar em ~500 MC33 sem MDM exige instalar, ativar (digitar chave) e dar 5 permissões em cada aparelho. Avaliar instalação em massa (ex.: Zebra StageNow) e ativação sem digitar chave [NAO CONFIRMADO] | Implantação em escala | ScanTE | Pós-apresentação |
-| P-14 | `scripts/preparar-demo-cerca.ps1` aponta para a pasta `emulador-unificacao`; ajustar quando o código for unificado | Manutenção | ScanTE | Após o push |
+| P-14 | ~~`scripts/preparar-demo-cerca.ps1` aponta para a pasta `emulador-unificacao`~~ — agora usa caminhos relativos ao repositório e acha o PHP sozinho (testado em 24/09) | Manutenção | ScanTE | Feito |

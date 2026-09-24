@@ -11,10 +11,14 @@
 param([int]$Minutos = 120)
 $ErrorActionPreference = 'Stop'
 
-# ponytail: caminhos fixos da worktree 'unificacao'; ajustar quando o código for unificado na pasta principal
-$admin  = 'C:\Users\7700924385\web\trabalho\emulador-unificacao\scante-admin'
-$apiKt  = 'C:\Users\7700924385\web\trabalho\emulador-unificacao\scante-monitor\app\src\main\java\com\logisticapp\scantemonitor\Api.kt'
-$php    = 'C:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.exe'
+# Caminhos relativos ao próprio repositório (funciona em qualquer máquina que tenha o clone)
+$raiz   = Split-Path $PSScriptRoot -Parent
+$admin  = Join-Path $raiz 'scante-admin'
+$apiKt  = Join-Path $raiz 'scante-monitor\app\src\main\java\com\logisticapp\scantemonitor\Api.kt'
+# PHP: o do PATH; senão, o do Laragon
+$php    = (Get-Command php -ErrorAction SilentlyContinue).Source
+if (-not $php) { $php = Get-ChildItem 'C:\laragon\bin\php\*\php.exe' -ErrorAction SilentlyContinue | Select-Object -Last 1 -ExpandProperty FullName }
+if (-not $php) { throw "PHP nao encontrado (instale o PHP ou o Laragon)" }
 $remoto = 'cd ~/domains/scante.com.br/public_html/scante-admin && php -- --empresa=4'
 
 # URL e segredo lidos do próprio app (não são impressos)
