@@ -27,4 +27,21 @@ class DashboardController extends Controller {
             'flash'     => $this->getFlash(),
         ], 'empresa');
     }
+
+    /** Liga/desliga e configura o bloqueio de edição de conexão (usuário/senha) da própria empresa. */
+    public function lockConexao(): void {
+        Auth::requireEmpresa();
+        $empresaId = Auth::empresaId();
+
+        if ($this->isPost()) {
+            (new Empresa())->salvarLockConexao(
+                $empresaId,
+                $this->input('lock_conexao_ativo', '0') === '1',
+                $this->sanitize($this->input('lock_conexao_usuario', '')),
+                $this->input('lock_conexao_senha', '')
+            );
+            $this->flash('success', 'Bloqueio de edição de conexão salvo.');
+        }
+        $this->redirect('/empresa');
+    }
 }

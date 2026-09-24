@@ -78,6 +78,7 @@ $router->post('/admin/licencas/{id}/transferir',    'Admin/LicencasController', 
 
 // Empresa
 $router->get( '/empresa',                                      'Empresa/DashboardController', 'index');
+$router->post('/empresa/lock-conexao',                         'Empresa/DashboardController', 'lockConexao');
 $router->get( '/empresa/licencas',                             'Empresa/LicencasController',  'index');
 $router->get( '/empresa/licencas/{id}',                        'Empresa/LicencasController',  'ver');
 $router->post('/empresa/licencas/{id}/transferir',             'Empresa/LicencasController',  'solicitarTransferencia');

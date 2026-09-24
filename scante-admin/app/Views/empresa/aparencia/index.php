@@ -115,34 +115,6 @@ $presetsJson = htmlspecialchars(json_encode($presets), ENT_QUOTES);
       </div>
     </div>
 
-    <div class="card mb-3">
-      <div class="card-body">
-        <h6 class="fw-bold mb-3">Bloqueio de edição de conexão</h6>
-        <p class="text-muted mb-3" style="font-size:.82rem">
-          Quando ativado, editar uma conexão já salva no coletor passa a pedir usuário e senha.
-          Criar a primeira conexão (coletor sem nenhuma ainda) continua livre.
-        </p>
-        <div class="form-check form-switch mb-3">
-          <input class="form-check-input" type="checkbox" id="lock_conexao_ativo" name="lock_conexao_ativo" value="1"
-                 <?= !empty($empresa['lock_conexao_ativo']) ? 'checked' : '' ?>>
-          <label class="form-check-label" for="lock_conexao_ativo">Exigir usuário/senha pra editar conexão</label>
-        </div>
-        <div class="row g-3">
-          <div class="col-6">
-            <label class="form-label" style="font-size:.82rem">Usuário</label>
-            <input type="text" class="form-control" name="lock_conexao_usuario" maxlength="100"
-                   value="<?= htmlspecialchars($empresa['lock_conexao_usuario'] ?? '') ?>">
-          </div>
-          <div class="col-6">
-            <label class="form-label" style="font-size:.82rem">Senha</label>
-            <input type="text" class="form-control" name="lock_conexao_senha" maxlength="100"
-                   value="<?= htmlspecialchars($empresa['lock_conexao_senha'] ?? '') ?>">
-          </div>
-        </div>
-        <div class="form-text">Só bloqueia de fato se estiver ativado <strong>e</strong> usuário/senha preenchidos.</div>
-      </div>
-    </div>
-
     <button type="submit" class="btn btn-accent"><i class="bi bi-check-lg me-1"></i> Salvar aparência</button>
   </div>
 
