@@ -42,6 +42,11 @@
             </intent-filter>
         </activity>
 
+        <!-- Ativacao por chave (trial ou vitalicia) -->
+        <activity
+            android:name=".ActivationActivity"
+            android:exported="false" />
+
         <!-- Tela estatica de ajuda sobre ativacao -->
         <activity
             android:name=".AjudaActivity"
