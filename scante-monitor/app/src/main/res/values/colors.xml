@@ -1,0 +1,7 @@
+<resources>
+    <color name="primaria">#0F2A3D</color>
+    <color name="destaque">#00D67A</color>
+    <color name="fundo">#F4F6F9</color>
+    <color name="texto">#1F2937</color>
+    <color name="texto_sec">#6B7280</color>
+</resources>

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/fundo">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textColor="@color/primaria"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:text="Controle, localização e bateria do coletor"
+            android:textColor="@color/texto_sec" />
+
+        <!-- Ativação -->
+        <LinearLayout
+            android:id="@+id/container_ativacao"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="Ative com a chave de licença ScanTE da empresa. O coletor passa a aparecer no painel da empresa."
+                android:textColor="@color/texto" />
+
+            <EditText
+                android:id="@+id/input_chave"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="SCTE-XXXXXX-XXXXXX-XXXXXX"
+                android:inputType="textCapCharacters|textNoSuggestions"
+                android:maxLength="25"
+                android:fontFamily="monospace" />
+
+            <EditText
+                android:id="@+id/input_nome"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="Nome do coletor (ex.: número de série)"
+                android:inputType="text" />
+
+            <Button
+                android:id="@+id/btn_ativar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="@color/primaria"
+                android:text="Ativar"
+                android:textColor="@android:color/white" />
+
+            <TextView
+                android:id="@+id/txt_resultado"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Bloqueado (ativado, mas sem a senha do coletor ainda) -->
+        <TextView
+            android:id="@+id/txt_bloqueado"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:padding="24dp"
+            android:text="🔒  Coletor monitorado — toque para desbloquear"
+            android:textColor="@color/texto_sec"
+            android:visibility="gone" />
+
+        <!-- Status -->
+        <LinearLayout
+            android:id="@+id/container_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/txt_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card"
+                android:lineSpacingExtra="3dp"
+                android:padding="16dp"
+                android:textColor="@color/texto"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/btn_permissoes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="@color/primaria"
+                android:text="Revisar permissões"
+                android:textColor="@android:color/white" />
+
+            <Button
+                android:id="@+id/btn_enviar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/destaque"
+                android:text="Enviar agora"
+                android:textColor="@color/primaria" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="16dp"
+                android:background="#E5E7EB" />
+
+            <Button
+                android:id="@+id/btn_trocar_senha"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:text="Trocar senha do coletor" />
+
+            <Button
+                android:id="@+id/btn_desativar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:text="Desativar monitoramento"
+                android:textColor="#B3261E" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
