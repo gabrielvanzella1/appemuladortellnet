@@ -28,6 +28,7 @@ class HostConfigActivity : AppCompatActivity() {
     private lateinit var btnConnect: Button
 
     companion object {
+        const val EXTRA_HOST_ID = "host_id"
         const val EXTRA_PREFILL_NAME = "prefill_name"
         const val EXTRA_PREFILL_HOST = "prefill_host"
         const val EXTRA_PREFILL_PORT = "prefill_port"
@@ -55,9 +56,12 @@ class HostConfigActivity : AppCompatActivity() {
         inputPort.setText("23")
 
         editAllMode = intent.getBooleanExtra(EXTRA_EDIT_ALL, false)
+        val hostId = intent.getIntExtra(EXTRA_HOST_ID, -1)
         if (editAllMode) {
             supportActionBar?.title = "Editar Conexão"
             loadFirstHostForEditAll()
+        } else if (hostId > 0) {
+            loadExistingHost(hostId)
         } else {
             supportActionBar?.title = "Novo Host"
             // Pre-fill from template (if launched from TemplatesActivity)
@@ -100,6 +104,19 @@ class HostConfigActivity : AppCompatActivity() {
         }
     }
 
+    private fun loadExistingHost(id: Int) {
+        lifecycleScope.launch {
+            val host = repository.getConnectionById(id)
+            if (host != null) {
+                existingHost = host
+                inputName.setText(host.name)
+                inputHost.setText(host.host)
+                inputPort.setText(host.port.toString())
+                supportActionBar?.title = "Editar Host"
+            }
+        }
+    }
+
     private fun buildConnection(): SavedConnection? {
         val name = inputName.text.toString().trim()
         val host = inputHost.text.toString().trim()
@@ -122,14 +139,22 @@ class HostConfigActivity : AppCompatActivity() {
     private fun saveHost(then: ((SavedConnection) -> Unit)? = null) {
         val connection = buildConnection() ?: return
         lifecycleScope.launch {
-            if (editAllMode) {
-                repository.updateAllConnectionsIdentity(connection.name, connection.host, connection.port)
-                existingHost = connection
-                Timber.d("Nome/Host/Porta aplicados a todas as sessões: ${connection.name}")
-            } else {
-                val newId = repository.saveConnection(connection).toInt()
-                existingHost = connection.copy(id = newId)
-                Timber.d("Host salvo: ${connection.name} id=$newId")
+            when {
+                editAllMode -> {
+                    repository.updateAllConnectionsIdentity(connection.name, connection.host, connection.port)
+                    existingHost = connection
+                    Timber.d("Nome/Host/Porta aplicados a todas as sessões: ${connection.name}")
+                }
+                existingHost != null -> {
+                    repository.updateConnection(connection)
+                    existingHost = connection
+                    Timber.d("Host atualizado: ${connection.name}")
+                }
+                else -> {
+                    val newId = repository.saveConnection(connection).toInt()
+                    existingHost = connection.copy(id = newId)
+                    Timber.d("Host salvo: ${connection.name} id=$newId")
+                }
             }
             if (then != null) {
                 then.invoke(existingHost ?: connection)

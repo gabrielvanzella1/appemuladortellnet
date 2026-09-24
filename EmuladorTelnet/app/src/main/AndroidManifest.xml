@@ -58,12 +58,6 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- 4. Configuracoes avancadas do host -->
-        <activity
-            android:name=".HostAdvancedActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-
         <!-- Opcoes gerais do app -->
         <activity
             android:name=".GeneralOptionsActivity"

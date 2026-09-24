@@ -284,7 +284,7 @@ class HostsActivity : AppCompatActivity() {
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 1 -> connectToHost(host)
-                3 -> openHostAdvanced(hostId = host.id)
+                3 -> openHostConfig(hostId = host.id)
                 4 -> confirmDelete(host)
             }
             true
@@ -393,10 +393,10 @@ class HostsActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun openHostAdvanced(hostId: Int) {
+    private fun openHostConfig(hostId: Int) {
         withConnectionUnlock {
-            val intent = Intent(this, HostAdvancedActivity::class.java)
-            intent.putExtra(HostAdvancedActivity.EXTRA_HOST_ID, hostId)
+            val intent = Intent(this, HostConfigActivity::class.java)
+            intent.putExtra(HostConfigActivity.EXTRA_HOST_ID, hostId)
             startActivity(intent)
         }
     }
