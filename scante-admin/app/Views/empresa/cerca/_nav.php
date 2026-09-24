@@ -8,6 +8,7 @@ $estados = [
     'sem_comunicacao'    => ['Sem comunicação',      'danger',    'bi-wifi-off'],
     'fora_do_expediente' => ['Fora do expediente',   'secondary', 'bi-moon'],
     'sem_cerca'          => ['Cerca não configurada','info',      'bi-question-circle'],
+    'sem_localizacao'    => ['Sem localização',      'info',      'bi-geo'],
     'sem_dados'          => ['Sem dados',            'light',     'bi-dash-circle'],
 ];
 $tiposAlerta = [

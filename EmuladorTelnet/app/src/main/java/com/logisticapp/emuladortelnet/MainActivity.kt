@@ -188,6 +188,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         if (slotId >= 0) binding.btnBackSessions.visibility = View.VISIBLE
         updateSessionBadge()
+        com.logisticapp.emuladortelnet.cerca.CercaPermissao.verificar(this)
         // Re-aplica configurações que podem ter sido alteradas em telas de configuração
         applyViewModelSettings()
         viewModel.refreshDisplay()

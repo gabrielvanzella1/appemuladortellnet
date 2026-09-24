@@ -31,5 +31,10 @@ class EmuladorTelnetApplication : Application() {
         } catch (e: Exception) {
             Timber.e(e, "Erro ao inicializar licença")
         }
+
+        // Cerca digital: retoma o envio se a empresa já tinha a cerca ativa (o ping confirma depois)
+        if (com.logisticapp.emuladortelnet.cerca.CercaReporter.estaAtiva(this)) {
+            com.logisticapp.emuladortelnet.cerca.CercaReporter.iniciar(this)
+        }
     }
 }

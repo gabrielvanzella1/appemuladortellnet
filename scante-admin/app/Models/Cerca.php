@@ -59,8 +59,9 @@ class Cerca extends Model {
         if ($agora - self::utcTs($disp['ultimo_sinal_em']) > $limite) {
             return self::emExpediente($empresa, $agora) ? 'sem_comunicacao' : 'fora_do_expediente';
         }
+        if (empty($disp['ultimo_bssid'])) return 'sem_localizacao'; // app sem permissão / Localização desligada
         if (!$cerca) return 'sem_cerca';
-        return isset($cerca[$disp['ultimo_bssid'] ?? '']) ? 'dentro' : 'fora_da_cerca';
+        return isset($cerca[$disp['ultimo_bssid']]) ? 'dentro' : 'fora_da_cerca';
     }
 
     /** Normaliza e valida um sinal vindo do app. Retorna null se inválido. */
@@ -189,14 +190,14 @@ class Cerca extends Model {
                     "Sem sinal por {$min} min", $s['em']);
             }
 
-            // Cerca (só depois que a empresa marcou algum roteador)
-            if ($cerca) {
-                $dentro = $s['bssid'] && isset($cerca[$s['bssid']]);
+            // Cerca (só depois que a empresa marcou algum roteador). Sinal sem roteador
+            // (sem permissão de localização ou Localização desligada) = local desconhecido:
+            // não abre nem fecha alerta de cerca.
+            if ($cerca && $s['bssid']) {
+                $dentro = isset($cerca[$s['bssid']]);
                 $aberto = $this->alertaAberto($device, 'fora_da_cerca');
                 if (!$dentro && !$aberto) {
-                    $det = $s['bssid']
-                        ? 'Conectado a ' . ($s['ssid'] ?? 'rede') . " ({$s['bssid']}), fora da cerca"
-                        : 'Sem Wi-Fi';
+                    $det = 'Conectado a ' . ($s['ssid'] ?? 'rede') . " ({$s['bssid']}), fora da cerca";
                     $this->abrirAlerta($eid, $device, $nome, 'fora_da_cerca', $s['em'], $s['bssid'], $det);
                 } elseif ($dentro && $aberto) {
                     $this->fecharAlerta((int)$aberto['id'], $s['em']);

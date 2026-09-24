@@ -2,6 +2,7 @@ package com.logisticapp.emuladortelnet.license
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -30,6 +31,7 @@ class LicenseApiService {
         val configJson: String = ""
     )
 
+    /** Retorna se a empresa do dispositivo usa a cerca digital (campo "rastreamento" do servidor). */
     suspend fun pingServidor(
         deviceId: String,
         deviceNome: String,
@@ -37,27 +39,52 @@ class LicenseApiService {
         licenseKey: String?
     ): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
-            val url = URL("$BASE_URL/api/dispositivo/ping")
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "POST"
-                setRequestProperty("Content-Type", "application/json")
-                setRequestProperty("Authorization", "Bearer $API_SECRET")
-                setRequestProperty("X-API-KEY", API_SECRET)  // fallback: Apache remove o Authorization em hosts compartilhados
-                connectTimeout = TIMEOUT_MS
-                readTimeout = TIMEOUT_MS
-                doOutput = true
-            }
             val body = JSONObject().apply {
                 put("device_id",   deviceId)
                 put("device_nome", deviceNome)
                 put("app_version", appVersion)
                 if (licenseKey != null) put("license_key", licenseKey)
-            }.toString()
-            OutputStreamWriter(conn.outputStream).use { it.write(body) }
-            conn.responseCode
-            Result.success(true)
+            }
+            val resp = postJson("/api/dispositivo/ping", body)
+            Result.success(resp?.optBoolean("rastreamento", false) ?: false)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Envia um lote de sinais da cerca digital (roteador Wi-Fi + bateria).
+     * Retorna se a cerca continua ativa para a empresa (false = o app deve parar de enviar).
+     */
+    suspend fun enviarSinais(deviceId: String, sinais: JSONArray): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            val resp = postJson("/api/dispositivo/sinal", JSONObject().put("device_id", deviceId).put("sinais", sinais))
+                ?: return@withContext Result.failure(IllegalStateException("Resposta inválida do servidor"))
+            if (!resp.optBoolean("ok", false)) return@withContext Result.failure(IllegalStateException(resp.optString("erro")))
+            Result.success(resp.optBoolean("rastreamento", false))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /** POST JSON autenticado; devolve o JSON da resposta (ou null se não for JSON). */
+    private fun postJson(path: String, body: JSONObject): JSONObject? {
+        val conn = (URL("$BASE_URL$path").openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            setRequestProperty("Content-Type", "application/json")
+            setRequestProperty("Authorization", "Bearer $API_SECRET")
+            setRequestProperty("X-API-KEY", API_SECRET)  // fallback: Apache remove o Authorization em hosts compartilhados
+            connectTimeout = TIMEOUT_MS
+            readTimeout = TIMEOUT_MS
+            doOutput = true
+        }
+        try {
+            OutputStreamWriter(conn.outputStream).use { it.write(body.toString()) }
+            val stream = if (conn.responseCode in 200..299) conn.inputStream else conn.errorStream
+            val text = stream?.let { BufferedReader(InputStreamReader(it)).use { r -> r.readText() } } ?: return null
+            return try { JSONObject(text) } catch (e: Exception) { null }
+        } finally {
+            conn.disconnect()
         }
     }
 

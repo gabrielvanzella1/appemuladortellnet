@@ -39,6 +39,7 @@ check(Cerca::estadoDe(['ultimo_sinal_em' => null], $emp, $cerca, $agora) === 'se
 check(Cerca::estadoDe($sinal(60, 'aa:aa:aa:aa:aa:01'), $emp, $cerca, $agora) === 'dentro', 'dentro');
 check(Cerca::estadoDe($sinal(60, 'bb:bb:bb:bb:bb:bb'), $emp, $cerca, $agora) === 'fora_da_cerca', 'fora da cerca');
 check(Cerca::estadoDe($sinal(60, 'bb:bb:bb:bb:bb:bb'), $emp, [], $agora) === 'sem_cerca', 'sem cerca configurada');
+check(Cerca::estadoDe($sinal(60, null), $emp, $cerca, $agora) === 'sem_localizacao', 'sinal sem roteador = sem localizacao (nao e fora da cerca)');
 check(Cerca::estadoDe($sinal(1200, 'aa:aa:aa:aa:aa:01'), $emp, $cerca, $agora) === 'sem_comunicacao', '20 min sem sinal no expediente');
 check(Cerca::estadoDe($sinal(1200, 'aa:aa:aa:aa:aa:01'), $emp, $cerca, $tsLocal('2026-09-21 23:00')) === 'fora_do_expediente', 'sem sinal fora do expediente');
 
@@ -106,6 +107,10 @@ try {
     check($meu['estado'] === 'dentro' && $meu['zona'] === 'Estoque', 'painel mostra dentro / Estoque');
     $novo = $db->queryOne("SELECT na_cerca FROM pontos_acesso WHERE empresa_id = ? AND bssid = ?", [$eid, $aps[2]]);
     check($novo !== null && (int)$novo['na_cerca'] === 0, 'roteador vizinho descoberto sozinho, fora da cerca');
+
+    // Sinal sem roteador (sem permissao/Localizacao desligada) nao abre alerta de cerca
+    $cerca->registrarSinais($cerca->contextoDoDispositivo($dev), [['capturado_em' => $now - 45, 'bateria' => 13]], null);
+    check((int)$db->queryOne("SELECT COUNT(*) n FROM dispositivo_alertas WHERE device_id = ? AND fim_em IS NULL", [$dev])['n'] === 0, 'sinal sem roteador nao abre fora da cerca');
 
     // Reenvio (app mandou de novo) nao duplica alertas
     $cerca->registrarSinais($cerca->contextoDoDispositivo($dev), [['capturado_em' => $now - 30, 'bssid' => $aps[1], 'bateria' => 13]], null);
