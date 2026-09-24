@@ -109,6 +109,25 @@ class EmpresasController extends Controller {
         $this->redirect('/admin/empresas/' . (int)$id);
     }
 
+    /** Liga/desliga e configura o bloqueio de edição de conexão (usuário/senha) da empresa. */
+    public function lockConexao(string $id): void {
+        Auth::requireAdmin();
+        $model   = new Empresa();
+        $empresa = $model->findById((int)$id);
+        if (!$empresa) { $this->redirect('/admin/empresas'); }
+
+        if ($this->isPost()) {
+            $model->salvarLockConexao(
+                (int)$id,
+                $this->input('lock_conexao_ativo', '0') === '1',
+                $this->sanitize($this->input('lock_conexao_usuario', '')),
+                $this->input('lock_conexao_senha', '')
+            );
+            $this->flash('success', 'Bloqueio de edição de conexão salvo.');
+        }
+        $this->redirect('/admin/empresas/' . (int)$id);
+    }
+
     public function gerarLicencas(string $id): void {
         Auth::requireAdmin();
         $empresa = (new Empresa())->findById((int)$id);

@@ -80,6 +80,35 @@
   </div>
 </div>
 
+<!-- Bloqueio de edição de conexão -->
+<div class="card mb-3">
+  <div class="card-body">
+    <h6 class="fw-bold mb-1"><i class="bi bi-lock me-2"></i>Bloqueio de edição de conexão</h6>
+    <small class="text-muted d-block mb-3">Quando ativado, editar uma conexão já salva no coletor pede esse usuário/senha.
+      Criar a primeira conexão continua livre.</small>
+    <form method="post" action="<?= APP_URL ?>/admin/empresas/<?= $empresa['id'] ?>/lock-conexao">
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="lock_conexao_ativo" name="lock_conexao_ativo" value="1"
+               <?= !empty($empresa['lock_conexao_ativo']) ? 'checked' : '' ?>>
+        <label class="form-check-label" for="lock_conexao_ativo">Exigir usuário/senha pra editar conexão</label>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label" style="font-size:.82rem">Usuário</label>
+          <input type="text" class="form-control" name="lock_conexao_usuario" maxlength="100"
+                 value="<?= htmlspecialchars($empresa['lock_conexao_usuario'] ?? '') ?>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" style="font-size:.82rem">Senha</label>
+          <input type="text" class="form-control" name="lock_conexao_senha" maxlength="100"
+                 value="<?= htmlspecialchars($empresa['lock_conexao_senha'] ?? '') ?>">
+        </div>
+      </div>
+      <button class="btn btn-sm btn-accent"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+    </form>
+  </div>
+</div>
+
 <!-- Licenças da empresa -->
 <div class="card">
   <div class="card-body">

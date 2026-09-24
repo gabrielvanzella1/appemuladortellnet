@@ -54,6 +54,7 @@ $router->post('/admin/empresas/{id}/editar',        'Admin/EmpresasController', 
 $router->get( '/admin/empresas/{id}/excluir',       'Admin/EmpresasController',  'excluir');
 $router->post('/admin/empresas/{id}/gerar-licencas','Admin/EmpresasController',  'gerarLicencas');
 $router->post('/admin/empresas/{id}/rastreamento', 'Admin/EmpresasController',  'rastreamento');
+$router->post('/admin/empresas/{id}/lock-conexao', 'Admin/EmpresasController',  'lockConexao');
 $router->get( '/admin/manual',                      'Admin/ManualController',       'index');
 $router->get( '/admin/configuracoes',               'Admin/ConfiguracoesController', 'index');
 $router->post('/admin/configuracoes/salvar',         'Admin/ConfiguracoesController', 'salvar');
