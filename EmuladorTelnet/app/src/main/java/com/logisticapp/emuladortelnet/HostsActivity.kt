@@ -343,9 +343,38 @@ class HostsActivity : AppCompatActivity() {
             toast("Nenhuma sessão cadastrada. Use o + para criar a primeira.")
             return
         }
-        val intent = Intent(this, HostConfigActivity::class.java)
-        intent.putExtra(HostConfigActivity.EXTRA_EDIT_ALL, true)
-        startActivity(intent)
+        withConnectionUnlock {
+            val intent = Intent(this, HostConfigActivity::class.java)
+            intent.putExtra(HostConfigActivity.EXTRA_EDIT_ALL, true)
+            startActivity(intent)
+        }
+    }
+
+    /**
+     * Roda [action] direto, ou pede usuário/senha da empresa antes se o bloqueio de
+     * edição de conexão estiver ativo (CompanyConfigStore — configurado no painel).
+     * Só se aplica a editar uma conexão já existente, nunca a criar a primeira.
+     */
+    private fun withConnectionUnlock(action: () -> Unit) {
+        if (!com.logisticapp.emuladortelnet.settings.CompanyConfigStore.isConnectionLocked(this)) {
+            action()
+            return
+        }
+        val view = layoutInflater.inflate(R.layout.dialog_connection_unlock, null)
+        val inputUser = view.findViewById<EditText>(R.id.input_lock_usuario)
+        val inputPass = view.findViewById<EditText>(R.id.input_lock_senha)
+        AlertDialog.Builder(this)
+            .setTitle("Edição bloqueada")
+            .setMessage("Digite o usuário e a senha da empresa pra editar essa conexão.")
+            .setView(view)
+            .setPositiveButton("Confirmar") { _, _ ->
+                val ok = com.logisticapp.emuladortelnet.settings.CompanyConfigStore.checkConnectionLockCredentials(
+                    this, inputUser.text.toString(), inputPass.text.toString()
+                )
+                if (ok) action() else toast("Usuário ou senha incorretos.")
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     /**
@@ -365,9 +394,11 @@ class HostsActivity : AppCompatActivity() {
     }
 
     private fun openHostAdvanced(hostId: Int) {
-        val intent = Intent(this, HostAdvancedActivity::class.java)
-        intent.putExtra(HostAdvancedActivity.EXTRA_HOST_ID, hostId)
-        startActivity(intent)
+        withConnectionUnlock {
+            val intent = Intent(this, HostAdvancedActivity::class.java)
+            intent.putExtra(HostAdvancedActivity.EXTRA_HOST_ID, hostId)
+            startActivity(intent)
+        }
     }
 
     private fun confirmDelete(host: SavedConnection) {

@@ -66,6 +66,14 @@ class Empresa extends Model {
         $this->db->execute("UPDATE empresas SET config_versao = config_versao + 1 WHERE id = ?", [$id]);
     }
 
+    /** Bloqueio de edição de conexão: ativo só quando ligado E usuário/senha preenchidos. */
+    public function salvarLockConexao(int $id, bool $ativo, string $usuario, string $senha): void {
+        $this->db->execute(
+            "UPDATE empresas SET lock_conexao_ativo=?, lock_conexao_usuario=?, lock_conexao_senha=?, config_versao = config_versao + 1 WHERE id=?",
+            [$ativo ? 1 : 0, $usuario, $senha, $id]
+        );
+    }
+
     /**
      * Busca uma empresa pelo CNPJ, ignorando formatação (pontos/traço/barra).
      * Usado no checkout público pra não deixar a mesma empresa se cadastrar

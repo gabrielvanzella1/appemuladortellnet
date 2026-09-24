@@ -58,6 +58,13 @@ class AparenciaController extends Controller {
         // Upload/remoção da logo
         $this->tratarLogo($empresaId, $empresaModel);
 
+        $empresaModel->salvarLockConexao(
+            $empresaId,
+            $this->input('lock_conexao_ativo', '0') === '1',
+            $this->sanitize($this->input('lock_conexao_usuario', '')),
+            $this->input('lock_conexao_senha', '')
+        );
+
         $this->flash('success', 'Aparência salva! Os coletores vão aplicar na próxima conexão.');
         $this->redirect('/empresa/aparencia');
     }

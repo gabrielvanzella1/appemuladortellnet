@@ -284,7 +284,9 @@ class Licenca extends Model {
         if (!$empresaId) return null;
 
         $emp = $this->db->queryOne(
-            "SELECT config_tema, config_teclas, config_versao FROM empresas WHERE id = ?",
+            "SELECT config_tema, config_teclas, config_versao,
+                    lock_conexao_ativo, lock_conexao_usuario, lock_conexao_senha
+             FROM empresas WHERE id = ?",
             [$empresaId]
         );
         if (!$emp) return null;
@@ -298,14 +300,22 @@ class Licenca extends Model {
             ? APP_URL . '/uploads/logos/' . $empresaId . '.png?v=' . $versao
             : null;
 
+        // Bloqueio de edição de conexão: só vale ligado E com usuário/senha preenchidos.
+        $lockUsuario = (string)($emp['lock_conexao_usuario'] ?? '');
+        $lockSenha   = (string)($emp['lock_conexao_senha'] ?? '');
+        $lock = ((bool)($emp['lock_conexao_ativo'] ?? false)) && $lockUsuario !== '' && $lockSenha !== ''
+            ? ['usuario' => $lockUsuario, 'senha' => $lockSenha]
+            : null;
+
         // Nada configurado ainda: não manda config (app fica no padrão).
-        if ($tema === null && $teclas === null && $logoUrl === null) return null;
+        if ($tema === null && $teclas === null && $logoUrl === null && $lock === null) return null;
 
         return [
-            'versao'   => $versao,
-            'tema'     => $tema,
-            'teclas'   => $teclas,
-            'logo_url' => $logoUrl,
+            'versao'          => $versao,
+            'tema'            => $tema,
+            'teclas'          => $teclas,
+            'logo_url'        => $logoUrl,
+            'lock_conexao'    => $lock,
         ];
     }
 

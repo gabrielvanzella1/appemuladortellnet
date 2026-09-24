@@ -29,6 +29,8 @@ object CompanyConfigStore {
     private const val K_LOGO = "logo_path"
     private const val K_LOGO_VERSAO = "logo_versao"
     private const val LOGO_FILE = "empresa_logo.png"
+    private const val K_LOCK_USUARIO = "lock_usuario"
+    private const val K_LOCK_SENHA = "lock_senha"
 
     private val gson = Gson()
     private fun prefs(c: Context) = c.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -43,12 +45,17 @@ object CompanyConfigStore {
             val tema   = obj.optJSONObject("tema")?.toString() ?: ""
             val teclas = obj.optJSONArray("teclas")?.toString() ?: ""
             val logoUrl = obj.optString("logo_url", "")
+            val lock = obj.optJSONObject("lock_conexao")
+            val lockUsuario = lock?.optString("usuario", "") ?: ""
+            val lockSenha = lock?.optString("senha", "") ?: ""
 
             prefs(c).edit()
                 .putBoolean(K_ACTIVE, true)
                 .putInt(K_VERSAO, versao)
                 .putString(K_TEMA, tema)
                 .putString(K_TECLAS, teclas)
+                .putString(K_LOCK_USUARIO, lockUsuario)
+                .putString(K_LOCK_SENHA, lockSenha)
                 .apply()
 
             if (logoUrl.isNotBlank()) baixarLogoSeNecessario(c, logoUrl, versao) else removerLogo(c)
@@ -71,6 +78,19 @@ object CompanyConfigStore {
 
     /** A empresa definiu teclas? Trava a tela de configuração das barras no app. */
     fun hasKeys(context: Context): Boolean = isActive(context) && toolbars(context) != null
+
+    /** Edição de conexão travada? Só vale com usuário e senha realmente preenchidos. */
+    fun isConnectionLocked(context: Context): Boolean {
+        if (!isActive(context)) return false
+        val p = prefs(context)
+        return p.getString(K_LOCK_USUARIO, "")!!.isNotBlank() && p.getString(K_LOCK_SENHA, "")!!.isNotBlank()
+    }
+
+    /** Confere usuário/senha digitados contra o que a empresa configurou. */
+    fun checkConnectionLockCredentials(context: Context, usuario: String, senha: String): Boolean {
+        val p = prefs(context)
+        return usuario == p.getString(K_LOCK_USUARIO, "") && senha == p.getString(K_LOCK_SENHA, "")
+    }
 
     // ------------------------------------------------------------------
     // Cores — ARGB Int, ou null quando a empresa não definiu (usa o padrão do app)

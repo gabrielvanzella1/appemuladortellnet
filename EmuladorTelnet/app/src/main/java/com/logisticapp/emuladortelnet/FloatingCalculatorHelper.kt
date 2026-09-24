@@ -84,13 +84,13 @@ class FloatingCalculatorHelper(
     private fun scaleFactor(): Float {
         val dm = activity.resources.displayMetrics
         val smallestDp = minOf(dm.widthPixels, dm.heightPixels) / dm.density
-        return (smallestDp / 360f).coerceIn(0.78f, 1f)
+        return (smallestDp / 360f).coerceIn(0.92f, 1.2f)
     }
 
     /** Largura do painel: uma fração da largura real da tela, com limites de conforto. */
     private fun panelWidthPx(): Int {
         val dm = activity.resources.displayMetrics
-        val widthDp = (dm.widthPixels / dm.density * 0.62f).coerceIn(190f, 240f)
+        val widthDp = (dm.widthPixels / dm.density * 0.62f).coerceIn(210f, 280f)
         return (widthDp * dm.density).toInt()
     }
 
