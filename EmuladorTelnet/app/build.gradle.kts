@@ -23,8 +23,8 @@ android {
         applicationId = "com.logisticapp.emuladortelnet"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 4
+        versionName = "1.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
