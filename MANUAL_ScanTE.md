@@ -66,9 +66,10 @@ ScanTE (`www.scante.com.br` / `scante@scante.com.br`).
 
 Lista os servidores (sessões) cadastrados. Cada item mostra o **nome** e o **endereço:porta**.
 
-- **Tocar numa sessão:** abre a configuração dela (nome, IP, porta).
+- **Tocar numa sessão:** conecta (ou retoma, se já estiver ativa).
 - **Botão + (canto inferior):** cria uma nova sessão.
-- **3 pontinhos de cada sessão:** Conectar, Editar, Configuração avançada, Remover.
+- **3 pontinhos de cada sessão:** Conectar/Retomar, **Configuração** (edita Nome/Host/Porta
+  dessa sessão específica), Remover.
 
 ### Menu geral (3 pontos no topo) ✅
 Ações que valem para o app / sessões:
@@ -77,6 +78,7 @@ Ações que valem para o app / sessões:
 |---|---|
 | **Configurações** | Abre o painel de configurações (Comunicação, Emulação, Tela, Dispositivos) |
 | **Novo** | Cria uma nova sessão |
+| **Editar Conexão** | Edita Nome/Host/Porta de uma vez, aplicando a **todas** as sessões salvas |
 | **Remover** | Apaga uma sessão escolhida |
 | **Renomear** | Muda o nome de uma sessão |
 | **Ajuda** | Texto de ajuda rápida |
@@ -86,6 +88,19 @@ Ações que valem para o app / sessões:
 | **Calculadora** | Abre a calculadora flutuante (ver seção 11) |
 | **Opções gerais** | Configurações de comportamento do app (ver seção 7) |
 | **Sobre ScanTE** | Versão e informações do app |
+
+### Bloqueio de edição de conexão ✅
+
+A empresa pode exigir usuário e senha para editar uma conexão já salva ou para abrir o
+menu de 3 pontinhos no topo — configurado pelo painel ScanTE Admin (Dashboard da empresa,
+ou pelo ScanTE em nome dela). **Desligado por padrão.**
+
+- Só afeta **editar** uma conexão existente e o **menu de 3 pontinhos**; criar a primeira
+  conexão (coletor ainda sem nenhuma) continua sempre livre.
+- Uma vez digitado certo, não pede de novo até o app ser fechado por completo — vale pra
+  sessão toda do app.
+- A configuração da empresa (incluindo esse bloqueio) só chega ao aparelho quando o app
+  reinicia do zero (fecha totalmente e abre de novo) — não basta minimizar.
 
 ### 3.1. Modelos de sessão ✅
 
@@ -617,7 +632,8 @@ minimizada para um botão arrastável, sem interromper o trabalho no terminal.
 ### Como abrir
 
 - Na tela de **Sessões** → menu **3 pontos** → **Calculadora**
-- Na tela do **Terminal** → menu **3 pontos** → **Calculadora**
+- Na tela do **Terminal** → menu **3 pontos** → **Calculadora**, ou pelo botão **🖩** na
+  barra do topo (ao lado do botão de mostrar/ocultar teclas), visível assim que conecta
 
 Na primeira vez, o Android pedirá permissão para "exibir sobre outros apps" — toque em
 **Permitir** e volte ao ScanTE; a calculadora abrirá automaticamente.
