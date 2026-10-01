@@ -49,7 +49,7 @@
     <a href="<?= APP_URL ?>/admin/pagamentos" class="nav-link"><i class="bi bi-cash-stack"></i> Pagamentos</a>
 
     <div class="nav-section">Configurações</div>
-    <a href="<?= APP_URL ?>/admin/configuracoes" class="nav-link"><i class="bi bi-sliders"></i> Gateways de Pagamento</a>
+    <a href="<?= APP_URL ?>/admin/configuracoes" class="nav-link"><i class="bi bi-sliders"></i> Configurações</a>
 
     <div class="nav-section">Suporte</div>
     <a href="<?= APP_URL ?>/admin/chamados" class="nav-link"><i class="bi bi-headset"></i> Chamados</a>

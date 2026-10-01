@@ -41,9 +41,4 @@ class Configuracao {
         }
         return $result;
     }
-
-    /** Retorna o gateway ativo: 'pagarme' | 'mercadopago' | 'dev' */
-    public static function gatewayAtivo(): string {
-        return (new self())->get('gateway_ativo', 'dev');
-    }
 }

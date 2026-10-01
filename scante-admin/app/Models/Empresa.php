@@ -73,21 +73,4 @@ class Empresa extends Model {
             [$ativo ? 1 : 0, $usuario, $senha, $id]
         );
     }
-
-    /**
-     * Busca uma empresa pelo CNPJ, ignorando formatação (pontos/traço/barra).
-     * Usado no checkout público pra não deixar a mesma empresa se cadastrar
-     * duas vezes com o CNPJ formatado de jeitos diferentes.
-     */
-    public function findByCnpj(string $cnpj): ?array {
-        $digits = preg_replace('/\D/', '', $cnpj);
-        if (!$digits) return null;
-
-        foreach ($this->db->query("SELECT * FROM empresas WHERE cnpj IS NOT NULL AND cnpj != ''") as $e) {
-            if (preg_replace('/\D/', '', $e['cnpj']) === $digits) {
-                return $e;
-            }
-        }
-        return null;
-    }
 }

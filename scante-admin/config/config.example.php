@@ -20,17 +20,6 @@ define('SESSION_LIFETIME', 7200); // 2 horas
 // Chave secreta para tokens da API (altere para uma string aleatória longa)
 define('API_SECRET', 'MUDE_PARA_UMA_CHAVE_SECRETA_FORTE');
 
-// Pagar.me (https://dashboard.pagar.me)
-// Sandbox: chaves com prefixo sk_test_ / pk_test_
-// Produção: chaves com prefixo sk_ / pk_
-define('PAGARME_SECRET_KEY', 'sk_test_SUA_CHAVE_SECRETA');
-define('PAGARME_PUBLIC_KEY',  'pk_test_SUA_CHAVE_PUBLICA');
-
-// Preços das licenças (R$)
-define('PRECO_MENSAL',    29.90);
-define('PRECO_ANUAL',    199.90);
-define('PRECO_VITALICIA', 499.90);
-
 // Trial do app (dias)
 define('TRIAL_DIAS', 7);
 

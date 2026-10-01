@@ -7,54 +7,10 @@ class Licenca extends Model {
     protected string $table = 'licencas';
 
     /**
-     * Cria a licença "mestre" de um pedido em lote (checkout de empresa):
-     * quantidade de licenças × anos de suporte. As licenças adicionais
-     * (quando quantidade > 1) só são geradas em aprovar(), depois que o
-     * admin aprovar a compra (ver registrarPagamento() e aprovar()).
-     */
-    public function criarPendenteLote(?int $empresaId, int $quantidade, int $anosSuporte, string $email, string $telefone): int {
-        $chave = $this->gerarChave();
-        $this->db->execute(
-            "INSERT INTO licencas (chave, empresa_id, tipo, quantidade, anos_suporte, status, email, telefone, criada_em)
-             VALUES (?, ?, 'anual', ?, ?, 'pendente', ?, ?, NOW())",
-            [$chave, $empresaId, $quantidade, $anosSuporte, $email ?: null, $telefone ?: null]
-        );
-        return (int)$this->db->lastInsertId();
-    }
-
-    /**
-     * Chamado quando o pagamento é confirmado (dev, Bricks, webhook MP/Pagar.me).
-     * NÃO ativa a licença — só registra o payment_id e avisa a equipe por
-     * e-mail. As chaves só passam a valer quando o admin aprovar (ver aprovar()).
-     * Idempotente: se o pagamento já tinha sido registrado, não reenvia o aviso
-     * (importante porque webhooks podem chamar isso mais de uma vez).
-     */
-    public function registrarPagamento(int $id, string $paymentId): void {
-        $licenca = $this->findByIdComEmpresa($id);
-        if (!$licenca || $licenca['payment_id']) return;
-
-        $this->db->execute("UPDATE licencas SET payment_id=? WHERE id=?", [$paymentId, $id]);
-
-        $emailNotificacao = (new Configuracao())->get('email_notificacoes', 'scante@scante.com.br');
-        if ($emailNotificacao) {
-            \App\Services\Mailer::notificarNovaCompra($emailNotificacao, [
-                'licencaId'   => $id,
-                'quantidade'  => max(1, (int)$licenca['quantidade']),
-                'anosSuporte' => (int)$licenca['anos_suporte'],
-                'empresaNome' => $licenca['empresa_nome'] ?? '—',
-                'email'       => $licenca['email'] ?: '—',
-                'telefone'    => $licenca['telefone'] ?: '—',
-                'linkAdmin'   => APP_URL . '/admin/licencas/' . $id,
-            ]);
-        }
-    }
-
-    /**
      * Aprovação manual pelo admin: só aqui as chaves passam a valer de fato.
      * Ativa a licença mestre e, se quantidade > 1, gera as demais licenças do
-     * mesmo pedido (todas com o mesmo payment_id, recuperáveis juntas via
-     * findAllByPaymentId()). Se aprovado sem pagamento online registrado
-     * (ex: negociação manual/boleto fora do sistema), usa um marcador.
+     * mesmo pedido (todas com o mesmo payment_id). Sem pagamento online, usa
+     * um marcador (ex: negociação manual fora do sistema).
      */
     public function aprovar(int $id): void {
         $licenca = $this->findById($id);
@@ -87,14 +43,6 @@ class Licenca extends Model {
                 [$this->gerarChave(), $licenca['empresa_id'], $anosSuporte, $licenca['email'], $licenca['telefone'], $expira, $paymentId]
             );
         }
-    }
-
-    /** Todas as licenças (do mesmo pedido em lote) que compartilham um payment_id. */
-    public function findAllByPaymentId(string $paymentId): array {
-        return $this->db->query(
-            "SELECT * FROM licencas WHERE payment_id = ? ORDER BY id ASC",
-            [$paymentId]
-        );
     }
 
     public function gerar(int $empresaId, string $tipo = 'trial', int $dias = 30): int {

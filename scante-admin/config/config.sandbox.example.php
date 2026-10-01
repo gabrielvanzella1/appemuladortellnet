@@ -27,15 +27,6 @@ define('SESSION_LIFETIME', 7200); // 2 horas
 // do flavor "sandbox" em EmuladorTelnet/app/build.gradle.kts.
 define('API_SECRET', 'c9ce24d6a1e9a583036278736526a82d144e9955b04c9ea490f215f230f592cf');
 
-// Pagar.me — sandbox usa sempre chaves sk_test_ / pk_test_
-define('PAGARME_SECRET_KEY', 'sk_test_SUA_CHAVE_SECRETA');
-define('PAGARME_PUBLIC_KEY',  'pk_test_SUA_CHAVE_PUBLICA');
-
-// Preços das licenças (R$) — pode manter iguais à produção pra teste realista
-define('PRECO_MENSAL',    29.90);
-define('PRECO_ANUAL',    199.90);
-define('PRECO_VITALICIA', 499.90);
-
 // Trial do app (dias)
 define('TRIAL_DIAS', 7);
 

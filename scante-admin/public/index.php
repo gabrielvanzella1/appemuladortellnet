@@ -33,16 +33,6 @@ $router->post('/conta/senha', 'ContaController', 'senha');
 // Página pública de download do ScanTE Relay
 $router->get('/scan-relay', 'RelayDownloadController', 'index');
 
-// Checkout público (sem autenticação)
-$router->get( '/checkout',           'CheckoutController', 'index');
-$router->post('/checkout',           'CheckoutController', 'processar');
-$router->get( '/checkout/pagamento',  'CheckoutController', 'pagamento');
-$router->post('/checkout/pagar',               'CheckoutController', 'pagar');
-$router->post('/checkout/processar-pagamento', 'CheckoutController', 'processarPagamento');
-$router->get( '/checkout/status',     'CheckoutController', 'status');
-$router->get( '/checkout/sucesso',    'CheckoutController', 'sucesso');
-$router->get( '/checkout/cancelado',  'CheckoutController', 'cancelado');
-
 // Admin
 $router->get( '/admin',                             'Admin/DashboardController', 'index');
 $router->get( '/admin/empresas',                    'Admin/EmpresasController',  'index');
@@ -58,7 +48,6 @@ $router->post('/admin/empresas/{id}/lock-conexao', 'Admin/EmpresasController',  
 $router->get( '/admin/manual',                      'Admin/ManualController',       'index');
 $router->get( '/admin/configuracoes',               'Admin/ConfiguracoesController', 'index');
 $router->post('/admin/configuracoes/salvar',         'Admin/ConfiguracoesController', 'salvar');
-$router->post('/admin/configuracoes/limpar-chave',   'Admin/ConfiguracoesController', 'limparChave');
 $router->get( '/admin/pagamentos',                  'Admin/PagamentosController', 'index');
 $router->post('/admin/pagamentos/registrar',        'Admin/PagamentosController', 'registrar');
 $router->get( '/admin/pagamentos/{id}/excluir',     'Admin/PagamentosController', 'excluir');
@@ -101,7 +90,6 @@ $router->post('/empresa/cerca/config',                         'Empresa/CercaCon
 
 // API REST (app Android)
 $router->post('/api/licenca/validar',               'Api/LicencaController',      'validar');
-$router->post('/api/webhook/mercadopago',           'Api/LicencaController',         'webhookMercadoPago');
 $router->post('/api/dispositivo/ping',              'Api/DispositivoController',  'ping');
 $router->post('/api/dispositivo/sinal',             'Api/DispositivoController',  'sinal');
 
