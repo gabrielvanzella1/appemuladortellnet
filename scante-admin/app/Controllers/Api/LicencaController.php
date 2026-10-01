@@ -11,7 +11,7 @@ class LicencaController extends Controller {
     private function autenticar(): void {
         $header = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['HTTP_X_API_KEY'] ?? '';
         $token  = str_replace('Bearer ', '', $header);
-        if ($token !== API_SECRET) {
+        if (!hash_equals(API_SECRET, $token)) {
             $this->json(['erro' => 'Não autorizado.'], 401);
         }
     }

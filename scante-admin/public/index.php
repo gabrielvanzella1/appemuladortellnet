@@ -102,7 +102,6 @@ $router->post('/empresa/cerca/config',                         'Empresa/CercaCon
 // API REST (app Android)
 $router->post('/api/licenca/validar',               'Api/LicencaController',      'validar');
 $router->post('/api/webhook/mercadopago',           'Api/LicencaController',         'webhookMercadoPago');
-$router->post('/api/webhook/pagarme',              'Api/PagarmeWebhookController',  'handle');
 $router->post('/api/dispositivo/ping',              'Api/DispositivoController',  'ping');
 $router->post('/api/dispositivo/sinal',             'Api/DispositivoController',  'sinal');
 
