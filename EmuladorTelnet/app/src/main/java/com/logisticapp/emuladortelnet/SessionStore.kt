@@ -1,6 +1,7 @@
 package com.logisticapp.emuladortelnet
 
 import android.content.Context
+import com.logisticapp.emuladortelnet.data.ConnectionState
 import com.logisticapp.emuladortelnet.database.TelnetRepository
 import com.logisticapp.emuladortelnet.ui.TelnetViewModel
 import com.logisticapp.emuladortelnet.ui.TelnetViewModelFactory
@@ -25,6 +26,14 @@ object SessionStore {
     private val slots = arrayOfNulls<ActiveSession>(MAX)
 
     /**
+     * Uma sessão só conta como "viva" enquanto conectada ou tentando conectar.
+     * ERROR/DISCONNECTED são sessões mortas — não devem bloquear um reconectar de verdade
+     * (ex: caiu no modo avião e o usuário tenta conectar de novo no mesmo host).
+     */
+    private fun isAlive(s: ActiveSession): Boolean =
+        s.viewModel.connectionState.value.let { it == ConnectionState.CONNECTED || it == ConnectionState.CONNECTING }
+
+    /**
      * Abre ou retoma uma sessão.
      * Retorna (slotId, viewModel) se há vaga, ou null se as duas vagas estão ocupadas.
      */
@@ -35,11 +44,13 @@ object SessionStore {
         host: String,
         port: Int
     ): Pair<Int, TelnetViewModel>? {
-        // Sessão já ativa para este host? Retoma o slot existente.
+        // Sessão já ativa (conectada/conectando) para este host? Retoma o slot existente.
         val existingIdx = slots.indexOfFirst { it?.hostId == hostId }
         if (existingIdx >= 0) {
             val s = slots[existingIdx]!!
-            return Pair(s.slotId, s.viewModel)
+            if (isAlive(s)) return Pair(s.slotId, s.viewModel)
+            // Slot travado em erro/desconectado: libera e cria uma sessão nova de verdade.
+            close(s.slotId)
         }
         // Procura slot livre
         val free = slots.indexOfFirst { it == null }
@@ -61,7 +72,7 @@ object SessionStore {
 
     fun getAll(): List<ActiveSession> = slots.filterNotNull()
 
-    fun isActive(hostId: Int): Boolean = slots.any { it?.hostId == hostId }
+    fun isActive(hostId: Int): Boolean = slots.any { it?.hostId == hostId && isAlive(it) }
 
     fun activeCount(): Int = slots.count { it != null }
 

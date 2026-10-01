@@ -180,6 +180,13 @@ class TerminalEmulator(
     private fun handleEsc(ch: Char) {
         when (ch) {
             '[' -> { csiParams.setLength(0); state = State.CSI }
+            'E' -> {
+                // NEL (Next Line) — equivale a CR+LF: volta pra coluna 0 e avança uma linha.
+                cursorCol = 0
+                cursorRow++
+                if (cursorRow >= rows) { if (scrollMode) scrollUp() else cursorRow = 0 }
+                state = State.NORMAL
+            }
             else -> {
                 if (!ignoreUnknownEscapes) Timber.d("ESC desconhecido: $ch")
                 state = State.NORMAL

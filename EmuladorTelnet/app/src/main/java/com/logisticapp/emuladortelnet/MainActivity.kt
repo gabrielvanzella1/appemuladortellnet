@@ -159,11 +159,14 @@ class MainActivity : AppCompatActivity() {
 
         if (slot != null) {
             if (viewModel.connectionState.value == ConnectionState.CONNECTED) hasConnected = true
-            if (viewModel.connectionState.value == ConnectionState.DISCONNECTED && currentHost.isNotEmpty()) {
+            val state = viewModel.connectionState.value
+            // ERROR conta igual DISCONNECTED aqui — sessão morta, tenta de novo em vez de
+            // só mostrar a tela travada (a causa do "não consigo reconectar" depois de cair).
+            if ((state == ConnectionState.DISCONNECTED || state == ConnectionState.ERROR) && currentHost.isNotEmpty()) {
                 viewModel.connect(currentHost, currentPort.toString())
                 Timber.d("Conectando (slot $slotId): $currentName -> $currentHost:$currentPort")
             } else {
-                Timber.d("Retomando sessão (slot $slotId): $currentName [${viewModel.connectionState.value}]")
+                Timber.d("Retomando sessão (slot $slotId): $currentName [$state]")
             }
         } else if (currentHost.isNotEmpty()) {
             viewModel.connect(currentHost, currentPort.toString())
@@ -378,7 +381,9 @@ class MainActivity : AppCompatActivity() {
                 ConnectionState.ERROR -> {
                     binding.statusText.text = getString(R.string.status_error)
                     binding.statusText.setTextColor(getColor(android.R.color.holo_red_dark))
-                    binding.disconnectButton.isEnabled = false
+                    // Precisa continuar clicável — sem isso o usuário fica preso na tela de erro
+                    // sem nenhum jeito manual de sair (só saindo do app).
+                    binding.disconnectButton.isEnabled = true
                     binding.controlKeysBar.visibility = android.view.View.GONE
                 }
             }
