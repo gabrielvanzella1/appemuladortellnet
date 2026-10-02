@@ -215,43 +215,7 @@ class MainActivity : AppCompatActivity() {
     private fun applyViewModelSettings() {
         viewModel.setForegroundColor(effFg())
         viewModel.setFieldColor(effField())
-        viewModel.setTerminalType(settings.telnetOptions.terminalType)
-        viewModel.setBinaryMode(settings.telnetOptions.binaryMode)
-        viewModel.setSimulateParity(settings.telnetOptions.simulateParity)
-        viewModel.setKeepAlive(
-            settings.telnetOptions.keepAliveType,
-            settings.telnetOptions.keepAliveInterval.toIntOrNull() ?: 0
-        )
-        viewModel.setAutoLogin(
-            settings.telnetOptions.waitLoginPrompt,
-            settings.telnetOptions.loginWith,
-            settings.telnetOptions.waitPasswordPrompt,
-            settings.telnetOptions.password,
-            settings.telnetOptions.waitCommandPrompt,
-            settings.telnetOptions.doCommand
-        )
-        val sslOpts = settings.telnetOptions
-        val certBytes: ByteArray? = if (sslOpts.useSsl && sslOpts.clientCertFile.isNotBlank()) {
-            try { java.io.File(sslOpts.clientCertFile).readBytes() } catch (e: Exception) { null }
-        } else null
-        viewModel.setSsl(sslOpts.useSsl, certBytes, sslOpts.clientCertPassword)
-        val keyBytes: ByteArray? = if (sslOpts.useSsh && sslOpts.sshPrivateKey.isNotBlank()) {
-            try { java.io.File(sslOpts.sshPrivateKey).readBytes() } catch (e: Exception) { null }
-        } else null
-        val sshHostStr = sslOpts.sshServer.ifBlank { currentHost }
-        val sshPortParsed = sslOpts.sshServer.substringAfter(":", "22").toIntOrNull() ?: currentPort
-        val sshHostParsed = sslOpts.sshServer.substringBefore(":").ifBlank { sshHostStr }
-        viewModel.setSshConfig(
-            sslOpts.useSsh, sshHostParsed, sshPortParsed,
-            sslOpts.sshUsername, sslOpts.sshPassword, keyBytes,
-            sslOpts.sshKeepAlive.toIntOrNull() ?: 0
-        )
-        val proxyOpts = settings.proxyOptions
-        val proxyPortParsed = proxyOpts.port.toIntOrNull() ?: 3128
-        viewModel.setProxy(
-            proxyOpts.useServer, proxyOpts.address.trim(), proxyPortParsed,
-            proxyOpts.secureComm, proxyOpts.username, proxyOpts.password
-        )
+        viewModel.applyConnectionSettings(settings, currentHost, currentPort)
         viewModel.setCursorSettings(settings.cursorType, cursorColorFromName(settings.cursorColor))
         viewModel.setFields3dMode(settings.fields3D)
         viewModel.setColorAdjust(settings.colorFgDark, settings.colorFgBright, settings.colorBgAdjust)

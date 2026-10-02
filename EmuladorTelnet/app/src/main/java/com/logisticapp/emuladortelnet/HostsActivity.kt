@@ -310,6 +310,12 @@ class HostsActivity : AppCompatActivity() {
             return
         }
 
+        // Precisa rodar antes de connect() — sem isso, uma sessão nova (ainda não
+        // passou pelo MainActivity) ignora o proxy/relay configurado.
+        vm.applyConnectionSettings(
+            com.logisticapp.emuladortelnet.settings.AppSettings.get(this), host.host, host.port
+        )
+
         toast("Conectando a ${host.host}:${host.port}...")
         vm.connect(host.host, host.port.toString())
         vm.connectionState.observe(this, object : Observer<ConnectionState> {

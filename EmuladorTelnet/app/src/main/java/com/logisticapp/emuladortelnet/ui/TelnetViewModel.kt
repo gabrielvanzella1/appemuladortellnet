@@ -10,6 +10,7 @@ import com.logisticapp.emuladortelnet.data.TelnetConnection
 import com.logisticapp.emuladortelnet.database.SavedConnection
 import com.logisticapp.emuladortelnet.database.TelnetRepository
 import com.logisticapp.emuladortelnet.network.TelnetClient
+import com.logisticapp.emuladortelnet.settings.AppSettings
 import com.logisticapp.emuladortelnet.settings.GeneralEmulationOptions
 import com.logisticapp.emuladortelnet.settings.TransliterationOptions
 import com.logisticapp.emuladortelnet.settings.VtAttrMapOptions
@@ -266,6 +267,51 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
         keepAliveSec: Int = 0
     ) {
         telnetClient.setSshConfig(enabled, host, port, username, password, privateKeyBytes, keepAliveSec)
+    }
+
+    /**
+     * Aplica proxy/SSL/SSH/telnet antes de conectar. Precisa rodar ANTES de connect() —
+     * sem isso, uma conexão nova aberta direto da lista de sessões (HostsActivity) ignora
+     * o relay/proxy configurado, porque só o MainActivity aplicava essas configurações
+     * (e ele só abre depois que a conexão já foi tentada).
+     */
+    fun applyConnectionSettings(settings: AppSettings, host: String, port: Int) {
+        setTerminalType(settings.telnetOptions.terminalType)
+        setBinaryMode(settings.telnetOptions.binaryMode)
+        setSimulateParity(settings.telnetOptions.simulateParity)
+        setKeepAlive(
+            settings.telnetOptions.keepAliveType,
+            settings.telnetOptions.keepAliveInterval.toIntOrNull() ?: 0
+        )
+        setAutoLogin(
+            settings.telnetOptions.waitLoginPrompt,
+            settings.telnetOptions.loginWith,
+            settings.telnetOptions.waitPasswordPrompt,
+            settings.telnetOptions.password,
+            settings.telnetOptions.waitCommandPrompt,
+            settings.telnetOptions.doCommand
+        )
+        val sslOpts = settings.telnetOptions
+        val certBytes: ByteArray? = if (sslOpts.useSsl && sslOpts.clientCertFile.isNotBlank()) {
+            try { java.io.File(sslOpts.clientCertFile).readBytes() } catch (e: Exception) { null }
+        } else null
+        setSsl(sslOpts.useSsl, certBytes, sslOpts.clientCertPassword)
+        val keyBytes: ByteArray? = if (sslOpts.useSsh && sslOpts.sshPrivateKey.isNotBlank()) {
+            try { java.io.File(sslOpts.sshPrivateKey).readBytes() } catch (e: Exception) { null }
+        } else null
+        val sshHostStr = sslOpts.sshServer.ifBlank { host }
+        val sshPortParsed = sslOpts.sshServer.substringAfter(":", "22").toIntOrNull() ?: port
+        val sshHostParsed = sslOpts.sshServer.substringBefore(":").ifBlank { sshHostStr }
+        setSshConfig(
+            sslOpts.useSsh, sshHostParsed, sshPortParsed,
+            sslOpts.sshUsername, sslOpts.sshPassword, keyBytes,
+            sslOpts.sshKeepAlive.toIntOrNull() ?: 0
+        )
+        val proxyOpts = settings.proxyOptions
+        setProxy(
+            proxyOpts.useServer, proxyOpts.address.trim(), proxyOpts.port.toIntOrNull() ?: 3128,
+            proxyOpts.secureComm, proxyOpts.username, proxyOpts.password
+        )
     }
 
     /** Inicia o envio periodico de NOP quando o keep-alive e NVT. */

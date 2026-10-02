@@ -41,7 +41,7 @@ func runStatusWindow(lic *License, cfg Config) int {
 	win := MainWindow{
 		AssignTo:   &mw,
 		Title:      "ScanTE Relay",
-		MinSize:    Size{Width: 460, Height: 440},
+		MinSize:    Size{Width: 340, Height: 440},
 		Background: SolidColorBrush{Color: bgLight},
 		Font:       baseFont,
 		Layout:     VBox{MarginsZero: true, SpacingZero: true},

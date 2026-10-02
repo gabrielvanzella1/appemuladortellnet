@@ -184,6 +184,9 @@ class HostConfigActivity : AppCompatActivity() {
                 return@saveHost
             }
 
+            vm.applyConnectionSettings(
+                com.logisticapp.emuladortelnet.settings.AppSettings.get(this@HostConfigActivity), saved.host, saved.port
+            )
             vm.connect(saved.host, saved.port.toString())
             vm.connectionState.observe(this, object : Observer<ConnectionState> {
                 override fun onChanged(state: ConnectionState) {
