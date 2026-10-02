@@ -27,7 +27,7 @@ echo Compilando scante-relay.exe para Windows x64...
 set GOOS=windows
 set GOARCH=amd64
 set CGO_ENABLED=0
-go build -trimpath -ldflags="-s -w" -o scante-relay.exe .
+go build -trimpath -ldflags="-s -w -H windowsgui" -o scante-relay.exe .
 
 if %ERRORLEVEL% NEQ 0 (
     echo.

@@ -9,7 +9,7 @@ VERSION = 1.0.0
 # Build padrão: Windows x64
 build:
 	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 \
-	go build -trimpath -ldflags="-s -w" -o $(BINARY) .
+	go build -trimpath -ldflags="-s -w -H windowsgui" -o $(BINARY) .
 	@echo "Gerado: $(BINARY)"
 
 # Build alternativo: Linux (para servidores Linux)

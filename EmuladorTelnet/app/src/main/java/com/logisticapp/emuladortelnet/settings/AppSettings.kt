@@ -31,7 +31,7 @@ class AppSettings private constructor(context: Context) {
 
     // Reconectar automaticamente apos conexao perdida
     var autoReconnect: Boolean
-        get() = prefs.getBoolean(K_AUTO_RECONNECT, false)
+        get() = prefs.getBoolean(K_AUTO_RECONNECT, true)
         set(v) { prefs.edit().putBoolean(K_AUTO_RECONNECT, v).apply() }
 
     // Desconectar na tela de bloqueio

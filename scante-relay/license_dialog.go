@@ -135,8 +135,11 @@ func showLicenseDialog(currentText string) (lic *License, rawText string, accept
 		},
 	}
 
-	owner, _ := walk.NewMainWindow()
-	code, err := dialog.Run(owner)
+	// Sem owner real: essa tela aparece antes de qualquer janela principal
+	// existir. Um MainWindow criado só pra isso (walk.NewMainWindow()) fica
+	// sem layout configurado e crasha com nil pointer quando o diálogo fecha
+	// e o Windows manda WM_WINDOWPOSCHANGED pra ele.
+	code, err := dialog.Run(nil)
 	if err != nil {
 		return nil, "", false
 	}

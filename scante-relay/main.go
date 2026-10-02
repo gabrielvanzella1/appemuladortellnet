@@ -8,12 +8,28 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"syscall"
 	"time"
+
+	"github.com/lxn/walk"
 )
+
+// crashPause grava o erro no log (se já configurado) e mostra um alerta
+// gráfico — o relay roda sem console (janela gráfica), então não dá pra só
+// imprimir no terminal e esperar Enter.
+func crashPause(msg string) {
+	log.Printf("ERRO FATAL: %s", msg)
+	walk.MsgBox(nil, "ScanTE Relay — erro", msg, walk.MsgBoxOK|walk.MsgBoxIconError)
+}
+
+func fatal(format string, args ...interface{}) {
+	crashPause(fmt.Sprintf(format, args...))
+	os.Exit(1)
+}
 
 const version = "1.0.0"
 
@@ -53,18 +69,19 @@ func clientIP(addr string) string {
 }
 
 func main() {
-	fmt.Printf("ScanTE Relay Server v%s\n", version)
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Println("  Relay de persistência de sessão para o ScanTE")
-	fmt.Println("  Protocolo: HTTP CONNECT (compatível com proxy)")
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	defer func() {
+		if r := recover(); r != nil {
+			crashPause(fmt.Sprintf("panic: %v\n%s", r, debug.Stack()))
+			os.Exit(1)
+		}
+	}()
 
 	// Carrega configuração do mesmo diretório do executável
 	exeDir := execDir()
 	cfgPath := filepath.Join(exeDir, "scante-relay.json")
 	cfg, err := loadConfig(cfgPath)
 	if err != nil {
-		log.Fatalf("Erro na configuração: %v", err)
+		fatal("Erro na configuração: %v", err)
 	}
 
 	// Configura log com arquivo opcional
@@ -74,11 +91,9 @@ func main() {
 	licPath := licenseFilePath(exeDir)
 	lic, licErr := loadLicenseFromFile(licPath)
 	if licErr != nil {
-		fmt.Println("Licença necessária — abrindo tela de ativação...")
 		existingText, _ := readFileText(licPath)
 		newLic, rawText, accepted := showLicenseDialog(existingText)
 		if !accepted {
-			fmt.Println("Ativação cancelada. Encerrando.")
 			os.Exit(1)
 		}
 		if err := saveLicenseToFile(licPath, rawText); err != nil {
@@ -102,25 +117,31 @@ func main() {
 
 	listener, err := net.Listen("tcp", cfg.ListenAddr)
 	if err != nil {
-		log.Fatalf("Não foi possível escutar em %s: %v", cfg.ListenAddr, err)
+		fatal("Não foi possível escutar em %s: %v", cfg.ListenAddr, err)
 	}
-	defer listener.Close()
 
 	log.Printf("✓ Relay aguardando conexões em %s", cfg.ListenAddr)
 
-	// Goroutine: status a cada 60s
+	// Goroutine: status a cada 60s (no log)
 	go statusPrinter()
 
-	// Goroutine: trata SIGINT/SIGTERM
+	// Goroutine: trata SIGINT/SIGTERM (ex: taskkill)
 	go func() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 		<-c
-		fmt.Println("\nEncerrando relay...")
 		listener.Close()
 		os.Exit(0)
 	}()
 
+	// Goroutine: aceita conexões — a janela gráfica roda na goroutine principal
+	// (exigência do Win32: a UI tem que viver na thread que a criou).
+	go acceptLoop(listener, cfg)
+
+	os.Exit(runStatusWindow(lic, cfg))
+}
+
+func acceptLoop(listener net.Listener, cfg Config) {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {

@@ -15,6 +15,12 @@ import (
 // IAC NOP — Telnet keepalive (RFC 854)
 var iacNop = []byte{0xFF, 0xF1}
 
+// Quanto o relay guarda do que o operador digitou/escaneou durante uma queda
+// do servidor, pra reenviar assim que reconectar. Poucos KB = poucos segundos
+// de digitação real — de propósito pequeno: reenviar algo digitado há muito
+// tempo (achando que a tela já tinha avançado) é mais arriscado que perder.
+const maxPendingBuffer = 8 * 1024
+
 // Session representa um túnel: cliente Android ↔ relay ↔ servidor Telnet/ERP.
 // O lado do cliente (LAN) nunca é fechado pelo relay.
 // Quando o lado do servidor (internet) cai, o relay tenta reconectar continuamente.
@@ -26,8 +32,11 @@ type Session struct {
 	mu     sync.Mutex
 	server net.Conn // nil enquanto desconectado do servidor
 
-	alive  int32 // 1 = ativo, 0 = encerrado (atomic)
-	cfg    Config
+	pendingMu sync.Mutex
+	pending   []byte // bytes do cliente acumulados enquanto server == nil
+
+	alive int32 // 1 = ativo, 0 = encerrado (atomic)
+	cfg   Config
 }
 
 var sessionCounter int64
@@ -106,7 +115,17 @@ func (s *Session) pipeClientToServer(done chan<- struct{}) {
 		srv := s.server
 		s.mu.Unlock()
 		if srv == nil {
-			// Internet caída — descarta dado do cliente (teclado ignorado)
+			// Servidor caído — guarda por um tempo curto (ver maxPendingBuffer)
+			// em vez de descartar, pra não perder o último scan numa queda rápida.
+			s.pendingMu.Lock()
+			if room := maxPendingBuffer - len(s.pending); room > 0 {
+				chunk := buf[:n]
+				if len(chunk) > room {
+					chunk = chunk[:room]
+				}
+				s.pending = append(s.pending, chunk...)
+			}
+			s.pendingMu.Unlock()
 			continue
 		}
 		if _, werr := srv.Write(buf[:n]); werr != nil {
@@ -215,6 +234,19 @@ func (s *Session) reconnectLoop() {
 		s.mu.Unlock()
 		backoff = 1
 		log.Printf("[%s] Reconectado a %s com sucesso", s.id, s.target)
+
+		// Reenvia o que o cliente digitou/escaneou durante a queda.
+		s.pendingMu.Lock()
+		pending := s.pending
+		s.pending = nil
+		s.pendingMu.Unlock()
+		if len(pending) > 0 {
+			if _, werr := conn.Write(pending); werr != nil {
+				log.Printf("[%s] Falha ao reenviar %d bytes pendentes: %v", s.id, len(pending), werr)
+			} else {
+				log.Printf("[%s] Reenviados %d bytes digitados durante a queda", s.id, len(pending))
+			}
+		}
 	}
 }
 
