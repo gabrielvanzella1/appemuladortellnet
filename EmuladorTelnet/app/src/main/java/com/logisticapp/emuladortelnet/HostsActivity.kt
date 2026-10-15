@@ -404,9 +404,10 @@ class HostsActivity : AppCompatActivity() {
     }
 
     /**
-     * Nova sessão via "+": se já existe algum host salvo, reaproveita o mesmo Host/Porta
-     * (bloqueados) — só o Nome fica livre. Evita erro de digitação de quem for criar
-     * sessões novas no dia a dia.
+     * Nova sessão via "+": pré-preenche com o Host/Porta usado por último (evita digitar
+     * de novo quando é mais uma sessão do mesmo host). Só TRAVA esses campos quando a
+     * empresa tem o bloqueio de conexão ativo no painel — sem isso, Host/Porta ficam
+     * livres pra permitir sessões em hosts diferentes ao mesmo tempo.
      */
     private fun openNewSessionConfig() {
         val referencia = currentHosts.maxByOrNull { it.lastUsed }
@@ -414,7 +415,9 @@ class HostsActivity : AppCompatActivity() {
         if (referencia != null) {
             intent.putExtra(HostConfigActivity.EXTRA_PREFILL_HOST, referencia.host)
             intent.putExtra(HostConfigActivity.EXTRA_PREFILL_PORT, referencia.port)
-            intent.putExtra(HostConfigActivity.EXTRA_LOCK_HOST_PORT, true)
+            if (com.logisticapp.emuladortelnet.settings.CompanyConfigStore.isConnectionLocked(this)) {
+                intent.putExtra(HostConfigActivity.EXTRA_LOCK_HOST_PORT, true)
+            }
         }
         startActivity(intent)
     }
