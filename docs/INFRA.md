@@ -35,3 +35,19 @@
 - Ver memória do projeto `[[centauro-adaptations]]`: adaptações pra Centauro não se limitam a
   commits com "Centauro" no texto — incluem fixes de reconexão e teclado físico do coletor
   feitos na mesma janela de trabalho.
+- **Multi-host (commit `ba76d72`):** sessões novas só travam Host/Porta se a empresa tiver o
+  bloqueio de conexão ativo no painel (`CompanyConfigStore.isConnectionLocked`). Centauro está
+  com esse bloqueio desligado (`lock_conexao_ativo=0`, confirmado no banco em 14/10), então já
+  consegue cadastrar hosts diferentes e alternar entre eles. Testado de ponta a ponta no EDA52
+  com dois hosts reais (`towel.blinkenlights.nl` e `mapscii.me`).
+- **Som de alerta do alarme do host (commit `5bcf86b`):** `AlarmSoundPlayer` toca o alarme BEL
+  no stream de **ALARME** (não notificação) de propósito — ignora "Não perturbe" por padrão, sem
+  precisar de permissão especial. Em Configurações > Emulação > VT Opções > "Som do alarme do
+  host" dá pra escolher entre 3 alertas prontos (sintetizados, sem precisar de arquivo), toque do
+  sistema, ou importar um arquivo de áudio próprio. Cada opção toca prévia ao tocar na lista.
+  **Assume que o host da Centauro manda BEL (0x07) quando o código é inválido** — confirmado pelo
+  usuário em 20/10, não testado contra o ERP real deles ainda.
+- **Assinatura:** essas duas mudanças (e tudo até aqui) seguem em build **debug** — a keystore
+  oficial ainda não chegou no PC de casa (ver seção acima). O CK62 da Centauro já está rodando
+  numa versão não assinada oficialmente; manter a mesma situação por ora não piora nada, só não
+  resolve o problema de assinatura que já existia.
