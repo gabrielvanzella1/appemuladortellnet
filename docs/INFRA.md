@@ -8,6 +8,15 @@
   `EmuladorTelnet/keystore.properties.example` — copie o `.jks` real e preencha os 4 campos.
   **Importante:** tem que ser a MESMA keystore usada nos releases anteriores (Centauro etc.),
   nunca gerar uma nova — isso quebra update pra quem já instalou.
+- **Chave oficial:** certificado SHA-256 `c8eef2b78a8898017cb4edacb409ce49f221cc9eeeaeec4db660259f95583e73`.
+  Todo APK release deve passar em `apksigner verify --print-certs` com esse valor antes de ir pra coletor.
+- **Assinar no PC de casa:** copiar `scante-release.jks` (fora do repo, ex.: `C:\Users\<user>\ScanTE-Chaves-Assinatura\`)
+  e o `keystore.properties` para `EmuladorTelnet/` e `scante-monitor/`, trocando só a linha `storeFile`.
+  Gerar com `.\gradlew.bat assembleProductionRelease`. Passo a passo completo foi entregue fora do git
+  (`INSTRUCOES-CLAUDE-CASA.md`, 20/10/2026).
+- **Atenção (20/10/2026):** o 1.1.1 instalado no CK62 da Centauro NÃO foi assinado com a chave oficial
+  (ID do aparelho mudou de `42930dac…` para `7e088945…` em 25/09). A próxima atualização oficial exige
+  desinstalar e liberar a licença no painel. Próxima versão sugerida: 1.1.2 / versionCode 5.
 
 ## Backend scante-admin (PHP, Hostinger)
 - Produção: `https://scante.com.br/scante-admin/public`. Config real em
