@@ -16,5 +16,6 @@ data class VtOptions(
     var f5PuttySequence: Boolean = false,               // F5 envia sequência PuTTY
     var silenceHostAlarm: Boolean = false,              // Silenciar alarme do host
     var maxConsecutiveAlarms: String = "Max",           // Max | 1 | 2 | 3 | 5 | 10 | 25 | 50
-    var ignoreUnknownEscapes: Boolean = false           // Ignorar sequências de escape desconhecidas
+    var ignoreUnknownEscapes: Boolean = false,          // Ignorar sequências de escape desconhecidas
+    var alarmSoundUri: String = ""                      // Som do alarme do host; "" = beep padrão
 )

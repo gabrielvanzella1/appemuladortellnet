@@ -1,10 +1,14 @@
 package com.logisticapp.emuladortelnet
 
+import android.content.Intent
+import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -32,11 +36,33 @@ class VtOptionsActivity : AppCompatActivity() {
     private lateinit var ckSilenceAlarm: CheckBox
     private lateinit var valMaxAlarms: TextView
     private lateinit var ckIgnoreEscapes: CheckBox
+    private lateinit var valAlarmSound: TextView
+
+    private var alarmSoundUri: String = ""
 
     private val lineModeOptions = arrayOf("Desativado", "Local", "Remoto")
     private val backspaceOptions = arrayOf("BS", "DEL")
     private val vtAliasOptions = arrayOf("VT52", "VT100", "VT220", "VT320", "ANSI")
     private val maxAlarmsOptions = arrayOf("Max", "1", "2", "3", "5", "10", "25", "50")
+
+    private val pickSystemSound = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val uri = result.data?.getParcelableExtra<Uri>(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+        if (uri != null) setAlarmSound(uri.toString())
+    }
+
+    private val pickFileSound = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@registerForActivityResult
+        try {
+            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        } catch (e: Exception) {
+            // Alguns provedores não suportam permissão persistente — segue mesmo assim
+        }
+        setAlarmSound(uri.toString())
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,6 +94,7 @@ class VtOptionsActivity : AppCompatActivity() {
         ckSilenceAlarm  = findViewById(R.id.ck_silence_alarm)
         valMaxAlarms    = findViewById(R.id.val_max_alarms)
         ckIgnoreEscapes = findViewById(R.id.ck_ignore_escapes)
+        valAlarmSound   = findViewById(R.id.val_alarm_sound)
     }
 
     private fun loadValues() {
@@ -83,6 +110,8 @@ class VtOptionsActivity : AppCompatActivity() {
         ckSilenceAlarm.isChecked  = opts.silenceHostAlarm
         valMaxAlarms.text         = opts.maxConsecutiveAlarms
         ckIgnoreEscapes.isChecked = opts.ignoreUnknownEscapes
+        alarmSoundUri = opts.alarmSoundUri
+        valAlarmSound.text = AlarmSoundPlayer.displayName(this, alarmSoundUri)
     }
 
     private fun setupInteractions() {
@@ -116,6 +145,56 @@ class VtOptionsActivity : AppCompatActivity() {
                 valMaxAlarms.text = it
             }
         }
+        findViewById<View>(R.id.row_alarm_sound).setOnClickListener { pickAlarmSound() }
+        findViewById<View>(R.id.row_test_alarm_sound).setOnClickListener {
+            AlarmSoundPlayer.play(this, alarmSoundUri)
+        }
+    }
+
+    /** Escolher entre alertas prontos, toques do sistema ou importar um arquivo de som. */
+    private fun pickAlarmSound() {
+        val options = arrayOf("Sons de alerta (recomendado)", "Toques do sistema", "Importar arquivo de som")
+        AlertDialog.Builder(this)
+            .setTitle("Som do alarme do host")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> pickPresetSound()
+                    1 -> {
+                        val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
+                            putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION)
+                            putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
+                            putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, false)
+                            val current = alarmSoundUri.takeIf { it.isNotBlank() }?.let { Uri.parse(it) }
+                            putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, current)
+                        }
+                        pickSystemSound.launch(intent)
+                    }
+                    2 -> pickFileSound.launch(arrayOf("audio/*"))
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun setAlarmSound(uri: String) {
+        alarmSoundUri = uri
+        valAlarmSound.text = AlarmSoundPlayer.displayName(this, uri)
+    }
+
+    /** Lista os alertas prontos — toca uma prévia ao tocar em cada um, confirma com "Usar este". */
+    private fun pickPresetSound() {
+        val presets = AlarmSoundPlayer.Preset.values()
+        val labels = presets.map { it.label }.toTypedArray()
+        var chosen = presets.indexOfFirst { it.id == alarmSoundUri }.takeIf { it >= 0 } ?: 0
+        AlertDialog.Builder(this)
+            .setTitle("Som do alarme do host")
+            .setSingleChoiceItems(labels, chosen) { _, which ->
+                chosen = which
+                AlarmSoundPlayer.play(this, presets[which].id)
+            }
+            .setPositiveButton("Usar este") { _, _ -> setAlarmSound(presets[chosen].id) }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun pick(title: String, options: Array<String>, current: String, onPick: (String) -> Unit) {
@@ -148,7 +227,8 @@ class VtOptionsActivity : AppCompatActivity() {
             f5PuttySequence      = ckF5Putty.isChecked,
             silenceHostAlarm     = ckSilenceAlarm.isChecked,
             maxConsecutiveAlarms = valMaxAlarms.text.toString(),
-            ignoreUnknownEscapes = ckIgnoreEscapes.isChecked
+            ignoreUnknownEscapes = ckIgnoreEscapes.isChecked,
+            alarmSoundUri        = alarmSoundUri
         )
     }
 }

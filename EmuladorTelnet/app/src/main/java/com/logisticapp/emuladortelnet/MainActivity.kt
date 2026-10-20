@@ -369,14 +369,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** Toca o som de notificação e vibra (alarme do host / BEL). */
+    /** Toca o som do alarme (customizado ou beep padrão) e vibra (alarme do host / BEL). */
     private fun playBell() {
         try {
-            val tone = android.media.ToneGenerator(
-                android.media.AudioManager.STREAM_NOTIFICATION, 100
-            )
-            tone.startTone(android.media.ToneGenerator.TONE_PROP_BEEP, 200)
-            binding.terminalOutput.postDelayed({ tone.release() }, 300)
+            AlarmSoundPlayer.play(this, settings.vtOptions.alarmSoundUri)
         } catch (e: Exception) {
             Timber.w(e, "Falha ao tocar alarme")
         }

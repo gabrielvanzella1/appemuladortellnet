@@ -113,6 +113,20 @@
             </LinearLayout>
             <View style="@style/TnDivider" />
 
+            <!-- Som do alarme do host -->
+            <LinearLayout android:id="@+id/row_alarm_sound" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Som do alarme do host" />
+                <TextView android:id="@+id/val_alarm_sound" style="@style/TnValue" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
+            <!-- Testar som do alarme -->
+            <LinearLayout android:id="@+id/row_test_alarm_sound" style="@style/TnRow">
+                <TextView style="@style/TnLabel" android:text="Testar som do alarme" />
+            </LinearLayout>
+            <View style="@style/TnDivider" />
+
             <!-- Ignorar sequências de escape desconhecidas -->
             <LinearLayout android:id="@+id/row_ignore_escapes" style="@style/TnRow">
                 <TextView style="@style/TnLabel" android:text="Ignorar sequências de escape desconhecidas" />
