@@ -1,6 +1,7 @@
 package com.logisticapp.emuladortelnet
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -275,6 +276,29 @@ class HostsActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         adapter.notifyDataSetChanged()
+        checkAppUpdate()
+    }
+
+    /** Mostra o aviso de versão nova (se tiver e não foi dispensado pra essa versão ainda). */
+    private fun checkAppUpdate() {
+        val update = com.logisticapp.emuladortelnet.settings.UpdateInfoStore.pending(this) ?: return
+        if (com.logisticapp.emuladortelnet.settings.UpdateInfoStore.wasDismissed(this, update.versionCode)) return
+
+        AlertDialog.Builder(this)
+            .setTitle("Nova versão disponível: v${update.versionName}")
+            .setMessage(update.changelog)
+            .setPositiveButton("Baixar agora") { _, _ ->
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(update.downloadUrl)))
+                } catch (e: Exception) {
+                    toast("Não foi possível abrir o link de download.")
+                }
+            }
+            .setNegativeButton("Depois") { _, _ ->
+                com.logisticapp.emuladortelnet.settings.UpdateInfoStore.dismiss(this, update.versionCode)
+            }
+            .setCancelable(false)
+            .show()
     }
 
     private fun showPopupMenu(host: SavedConnection, anchor: View) {

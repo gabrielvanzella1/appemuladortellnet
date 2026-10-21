@@ -178,7 +178,7 @@ class Licenca extends Model {
         );
     }
 
-    public function validarParaApp(string $chave, string $deviceId, string $deviceNome = ''): array {
+    public function validarParaApp(string $chave, string $deviceId, string $deviceNome = '', int $appVersionCode = 0): array {
         $licenca = $this->findByChave($chave);
 
         if (!$licenca) {
@@ -224,6 +224,21 @@ class Licenca extends Model {
             // Personalização da empresa (tema + teclas) — o app aplica e trava.
             // null = empresa não personalizou nada (app usa o padrão dele).
             'config'         => $this->configDaEmpresa($licenca['empresa_id'] ?? null),
+            // Versão nova disponível pra essa empresa (null = já está na mais atual).
+            'atualizacao'    => $this->atualizacaoDisponivel($licenca['empresa_id'] ?? null, $appVersionCode),
+        ];
+    }
+
+    /** Verifica se há uma versão mais nova do app pra essa empresa do que a instalada. */
+    private function atualizacaoDisponivel(?int $empresaId, int $appVersionCode): ?array {
+        if ($appVersionCode <= 0) return null; // app antigo que não manda a própria versão ainda
+        $alvo = (new AppVersao())->alvoParaEmpresa($empresaId);
+        if (!$alvo || (int)$alvo['version_code'] <= $appVersionCode) return null;
+        return [
+            'version_code' => (int)$alvo['version_code'],
+            'version_name' => $alvo['version_name'],
+            'changelog'    => $alvo['changelog'],
+            'download_url' => APP_URL . '/downloads/apks/' . $alvo['arquivo_apk'],
         ];
     }
 

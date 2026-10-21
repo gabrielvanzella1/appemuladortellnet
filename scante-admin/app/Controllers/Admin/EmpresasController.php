@@ -6,6 +6,7 @@ use App\Core\Auth;
 use App\Models\Empresa;
 use App\Models\Usuario;
 use App\Models\Licenca;
+use App\Models\AppVersao;
 
 class EmpresasController extends Controller {
 
@@ -88,6 +89,7 @@ class EmpresasController extends Controller {
             'empresa'  => $empresa,
             'licencas' => $licencas,
             'usuarios' => $usuarios,
+            'versoes'  => (new AppVersao())->listarComEmpresa(),
             'flash'    => $this->getFlash(),
         ], 'admin');
     }
@@ -129,6 +131,21 @@ class EmpresasController extends Controller {
                 $this->input('lock_conexao_senha', '')
             );
             $this->flash('success', 'Bloqueio de edição de conexão salvo.');
+        }
+        $this->redirect('/admin/empresas/' . (int)$id);
+    }
+
+    /** Fixa qual versão do app essa empresa deve receber (vazio = automática, última geral). */
+    public function appVersao(string $id): void {
+        Auth::requireAdmin();
+        $model   = new Empresa();
+        $empresa = $model->findById((int)$id);
+        if (!$empresa) { $this->redirect('/admin/empresas'); return; }
+
+        if ($this->isPost()) {
+            $versaoId = (int)$this->input('app_versao_alvo_id', '0') ?: null;
+            $model->salvarVersaoAlvo((int)$id, $versaoId);
+            $this->flash('success', 'Versão do app da empresa atualizada.');
         }
         $this->redirect('/admin/empresas/' . (int)$id);
     }

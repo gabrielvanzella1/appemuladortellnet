@@ -112,6 +112,30 @@
 </div>
 <?php endif; ?>
 
+<!-- Versão do app -->
+<div class="card mb-3">
+  <div class="card-body">
+    <h6 class="fw-bold mb-1"><i class="bi bi-phone me-2"></i>Versão do app</h6>
+    <small class="text-muted d-block mb-3">
+      Automática = a empresa recebe sempre a última versão geral cadastrada em
+      <a href="<?= APP_URL ?>/admin/app-versoes">Versões do app</a>. Fixar uma versão específica
+      trava essa empresa nela até você mudar de novo (útil pra builds exclusivos ou pra não
+      atualizar enquanto testa).
+    </small>
+    <form method="post" action="<?= APP_URL ?>/admin/empresas/<?= $empresa['id'] ?>/app-versao" class="d-flex gap-2">
+      <select name="app_versao_alvo_id" class="form-select" style="max-width:360px">
+        <option value="">Automática (última versão geral)</option>
+        <?php foreach ($versoes as $v): ?>
+          <option value="<?= $v['id'] ?>" <?= (int)($empresa['app_versao_alvo_id'] ?? 0) === (int)$v['id'] ? 'selected' : '' ?>>
+            v<?= htmlspecialchars($v['version_name']) ?> (code <?= (int)$v['version_code'] ?>)<?= $v['empresa_nome'] ? ' — exclusiva ' . $v['empresa_nome'] : '' ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+      <button class="btn btn-sm btn-accent"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+    </form>
+  </div>
+</div>
+
 <!-- Licenças da empresa -->
 <div class="card">
   <div class="card-body">

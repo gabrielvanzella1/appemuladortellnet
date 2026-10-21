@@ -28,7 +28,9 @@ class LicenseApiService {
         val expiraEm: String = "",
         val erro: String = "",
         // JSON do bloco "config" (personalização da empresa). "" = empresa não personalizou.
-        val configJson: String = ""
+        val configJson: String = "",
+        // JSON do bloco "atualizacao" (versão nova do app). "" = já está na mais recente.
+        val atualizacaoJson: String = ""
     )
 
     suspend fun pingServidor(
@@ -83,6 +85,7 @@ class LicenseApiService {
                 put("chave", chave.trim().uppercase())
                 put("device_id", deviceId)
                 put("device_nome", deviceNome)
+                put("app_version_code", BuildConfig.VERSION_CODE)
             }.toString()
 
             OutputStreamWriter(conn.outputStream).use { it.write(body) }
@@ -94,6 +97,7 @@ class LicenseApiService {
 
             if (json.optBoolean("valida", false)) {
                 val config = if (json.isNull("config")) "" else json.optJSONObject("config")?.toString() ?: ""
+                val atualizacao = if (json.isNull("atualizacao")) "" else json.optJSONObject("atualizacao")?.toString() ?: ""
                 Result.success(
                     ValidacaoResult(
                         sucesso = true,
@@ -101,7 +105,8 @@ class LicenseApiService {
                         tipo = json.optString("tipo", "vitalicia"),
                         diasRestantes = if (json.isNull("dias_restantes")) -1 else json.optInt("dias_restantes", -1),
                         expiraEm = json.optString("expira_em"),
-                        configJson = config
+                        configJson = config,
+                        atualizacaoJson = atualizacao
                     )
                 )
             } else {

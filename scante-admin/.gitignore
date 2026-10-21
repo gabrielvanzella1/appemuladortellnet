@@ -7,6 +7,7 @@ node_modules/
 
 # Uploads e cache
 public/uploads/
+public/downloads/apks/
 storage/
 *.log
 

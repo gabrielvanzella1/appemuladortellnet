@@ -55,6 +55,9 @@ class LicenseViewModel(application: Application) : AndroidViewModel(application)
                             // Aplica/atualiza a personalização da empresa (tema + teclas + logo)
                             com.logisticapp.emuladortelnet.settings.CompanyConfigStore
                                 .save(getApplication(), validacao.configJson)
+                            // Aviso de versão nova disponível (lido depois pelo HostsActivity)
+                            com.logisticapp.emuladortelnet.settings.UpdateInfoStore
+                                .save(getApplication(), validacao.atualizacaoJson)
                         } else {
                             licenseManager.revokeLicense()
                             Timber.d("Licença inválida no servidor: ${validacao.erro}")

@@ -73,4 +73,12 @@ class Empresa extends Model {
             [$ativo ? 1 : 0, $usuario, $senha, $id]
         );
     }
+
+    /** Fixa a versão-alvo do app pra essa empresa. null = automática (última versão geral). */
+    public function salvarVersaoAlvo(int $id, ?int $versaoId): void {
+        $this->db->execute(
+            "UPDATE empresas SET app_versao_alvo_id=? WHERE id=?",
+            [$versaoId, $id]
+        );
+    }
 }

@@ -22,12 +22,13 @@ class LicencaController extends Controller {
         $chave     = trim($body['chave'] ?? '');
         $deviceId  = trim($body['device_id'] ?? '');
         $deviceNome = trim($body['device_nome'] ?? '');
+        $appVersionCode = (int)($body['app_version_code'] ?? 0);
 
         if (!$chave || !$deviceId) {
             $this->json(['valida' => false, 'mensagem' => 'Parâmetros incompletos.'], 400);
         }
 
-        $resultado = (new Licenca())->validarParaApp($chave, $deviceId, $deviceNome);
+        $resultado = (new Licenca())->validarParaApp($chave, $deviceId, $deviceNome, $appVersionCode);
         $this->json($resultado, $resultado['valida'] ? 200 : 403);
     }
 

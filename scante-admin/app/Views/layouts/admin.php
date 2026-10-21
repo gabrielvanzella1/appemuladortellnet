@@ -42,6 +42,7 @@
     <div class="nav-section">Clientes</div>
     <a href="<?= APP_URL ?>/admin/empresas" class="nav-link"><i class="bi bi-building"></i> Empresas</a>
     <a href="<?= APP_URL ?>/admin/licencas" class="nav-link"><i class="bi bi-key"></i> Licenças</a>
+    <a href="<?= APP_URL ?>/admin/app-versoes" class="nav-link"><i class="bi bi-phone"></i> Versões do app</a>
     <a href="<?= APP_URL ?>/admin/dispositivos" class="nav-link"><i class="bi bi-phone"></i> Dispositivos</a>
     <a href="<?= APP_URL ?>/admin/relay-licencas" class="nav-link"><i class="bi bi-hdd-network"></i> Licenças do Relay</a>
 
