@@ -127,7 +127,7 @@
         <option value="">Automática (última versão geral)</option>
         <?php foreach ($versoes as $v): ?>
           <option value="<?= $v['id'] ?>" <?= (int)($empresa['app_versao_alvo_id'] ?? 0) === (int)$v['id'] ? 'selected' : '' ?>>
-            v<?= htmlspecialchars($v['version_name']) ?> (code <?= (int)$v['version_code'] ?>)<?= $v['empresa_nome'] ? ' — exclusiva ' . $v['empresa_nome'] : '' ?>
+            v<?= htmlspecialchars($v['version_name']) ?> (code <?= (int)$v['version_code'] ?>)<?= $v['empresa_nome'] ? ' — exclusiva ' . htmlspecialchars($v['empresa_nome'], ENT_QUOTES, 'UTF-8') : '' ?>
           </option>
         <?php endforeach; ?>
       </select>
