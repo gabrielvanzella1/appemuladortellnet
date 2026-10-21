@@ -42,7 +42,11 @@ class AppVersoesController extends Controller {
 
         if (!is_dir(self::DIR_APKS)) mkdir(self::DIR_APKS, 0755, true);
 
-        $nomeArquivo = 'ScanTE-' . $versionName . '-' . $versionCode . '.apk';
+        // Token aleatório no nome: a pasta não lista (Options -Indexes), mas o nome
+        // sozinho (ScanTE-1.1.2-5.apk) seria adivinhável — importante pra build
+        // "exclusiva" de uma empresa não vazar pra quem não tem o link.
+        $token = bin2hex(random_bytes(6));
+        $nomeArquivo = 'ScanTE-' . $versionName . '-' . $versionCode . '-' . $token . '.apk';
         $destino = self::DIR_APKS . $nomeArquivo;
 
         if (!move_uploaded_file($_FILES['apk']['tmp_name'], $destino)) {
