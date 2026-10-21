@@ -51,3 +51,23 @@
   oficial ainda não chegou no PC de casa (ver seção acima). O CK62 da Centauro já está rodando
   numa versão não assinada oficialmente; manter a mesma situação por ora não piora nada, só não
   resolve o problema de assinatura que já existia.
+- **Verificação de atualização + versão alvo por empresa (commits `9f58a1f`/`e58f24a`, 20/10):**
+  - App manda a própria `versionCode` em `/api/licenca/validar`; a API responde com
+    `atualizacao: {version_code, version_name, changelog, download_url}` se a empresa tiver uma
+    versão mais nova disponível que a instalada (`Licenca::atualizacaoDisponivel`). `null` = já
+    está atualizado, ou o app é antigo demais pra mandar a própria versão.
+  - Painel: `/admin/app-versoes` cadastra uma versão (upload do .apk + changelog + opcionalmente
+    "empresa exclusiva"). Cada empresa pode ter uma versão fixada em `/admin/empresas/{id}` >
+    "Versão do app" — vazio = automática (última versão geral).
+  - **Não é silencioso** — Android não deixa um app comum se auto-instalar sem interação (fora
+    de device-owner/MDM). O app mostra um diálogo com o changelog e um botão "Baixar agora" que
+    abre o link no navegador; o usuário confirma a instalação normalmente. "Depois" não pergunta
+    de novo pra essa MESMA versão (`UpdateInfoStore.dismiss`).
+  - Link de download: `public/downloads/apks/ScanTE-<nome>-<code>-<token>.apk` — nome do arquivo
+    leva um token aleatório de propósito (achado por revisão automática de segurança: sem isso,
+    um build "exclusivo" de uma empresa seria baixável por qualquer um que adivinhasse o nome
+    previsível). A pasta em si não lista (`Options -Indexes` em `public/.htaccess`).
+  - `public/downloads/apks/` é gitignored (como `public/uploads/`) e excluído do rsync do deploy
+    (`~/deploy-scante-admin.sh` no servidor) — senão um deploy apagaria os APKs enviados.
+  - v1.1.2 / versionCode 5 (multi-host + som de alerta + esse próprio mecanismo) já está
+    cadastrada em produção como versão geral.
