@@ -73,6 +73,11 @@
             android:name=".ConfigMenuActivity"
             android:exported="false" />
 
+        <!-- Configuracoes > Gravacao de telas -->
+        <activity
+            android:name=".GravacaoActivity"
+            android:exported="false" />
+
         <!-- Configuracoes > Tela > Opcoes de tela -->
         <activity
             android:name=".ScreenOptionsActivity"
@@ -179,6 +184,17 @@
                 android:resource="@xml/input_method" />
         </service>
 
+    
+        <!-- Compartilhar o arquivo do gravador de telas (WhatsApp, e-mail, Drive) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

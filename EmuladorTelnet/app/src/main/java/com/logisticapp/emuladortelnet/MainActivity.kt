@@ -202,9 +202,23 @@ class MainActivity : AppCompatActivity() {
         // Re-aplica configurações que podem ter sido alteradas em telas de configuração
         applyViewModelSettings()
         viewModel.refreshDisplay()
+        // Gravador de telas: registra a sessão em primeiro plano e pega a tela atual
+        viewModel.recorder.let { r ->
+            r.provider = { viewModel.snapshotScreen() }
+            if (r.attachSession(currentHost, currentPort)) {
+                android.widget.Toast.makeText(
+                    this,
+                    "Gravação PAUSADA: você abriu outro host. Para continuar, retome em Configurações → Gravação de telas.",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
+            if (r.active && !r.paused) r.captureNow()
+        }
+        atualizarSeloGravacao()
     }
 
     override fun onDestroy() {
+        if (isFinishing) viewModel.recorder.provider = null   // solta a referência desta sessão
         super.onDestroy()
         screenOffReceiver?.let { runCatching { unregisterReceiver(it) } }
         cursorBlinkHandler.removeCallbacks(cursorBlinkRunnable)
@@ -265,6 +279,7 @@ class MainActivity : AppCompatActivity() {
         // Botao de mostrar/ocultar teclado (ao lado de Desconectar)
         binding.keyboardToggle.setOnClickListener { toggleKeyboard() }
         binding.keysToggle.setOnClickListener { toggleKeysBar() }
+        binding.tvRecBadge.setOnClickListener { startActivity(Intent(this, GravacaoActivity::class.java)) }
         binding.calculatorButton.setOnClickListener { abrirCalculadora() }
 
         // Toque simples: abre teclado e rola ao fim; duplo toque: ação configurada
@@ -292,6 +307,7 @@ class MainActivity : AppCompatActivity() {
                     binding.disconnectButton.isEnabled = false
                     binding.keyboardToggle.visibility = android.view.View.GONE
                     binding.keysToggle.visibility = android.view.View.GONE
+                    atualizarSeloGravacao()
                     binding.calculatorButton.visibility = android.view.View.GONE
                     cursorBlinkHandler.removeCallbacks(cursorBlinkRunnable)
                     // "Sempre" mantém a barra visível mesmo desconectado
@@ -325,6 +341,7 @@ class MainActivity : AppCompatActivity() {
                     binding.disconnectButton.isEnabled = true
                     binding.keyboardToggle.visibility = android.view.View.VISIBLE
                     binding.keysToggle.visibility = android.view.View.VISIBLE
+                    atualizarSeloGravacao()
                     binding.calculatorButton.visibility = android.view.View.VISIBLE
                     binding.keysToggle.alpha = if (toolbarHidden) 0.5f else 1f
                     if (settings.showToolbar != "Nunca") {
@@ -401,6 +418,17 @@ class MainActivity : AppCompatActivity() {
         menuInflater.inflate(R.menu.menu_main, menu)
         menu?.findItem(R.id.menu_reformat_poc)?.isChecked = reformatPocEnabled
         return true
+    }
+
+    /**
+     * Indicador do gravador de telas no topo (só aparece enquanto grava ou pausado).
+     * O controle fica em Configurações > Gravação de telas; tocar aqui abre essa tela.
+     */
+    private fun atualizarSeloGravacao() {
+        val rec = viewModel.recorder
+        binding.tvRecBadge.text = if (rec.paused) "⏸ REC" else "● REC"
+        binding.tvRecBadge.setTextColor(Color.parseColor(if (rec.paused) "#FFB300" else "#FF3B30"))
+        binding.tvRecBadge.visibility = if (rec.active) View.VISIBLE else View.GONE
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

@@ -100,6 +100,13 @@
             </LinearLayout>
 
             <!-- ===== DISPOSITIVOS ===== -->
+            <TextView style="@style/ConfigSection" android:text="Gravação" />
+
+            <LinearLayout android:id="@+id/config_gravacao" style="@style/ConfigItemRow">
+                <TextView style="@style/ConfigItemText" android:text="Gravação de telas" />
+                <ImageView style="@style/ConfigChevron" />
+            </LinearLayout>
+
             <TextView style="@style/ConfigSection" android:text="Dispositivos" />
 
             <LinearLayout android:id="@+id/config_print" style="@style/ConfigItemRow">

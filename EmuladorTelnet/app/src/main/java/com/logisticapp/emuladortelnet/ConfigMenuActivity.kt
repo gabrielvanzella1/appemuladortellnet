@@ -63,6 +63,11 @@ class ConfigMenuActivity : AppCompatActivity() {
             startActivity(android.content.Intent(this, KeyboardConfigActivity::class.java))
         }
 
+        // Gravacao
+        findViewById<android.view.View>(R.id.config_gravacao).setOnClickListener {
+            startActivity(android.content.Intent(this, GravacaoActivity::class.java))
+        }
+
         // Dispositivos
         findViewById<android.view.View>(R.id.config_print).setOnClickListener {
             startActivity(android.content.Intent(this, PrintConfigActivity::class.java))

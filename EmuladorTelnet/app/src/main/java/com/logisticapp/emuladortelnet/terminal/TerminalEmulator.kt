@@ -38,6 +38,8 @@ class TerminalEmulator(
     private val blink     = Array(rows) { BooleanArray(cols) { false } }
     // Marca celulas que sao "campo de preenchimento" (video reverso ou cor de fundo)
     private val field = Array(rows) { BooleanArray(cols) { false } }
+    // Células escritas com o atributo "oculto" (SGR 8, campo de senha): o gravador nunca guarda o texto delas
+    private val conceal = Array(rows) { BooleanArray(cols) { false } }
 
     private var cursorRow = 0
     private var cursorCol = 0
@@ -99,6 +101,7 @@ class TerminalEmulator(
     var answerbackString = ""       // resposta ao ENQ (0x05)
     var vtDaAlias = "VT100"         // resposta a ESC[c (DA query)
     var onBell: (() -> Unit)? = null
+    var onBellRaw: (() -> Unit)? = null   // BEL recebido, independente de "silenciar alarme"
     var onEnq: ((String) -> Unit)? = null
     var onDeviceAttrQuery: ((String) -> Unit)? = null
     private var consecutiveBells = 0
@@ -121,6 +124,7 @@ class TerminalEmulator(
     /**
      * Alimenta o emulador com texto recebido do servidor.
      */
+    @Synchronized
     fun feed(text: String) {
         for (ch in text) {
             when (state) {
@@ -168,6 +172,7 @@ class TerminalEmulator(
             '' -> { if (useSiso) charsetG1Active = false }  // SI: shift in  → G0
             BEL -> {
                 consecutiveBells++
+                onBellRaw?.invoke()   // gravador: registra o BEL mesmo com o alarme silenciado
                 if (!silenceHostAlarm && (maxConsecutiveAlarms == Int.MAX_VALUE || consecutiveBells <= maxConsecutiveAlarms)) {
                     onBell?.invoke()
                 }
@@ -250,6 +255,7 @@ class TerminalEmulator(
             underline[cursorRow][cursorCol] = curUnderline
             blink[cursorRow][cursorCol]     = curBlink
             field[cursorRow][cursorCol]     = curReverse || curBgSet || curConceal
+            conceal[cursorRow][cursorCol]   = curConceal
         }
         cursorCol++
     }
@@ -589,5 +595,45 @@ class TerminalEmulator(
         state = State.NORMAL
         csiParams.setLength(0)
         consecutiveBells = 0
+    }
+
+    /**
+     * Foto da tela atual para o gravador: texto das 24 linhas, cursor, campos de
+     * preenchimento (vídeo reverso/cor de fundo) e trechos destacados (cor, negrito,
+     * sublinhado, pisca). Não altera nada.
+     */
+    @Synchronized
+    fun snapshot(): ScreenRecorder.Snapshot {
+        val lines = (0 until rows).map { r ->
+            String(CharArray(cols) { c -> if (conceal[r][c] && chars[r][c] != ' ') '*' else chars[r][c] }).trimEnd()
+        }
+        val fields = mutableListOf<IntArray>()
+        val styled = mutableListOf<org.json.JSONObject>()
+        for (r in 0 until rows) {
+            var c = 0
+            while (c < cols) {
+                if (field[r][c]) {                       // trecho contínuo de campo
+                    val start = c
+                    while (c < cols && field[r][c]) c++
+                    fields.add(intArrayOf(r, start, c - start))
+                } else c++
+            }
+            c = 0
+            while (c < cols) {
+                val special = !field[r][c] && chars[r][c] != ' ' &&
+                    (bold[r][c] || underline[r][c] || blink[r][c] || fg[r][c] != defaultFg)
+                if (!special) { c++; continue }
+                val start = c; val f = fg[r][c]; val b = bold[r][c]; val u = underline[r][c]; val k = blink[r][c]
+                while (c < cols && !field[r][c] && (chars[r][c] != ' ' || c == start) &&
+                    fg[r][c] == f && bold[r][c] == b && underline[r][c] == u && blink[r][c] == k) c++
+                styled.add(org.json.JSONObject().apply {
+                    put("linha", r); put("coluna", start); put("tamanho", c - start)
+                    put("texto", String(chars[r], start, c - start))
+                    put("cor", String.format("#%06X", f and 0xFFFFFF))
+                    if (b) put("negrito", true); if (u) put("sublinhado", true); if (k) put("pisca", true)
+                })
+            }
+        }
+        return ScreenRecorder.Snapshot(lines, cursorRow, cursorCol, fields, styled)
     }
 }
