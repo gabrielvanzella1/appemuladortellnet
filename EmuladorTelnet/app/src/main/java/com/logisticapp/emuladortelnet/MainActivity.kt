@@ -54,6 +54,14 @@ class MainActivity : AppCompatActivity() {
     // Gerenciador de leitura de código de barras
     private lateinit var barcodeManager: BarcodeScannerManager
 
+    // PoC de reformatação de tela (menu "Modo reformatado") — reconhece só a tela de
+    // demonstração "RECEBIMENTO DE MERCADORIA" (scripts/demo_telnet_server.py), não é
+    // um motor genérico. Ver docs/homologacao/centauro/.
+    private var reformatPocEnabled = false
+    private var reformatOverlayShown = false
+    private var reformatActiveTemplate: ReformatTemplate? = null
+    private var reformatFields: List<android.widget.EditText> = emptyList()
+
     // Cursor piscando
     private val cursorBlinkHandler = Handler(Looper.getMainLooper())
     private val cursorBlinkRunnable = object : Runnable {
@@ -358,6 +366,7 @@ class MainActivity : AppCompatActivity() {
             binding.scrollView.post {
                 binding.scrollView.fullScroll(android.widget.ScrollView.FOCUS_DOWN)
             }
+            updateReformatOverlay()
         }
 
         // Alarme do host (BEL): toca som + vibra quando não silenciado
@@ -390,13 +399,20 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
+        menu?.findItem(R.id.menu_reformat_poc)?.isChecked = reformatPocEnabled
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.menu_calculadora -> { abrirCalculadora(); true }
-            R.id.menu_logout      -> { sair(); true }
+            R.id.menu_calculadora   -> { abrirCalculadora(); true }
+            R.id.menu_logout        -> { sair(); true }
+            R.id.menu_reformat_poc  -> {
+                reformatPocEnabled = !reformatPocEnabled
+                item.isChecked = reformatPocEnabled
+                updateReformatOverlay()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -734,5 +750,194 @@ class MainActivity : AppCompatActivity() {
         "Azul"     -> Color.rgb(64, 128, 255)
         "Laranja"  -> Color.rgb(255, 128, 0)
         else       -> Color.rgb(0, 200, 100)   // "Verde" / "Padrão"
+    }
+
+    // ------------------------------------------------------------------
+    // PoC de reformatação de tela (menu "Modo reformatado"). Cada tela reconhecível é um
+    // ReformatTemplate (texto-chave + campos) — o PADRÃO fica pronto pra receber as telas
+    // reais da Centauro (ainda não temos acesso ao host deles, ver docs/homologacao/centauro/
+    // pendencias.md P-01/P-04): tela nova = nova entrada em reformatTemplates, não uma
+    // reescrita da lógica. Hoje só tem a tela de demonstração
+    // (scripts/demo_telnet_server.py) — NÃO é tela real do ERP deles.
+    // Troca o grid cru por um formulário nativo enquanto essa tela está em exibição; os
+    // bytes digitados continuam indo pro mesmo socket (viewModel.sendRaw), então o host
+    // nem percebe diferença.
+    // ------------------------------------------------------------------
+    private data class ReformatField(
+        val label: String,
+        val width: Int,
+        val inputType: Int = android.text.InputType.TYPE_CLASS_TEXT
+    )
+
+    private data class ReformatTemplate(
+        val keyText: String,
+        val title: String,
+        val fields: List<ReformatField>,
+        val confirmLabel: String = "CONFIRMAR",
+        val confirmKey: ByteArray = byteArrayOf(27, 'O'.code.toByte(), 'P'.code.toByte())
+    )
+
+    private val reformatTemplates = listOf(
+        ReformatTemplate(
+            keyText = "RECEBIMENTO DE MERCADORIA",
+            title = "Recebimento de mercadoria",
+            fields = listOf(
+                ReformatField("CÓDIGO DO PRODUTO", 8),
+                ReformatField("QUANTIDADE", 3, android.text.InputType.TYPE_CLASS_NUMBER),
+                ReformatField("LOCAL DE ARMAZENAGEM", 6)
+            )
+        )
+    )
+
+    private fun updateReformatOverlay() {
+        val row0 = viewModel.rowText(0)
+        val match = if (reformatPocEnabled) reformatTemplates.firstOrNull { row0.contains(it.keyText) } else null
+        val recognized = match != null
+        if (recognized == reformatOverlayShown && match === reformatActiveTemplate) return
+        reformatOverlayShown = recognized
+        if (match != null) {
+            if (match !== reformatActiveTemplate) {
+                binding.reformatOverlay.removeAllViews()
+                buildReformatOverlay(match)
+                reformatActiveTemplate = match
+            }
+            reformatFields.forEach { it.setText("") }
+            binding.terminalOutput.visibility = View.INVISIBLE
+            binding.reformatOverlay.visibility = View.VISIBLE
+            reformatFields.firstOrNull()?.requestFocus()
+        } else {
+            binding.reformatOverlay.visibility = View.GONE
+            binding.terminalOutput.visibility = View.VISIBLE
+        }
+    }
+
+    /** Preto ou branco, o que tiver mais contraste em cima de [bg]. */
+    private fun reformatContrastOn(bg: Int): Int {
+        val luminance = (0.299 * Color.red(bg) + 0.587 * Color.green(bg) + 0.114 * Color.blue(bg)) / 255
+        return if (luminance > 0.6) Color.BLACK else Color.WHITE
+    }
+
+    private fun buildReformatOverlay(template: ReformatTemplate) {
+        // Essa PoC é especificamente pra Centauro (branch separada, não é o tema genérico
+        // por empresa) — cor vermelha extraída por amostra de pixel do site oficial
+        // centauro.com.br (RGB 227,0,0). Não é o hex do manual de marca deles, mas bate com
+        // o que está no ar; ajustar se a Centauro passar o código oficial.
+        val brandColor = Color.rgb(227, 0, 0)
+        // Cabeçalho branco com o logo, igual ao site da Centauro (barra vermelha ficaria
+        // estranha atrás do logo, que já tem fundo branco recortado do print deles).
+        val headerBg = Color.WHITE
+        val headerFg = Color.BLACK
+
+        val header = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setBackgroundColor(headerBg)
+            setPadding(32, 24, 32, 24)
+        }
+        val logoFile = cc().logoFile(this)
+        val logoHeightPx = (28 * resources.displayMetrics.density).toInt()
+        if (logoFile != null) {
+            header.addView(android.widget.ImageView(this).apply {
+                setImageURI(android.net.Uri.fromFile(logoFile))
+                adjustViewBounds = true
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, logoHeightPx
+                ).apply { marginEnd = 16 }
+            })
+        } else {
+            header.addView(android.widget.ImageView(this).apply {
+                setImageResource(R.drawable.centauro_logo)
+                adjustViewBounds = true
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, logoHeightPx
+                ).apply { marginEnd = 16 }
+            })
+        }
+        header.addView(android.widget.TextView(this).apply {
+            text = template.title
+            textSize = 15f
+            setTextColor(headerFg)
+            setTypeface(typeface, Typeface.BOLD)
+        })
+
+        val container = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setBackgroundColor(Color.WHITE)
+        }
+        val fieldsArea = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(32, 24, 32, 32)
+        }
+        val fields = mutableListOf<android.widget.EditText>()
+        template.fields.forEachIndexed { idx, field ->
+            val tv = android.widget.TextView(this).apply {
+                text = field.label
+                textSize = 11f
+                setTextColor(Color.DKGRAY)
+                setPadding(0, 20, 0, 4)
+            }
+            val et = android.widget.EditText(this).apply {
+                inputType = field.inputType
+                filters = arrayOf(android.text.InputFilter.LengthFilter(field.width))
+                imeOptions = if (idx < template.fields.size - 1)
+                    android.view.inputmethod.EditorInfo.IME_ACTION_NEXT
+                else
+                    android.view.inputmethod.EditorInfo.IME_ACTION_DONE
+                backgroundTintList = android.content.res.ColorStateList.valueOf(brandColor)
+            }
+            fields.add(et)
+            fieldsArea.addView(tv)
+            fieldsArea.addView(et)
+        }
+        val confirmBtn = android.widget.Button(this).apply {
+            text = template.confirmLabel
+            setTextColor(reformatContrastOn(brandColor))
+            isAllCaps = true
+            background = android.graphics.drawable.GradientDrawable().apply {
+                cornerRadius = 16f
+                setColor(brandColor)
+            }
+            val padV = (14 * resources.displayMetrics.density).toInt()
+            setPadding(0, padV, 0, padV)
+            setOnClickListener { viewModel.sendRaw(template.confirmKey) }
+        }
+        val btnParams = android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { topMargin = 28 }
+        fieldsArea.addView(confirmBtn, btnParams)
+        container.addView(header)
+        container.addView(fieldsArea)
+        binding.reformatOverlay.addView(container)
+        reformatFields = fields
+
+        // Cada campo manda pro host só o que mudou, char a char — igual à digitação crua.
+        fields.forEachIndexed { idx, et ->
+            var lastSent = ""
+            et.addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+                override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+                override fun afterTextChanged(s: android.text.Editable?) {
+                    val now = s?.toString() ?: ""
+                    when {
+                        now.length > lastSent.length && now.startsWith(lastSent) ->
+                            viewModel.sendRaw(now.substring(lastSent.length).toByteArray(Charsets.ISO_8859_1))
+                        now.length < lastSent.length && lastSent.startsWith(now) ->
+                            repeat(lastSent.length - now.length) { viewModel.sendRaw(byteArrayOf(8)) }
+                        else -> { /* edição no meio do campo: fora do escopo da PoC */ }
+                    }
+                    lastSent = now
+                }
+            })
+            et.setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_NEXT ||
+                    actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE
+                ) {
+                    viewModel.sendRaw(byteArrayOf(13))
+                    fields.getOrNull(idx + 1)?.requestFocus()
+                    true
+                } else false
+            }
+        }
     }
 }

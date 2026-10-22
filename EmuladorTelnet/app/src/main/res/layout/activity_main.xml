@@ -108,32 +108,54 @@
     </LinearLayout>
 
     <!-- Terminal Output -->
-    <ScrollView
-        android:id="@+id/scrollView"
+    <FrameLayout
+        android:id="@+id/terminalAreaFrame"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="#000000"
-        android:fillViewport="true">
+        android:layout_weight="1">
 
-        <HorizontalScrollView
+        <ScrollView
+            android:id="@+id/scrollView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:scrollbars="none">
+            android:layout_height="match_parent"
+            android:background="#000000"
+            android:fillViewport="true">
 
-            <com.logisticapp.emuladortelnet.terminal.TerminalView
-                android:id="@+id/terminalOutput"
-                android:layout_width="wrap_content"
+            <HorizontalScrollView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="10sp"
-                android:fontFamily="monospace"
-                android:padding="6dp"
-                android:background="#000000"
-                android:textColor="#00FF00"
-                android:includeFontPadding="false"
-                android:lineSpacingExtra="0dp" />
-        </HorizontalScrollView>
-    </ScrollView>
+                android:scrollbars="none">
+
+                <FrameLayout
+                    android:id="@+id/terminalFrame"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <com.logisticapp.emuladortelnet.terminal.TerminalView
+                        android:id="@+id/terminalOutput"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="10sp"
+                        android:fontFamily="monospace"
+                        android:padding="6dp"
+                        android:background="#000000"
+                        android:textColor="#00FF00"
+                        android:includeFontPadding="false"
+                        android:lineSpacingExtra="0dp" />
+                </FrameLayout>
+            </HorizontalScrollView>
+        </ScrollView>
+
+        <!-- Overlay da PoC de reformatação de tela (menu "Modo reformatado") — fora do
+             HorizontalScrollView de propósito, pra ocupar a largura toda da tela (responsivo),
+             em vez de ficar limitado à largura estreita do grid de 80 colunas do terminal cru. -->
+        <FrameLayout
+            android:id="@+id/reformatOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#FFFFFF"
+            android:visibility="gone" />
+    </FrameLayout>
 
     <!-- Barras de ferramentas (4 linhas geradas dinamicamente) -->
     <LinearLayout

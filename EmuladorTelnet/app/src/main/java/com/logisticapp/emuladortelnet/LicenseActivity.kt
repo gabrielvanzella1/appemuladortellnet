@@ -53,7 +53,7 @@ class LicenseActivity : AppCompatActivity() {
         }
 
         // Painel de debug — desativado por hora (confundia teste de ativação por chave real)
-        if (false && BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
             val debugPanel = findViewById<LinearLayout>(R.id.debug_panel)
             debugPanel.visibility = android.view.View.VISIBLE
 

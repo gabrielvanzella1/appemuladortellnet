@@ -84,6 +84,9 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
         emulator.blinkMode        = opts.blinkMode
     }
 
+    /** Texto puro de uma linha da tela atual — usado pra reconhecer telas conhecidas (PoC de reformatação). */
+    fun rowText(row: Int): String = emulator.rowText(row)
+
     /** Alterna visibilidade do cursor para efeito de piscada. Chamar no main thread. */
     fun toggleCursor() {
         emulator.showCursor = !emulator.showCursor

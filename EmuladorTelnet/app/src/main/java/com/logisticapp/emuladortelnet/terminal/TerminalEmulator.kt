@@ -381,6 +381,12 @@ class TerminalEmulator(
         }
     }
 
+    /** Texto puro de uma linha da grade (sem atributos) — usado pra reconhecer telas conhecidas. */
+    fun rowText(row: Int): String {
+        if (row < 0 || row >= rows) return ""
+        return String(chars[row])
+    }
+
     /**
      * Renderiza a grade inteira como HTML monoespaçado para exibir em TextView.
      */
