@@ -71,3 +71,9 @@
     (`~/deploy-scante-admin.sh` no servidor) — senão um deploy apagaria os APKs enviados.
   - v1.1.2 / versionCode 5 (multi-host + som de alerta + esse próprio mecanismo) já está
     cadastrada em produção como versão geral.
+  - **22/10/2026:** o APK da 1.1.2 cadastrado era build **debug** (chave de debug do PC de casa,
+    SHA-256 `47fb9332…`, depurável). Foi substituído no mesmo arquivo pela build **release oficial**
+    (SHA-256 `c8eef2b7…`, não depurável), conferida por hash no servidor e pelo link público.
+    O debug ficou em `~/backups/apks/ScanTE-1.1.2-5-DEBUG-casa-20261022.apk` (fora da pasta pública).
+    A oficial instala por cima da 1.1.0/1.1.1 oficiais (testado no emulador). Aparelhos com build de
+    debug/chave de casa (ex.: CK62 da Centauro) precisam desinstalar uma vez e liberar a licença.
