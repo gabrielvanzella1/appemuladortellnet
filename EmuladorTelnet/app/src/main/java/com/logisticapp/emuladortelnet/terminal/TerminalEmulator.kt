@@ -38,6 +38,8 @@ class TerminalEmulator(
     private val blink     = Array(rows) { BooleanArray(cols) { false } }
     // Marca celulas que sao "campo de preenchimento" (video reverso ou cor de fundo)
     private val field = Array(rows) { BooleanArray(cols) { false } }
+    // Células escritas com o atributo "oculto" (SGR 8, campo de senha): o gravador nunca guarda o texto delas
+    private val conceal = Array(rows) { BooleanArray(cols) { false } }
 
     private var cursorRow = 0
     private var cursorCol = 0
@@ -253,6 +255,7 @@ class TerminalEmulator(
             underline[cursorRow][cursorCol] = curUnderline
             blink[cursorRow][cursorCol]     = curBlink
             field[cursorRow][cursorCol]     = curReverse || curBgSet || curConceal
+            conceal[cursorRow][cursorCol]   = curConceal
         }
         cursorCol++
     }
@@ -595,7 +598,9 @@ class TerminalEmulator(
      */
     @Synchronized
     fun snapshot(): ScreenRecorder.Snapshot {
-        val lines = (0 until rows).map { String(chars[it]).trimEnd() }
+        val lines = (0 until rows).map { r ->
+            String(CharArray(cols) { c -> if (conceal[r][c] && chars[r][c] != ' ') '*' else chars[r][c] }).trimEnd()
+        }
         val fields = mutableListOf<IntArray>()
         val styled = mutableListOf<org.json.JSONObject>()
         for (r in 0 until rows) {

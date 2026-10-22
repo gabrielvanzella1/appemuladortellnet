@@ -36,6 +36,8 @@ class GravacaoActivity : AppCompatActivity() {
     private lateinit var btnIniciar: Button
     private lateinit var btnPausar: Button
     private lateinit var btnParar: Button
+    private lateinit var chkDownloads: android.widget.CheckBox
+    private val prefs by lazy { getSharedPreferences("gravacao_prefs", MODE_PRIVATE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +54,10 @@ class GravacaoActivity : AppCompatActivity() {
         btnPausar = findViewById(R.id.btn_pausar)
         btnParar = findViewById(R.id.btn_parar)
 
+        chkDownloads = findViewById(R.id.chk_downloads)
+        chkDownloads.isChecked = prefs.getBoolean("copiar_downloads", true)
+        chkDownloads.setOnCheckedChangeListener { _, v -> prefs.edit().putBoolean("copiar_downloads", v).apply() }
+
         btnIniciar.setOnClickListener { iniciar() }
         btnPausar.setOnClickListener {
             if (rec.paused) { rec.resume(); rec.captureNow() } else rec.pause()
@@ -65,7 +71,21 @@ class GravacaoActivity : AppCompatActivity() {
 
     private fun pasta() = File(getExternalFilesDir(null) ?: filesDir, "gravacoes")
 
+    /** Apaga da pasta Downloads as cópias de gravação (criadas pelo app) com mais de 7 dias. */
+    private fun apagarCopiasAntigas() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+        runCatching {
+            val limite = System.currentTimeMillis() / 1000 - 7L * 24 * 3600
+            contentResolver.delete(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                "${MediaStore.MediaColumns.DISPLAY_NAME} LIKE ? AND ${MediaStore.MediaColumns.DATE_ADDED} < ?",
+                arrayOf("gravacao-%", limite.toString())
+            )
+        }
+    }
+
     private fun iniciar() {
+        apagarCopiasAntigas()
         rec.appVersion = BuildConfig.VERSION_NAME
         rec.deviceModel = "${Build.MANUFACTURER} ${Build.MODEL}"
         rec.start(pasta())
@@ -102,7 +122,7 @@ class GravacaoActivity : AppCompatActivity() {
             Toast.makeText(this, "Nada foi gravado.", Toast.LENGTH_LONG).show()
             return
         }
-        val emDownloads = copiarParaDownloads(arquivo)
+        val emDownloads = chkDownloads.isChecked && copiarParaDownloads(arquivo)
         Toast.makeText(
             this,
             "Gravação salva: $telas telas." + if (emDownloads) " Cópia na pasta Downloads: ${arquivo.name}" else "",

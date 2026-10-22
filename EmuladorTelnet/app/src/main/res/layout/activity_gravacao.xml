@@ -39,6 +39,13 @@
                 android:padding="16dp"
                 android:background="#F3F4F6" />
 
+            <CheckBox
+                android:id="@+id/chk_downloads"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Copiar também para a pasta Downloads (fácil de achar; outros apps do aparelho poderão ver o arquivo). Cópias com mais de 7 dias são apagadas." />
+
             <Button
                 android:id="@+id/btn_iniciar"
                 android:layout_width="match_parent"

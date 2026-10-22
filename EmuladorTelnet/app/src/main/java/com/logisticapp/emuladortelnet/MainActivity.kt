@@ -196,9 +196,14 @@ class MainActivity : AppCompatActivity() {
         viewModel.refreshDisplay()
         // Gravador de telas: registra a sessão em primeiro plano e pega a tela atual
         viewModel.recorder.let { r ->
-            r.host = currentHost
-            r.port = currentPort
             r.provider = { viewModel.snapshotScreen() }
+            if (r.attachSession(currentHost, currentPort)) {
+                android.widget.Toast.makeText(
+                    this,
+                    "Gravação PAUSADA: você abriu outro host. Para continuar, retome em Configurações → Gravação de telas.",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
             if (r.active && !r.paused) r.captureNow()
         }
         atualizarSeloGravacao()

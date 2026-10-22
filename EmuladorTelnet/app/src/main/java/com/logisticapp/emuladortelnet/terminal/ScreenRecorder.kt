@@ -75,6 +75,7 @@ class ScreenRecorder {
             if (active) return
             active = true
             paused = false
+            host = ""; port = 0           // o host é "amarrado" na primeira sessão que abrir (ver attachSession)
             outFile = null
             sinceAutosave = 0
             dirOut = dir
@@ -137,6 +138,19 @@ class ScreenRecorder {
     fun onBell() {
         if (!active || paused) return
         synchronized(this) { flushText(); add(JSONObject().put("tipo", "alarme_host")) }
+    }
+
+    /**
+     * Registra a sessão em primeiro plano. A gravação fica amarrada ao primeiro host aberto depois de
+     * iniciar; se outra sessão (host/porta diferente) for aberta, PAUSA sozinha e devolve true para avisar.
+     */
+    fun attachSession(h: String, p: Int): Boolean {
+        synchronized(this) {
+            if (!active || host.isEmpty()) { host = h; port = p; return false }
+            if (host == h && port == p) return false
+            if (!paused) { pause(); return true }
+            return false
+        }
     }
 
     fun pause() {
