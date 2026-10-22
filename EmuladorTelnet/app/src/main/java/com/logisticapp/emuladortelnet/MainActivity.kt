@@ -197,6 +197,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        if (viewModel.recorder.active && isFinishing) finalizarGravacao(compartilhar = false)
         super.onDestroy()
         screenOffReceiver?.let { runCatching { unregisterReceiver(it) } }
         cursorBlinkHandler.removeCallbacks(cursorBlinkRunnable)
@@ -390,12 +391,78 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
+        atualizarItemGravacao(menu)
         return true
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        atualizarItemGravacao(menu)
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+    // ------------------------------------------------------------------
+    // Gravador de telas: grava as telas do host para montar a futura "tela gráfica".
+    // Não grava o que é digitado (só nomes de teclas e quantidade de caracteres).
+    // ------------------------------------------------------------------
+    private fun atualizarItemGravacao(menu: Menu?) {
+        menu?.findItem(R.id.menu_gravar_telas)?.title =
+            if (viewModel.recorder.active) "Parar gravação (${viewModel.recorder.screens} telas)" else "Gravar telas"
+    }
+
+    private fun atualizarSeloGravacao() {
+        binding.tvRecBadge.visibility = if (viewModel.recorder.active) View.VISIBLE else View.GONE
+    }
+
+    private fun alternarGravacao() {
+        val rec = viewModel.recorder
+        if (!rec.active) {
+            rec.host = currentHost
+            rec.port = currentPort
+            rec.appVersion = BuildConfig.VERSION_NAME
+            rec.deviceModel = "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}"
+            rec.start(java.io.File(getExternalFilesDir(null) ?: filesDir, "gravacoes"))
+            atualizarSeloGravacao()
+            android.widget.Toast.makeText(
+                this,
+                "Gravando as telas. Faça o trabalho normal e depois toque em Parar gravação.",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+        } else {
+            finalizarGravacao(compartilhar = true)
+        }
+        invalidateOptionsMenu()
+    }
+
+    /** Para a gravação, salva o arquivo e (se pedido) abre o "Compartilhar" do Android. */
+    private fun finalizarGravacao(compartilhar: Boolean) {
+        val telas = viewModel.recorder.screens
+        val dir = java.io.File(getExternalFilesDir(null) ?: filesDir, "gravacoes")
+        val arquivo = runCatching { viewModel.recorder.stop(dir) }.getOrNull()
+        atualizarSeloGravacao()
+        if (arquivo == null) {
+            android.widget.Toast.makeText(this, "Nada foi gravado.", android.widget.Toast.LENGTH_LONG).show()
+            return
+        }
+        android.widget.Toast.makeText(
+            this, "Gravação salva: $telas telas (${arquivo.name})", android.widget.Toast.LENGTH_LONG
+        ).show()
+        if (!compartilhar) return
+        runCatching {
+            val uri = androidx.core.content.FileProvider.getUriForFile(this, "$packageName.fileprovider", arquivo)
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = "application/json"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, "Gravação de telas ScanTE")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(send, "Enviar gravação").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }.onFailure { Timber.w(it, "Falha ao abrir o compartilhamento da gravação") }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_calculadora -> { abrirCalculadora(); true }
+            R.id.menu_gravar_telas -> { alternarGravacao(); true }
             R.id.menu_logout      -> { sair(); true }
             else -> super.onOptionsItemSelected(item)
         }

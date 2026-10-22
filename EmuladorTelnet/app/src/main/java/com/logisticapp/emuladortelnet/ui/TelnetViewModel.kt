@@ -38,6 +38,9 @@ private enum class TelnetAutoLoginState {
  */
 class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
 
+    /** Gravador de telas (menu "Gravar telas"); inativo até o usuário ligar. */
+    val recorder = com.logisticapp.emuladortelnet.terminal.ScreenRecorder()
+
     // Cliente Telnet
     private val telnetClient = TelnetClient()
 
@@ -205,6 +208,7 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
 
         // BEL → notifica a Activity para tocar o som
         emulator.onBell = { _bellEvent.postValue(Unit) }
+        emulator.onBellRaw = { recorder.onBell() }
 
         // VT DA Alias define também o tipo de terminal negociado no Telnet
         if (opts.vtDaAlias.isNotBlank()) telnetClient.setTerminalType(opts.vtDaAlias)
@@ -399,6 +403,7 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     /** Envia bytes brutos ao servidor (setas, Ctrl, Esc...) sem adicionar CRLF. */
     fun sendRaw(bytes: ByteArray) {
         if (_connectionState.value != ConnectionState.CONNECTED) return
+        recorder.onKey(bytes)   // grava só o NOME da tecla / quantidade de caracteres, nunca o texto
 
         // Aplicar transformações de transliteração antes de enviar
         var out = bytes
@@ -571,6 +576,7 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
      */
     fun sendCommand(command: String) {
         if (_connectionState.value == ConnectionState.CONNECTED) {
+            recorder.onKey(command.toByteArray(Charsets.ISO_8859_1)); recorder.onKey(byteArrayOf(13))  // só contagem + ENTER
             // Adicionar ao histórico de input e persistir no log de sessão
             inputHistory.add(command)
             saveCommandToHistory(command)
@@ -620,6 +626,7 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
     private fun addTerminalOutput(text: String) {
         try {
             emulator.feed(text)
+            recorder.onScreenData { emulator.snapshot() }
             _terminalOutputStyled.postValue(emulator.renderSpannable())
             // Verificar auto-login (monitora prompts e envia credenciais)
             checkAutoLogin(text)
