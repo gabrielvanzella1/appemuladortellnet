@@ -15,19 +15,23 @@ Objetivo: capturar as telas reais do SHARK para montar a "tela gráfica". Leva ~
 3. Cadastrar o host: **+** → nome, IP e porta do SHARK → Conectar.
 
 ## Gravar
-1. Conectado no SHARK, menu **⋮** (ou tecla MENU) → **Gravar telas**. Aparece **● REC** vermelho no topo.
-2. Fazer o trabalho normal, **passando por todos os fluxos** — marque ao concluir:
+1. Conectar no SHARK uma vez (ou iniciar a gravação antes de conectar, para pegar também a tela de login).
+2. Ir em **Configurações → Gravação de telas** → **Iniciar gravação**.
+3. Voltar para a sessão. Aparece **● REC** vermelho no topo (tocar nele reabre a tela da gravação).
+4. Fazer o trabalho normal, **passando por todos os fluxos** — marque ao concluir:
    - [ ] Login (certo)  · [ ] Login com senha errada
    - [ ] Menu principal e cada submenu
    - [ ] Recebimento · [ ] Separação · [ ] Conferência · [ ] Inventário · [ ] Endereçamento
    - [ ] **Erros de propósito:** código inexistente · quantidade inválida · campo vazio · endereço errado · produto já conferido
    - [ ] Telas de **lista** (que rolam) e telas de **confirmação/sucesso**
    - [ ] Tela de ajuda / mensagens do sistema, se houver
-3. Menu **⋮** → **Parar gravação**. O app salva o arquivo e abre o **Compartilhar**: enviar por WhatsApp, e-mail ou Drive.
+5. **Intervalo?** Configurações → Gravação de telas → **Pausar** (o selo fica amarelo ⏸). **Retomar** continua do mesmo ponto.
+6. Ao terminar: Configurações → Gravação de telas → **Parar e enviar**. O app salva o arquivo, **copia para a pasta Downloads**
+   do coletor (Arquivos → Downloads → `gravacao-….json`) e abre o **Compartilhar** (WhatsApp, e-mail, Drive).
 
 ## Se algo der errado (nada se perde)
 - **O app grava o arquivo sozinho a cada poucos passos.** Se fechar sem querer, a bateria acabar ou o Wi-Fi cair, o que foi feito até ali está salvo.
-- Para achar o arquivo: `Android/data/com.logisticapp.emuladortelnet/files/gravacoes/` (por cabo USB, no notebook).
+- Para achar o arquivo: pasta **Downloads** do coletor, ou `Android/data/com.logisticapp.emuladortelnet/files/gravacoes/` (cabo USB, no notebook).
 - Se o Wi-Fi cair, o app tenta reconectar sozinho e a gravação **continua**.
 
 ## Cuidados (importante)

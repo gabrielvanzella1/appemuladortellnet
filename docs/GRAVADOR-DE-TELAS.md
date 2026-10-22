@@ -4,7 +4,7 @@ Ramo: `feature/gravador-telas` (parte do `main` em `50f4aee`, versão **1.1.3 / 
 **Não inclui** a tela gráfica de demonstração (`feature/reformatacao-tela-poc`): são frentes separadas.
 
 ## O que é
-Função do app (menu ⋮ → **Gravar telas** / **Parar gravação**) que grava a conversa com o host Telnet num
+Função do app (**Configurações → Gravação de telas**: Iniciar / Pausar / Retomar / Parar e enviar; selo ● REC no topo da sessão) que grava a conversa com o host Telnet num
 arquivo JSON, para depois montar a "tela gráfica" a partir de telas reais (ideia do Ivanti Velocity:
 gravar → editar numa ferramenta → carregar de volta no coletor). Hoje existe só a **primeira peça (o gravador)**.
 
@@ -30,14 +30,16 @@ se o host a mostrar sem máscara. Conferir o arquivo antes de compartilhar; usar
 - `terminal/ScreenRecorder.kt` — gravador (captura com debounce, máscara das teclas, autosave a cada 15 eventos).
 - `terminal/TerminalEmulator.kt` — `snapshot()` e `onBellRaw` (BEL mesmo com alarme silenciado); `feed()` ficou `@Synchronized`.
 - `ui/TelnetViewModel.kt` — liga o gravador em `addTerminalOutput`, `sendRaw`, `sendCommand` e no BEL.
-- `MainActivity.kt` — menu, selo ● REC, salvar/compartilhar (FileProvider); fecha e salva ao sair da tela.
+- `GravacaoActivity.kt` + `res/layout/activity_gravacao.xml` — tela Configurações → Gravação de telas (iniciar/pausar/parar, salvar, cópia em Downloads, compartilhar via FileProvider).
+- `MainActivity.kt` — registra a sessão em primeiro plano no gravador (`onResume`) e mostra o selo ● REC / ⏸ REC (toque abre a tela de gravação).
+- `ScreenRecorder.instance` — gravador ÚNICO no app (vale para a sessão em primeiro plano; com 2 sessões abertas os eventos se misturam).
 - `AndroidManifest.xml` + `res/xml/file_paths.xml` — FileProvider (`<applicationId>.fileprovider`).
 - Arquivos ficam em `Android/data/com.logisticapp.emuladortelnet/files/gravacoes/`.
 
 ## Ensaio com coletor real (ex.: EDA52) usando o SHARK simulado
 1. PC e coletor no mesmo Wi-Fi. No PC: `python scripts/shark_simulado.py 2300 0.0.0.0` e liberar a porta 2300 no firewall.
 2. No coletor: instalar o APK, ativar, cadastrar host = **IP do PC** (`ipconfig`), porta 2300.
-3. Menu → Gravar telas → login (qualquer), `1`, bipar `7891000100103` (válido), `999` (inválido → bipe + "PRODUTO INVALIDO") → Parar.
+3. Configurações → Gravação de telas → Iniciar; voltar à sessão; login (qualquer), `1`, bipar `7891000100103` (válido), `999` (inválido → bipe + "PRODUTO INVALIDO") → Parar.
 4. Conferir o JSON: telas, `alarme_host` no código inválido, e nenhuma senha no texto.
 
 ## Build oficial

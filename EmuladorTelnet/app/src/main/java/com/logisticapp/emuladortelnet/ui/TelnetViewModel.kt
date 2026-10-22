@@ -39,7 +39,10 @@ private enum class TelnetAutoLoginState {
 class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
 
     /** Gravador de telas (menu "Gravar telas"); inativo até o usuário ligar. */
-    val recorder = com.logisticapp.emuladortelnet.terminal.ScreenRecorder()
+    val recorder get() = com.logisticapp.emuladortelnet.terminal.ScreenRecorder.instance
+
+    /** Foto da tela atual (usada pelo gravador). */
+    fun snapshotScreen() = emulator.snapshot()
 
     // Cliente Telnet
     private val telnetClient = TelnetClient()

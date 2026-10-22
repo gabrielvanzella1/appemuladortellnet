@@ -16,9 +16,12 @@ import java.util.Locale
  * Liga/desliga pelo menu. Enquanto grava, guarda uma linha do tempo com:
  *  - as TELAS do host (texto da grade 24x80, cursor, campos de preenchimento e trechos
  *    destacados/coloridos) — só quando a tela muda e fica parada ~0,4 s;
- *  - as TECLAS enviadas, SEM o conteúdo digitado: texto vira só "texto(n caracteres)",
- *    então senha e códigos bipados nunca vão para o arquivo; teclas especiais viram
- *    nomes (ENTER, TAB, F1...);
+ *  - as TECLAS enviadas, SEM o conteúdo digitado: texto vira só "digitou: n caracteres";
+ *    teclas especiais viram nomes (ENTER, TAB, F1...);
+ *  ATENÇÃO: as TELAS mostram o que o HOST exibiu, então valores digitados que o host ecoa
+ *  (usuário, códigos, quantidades) APARECEM nas telas. Linhas com rótulo de senha
+ *  ("senha", "password", "pin"...) têm o valor mascarado como proteção extra, mas a
+ *  máscara é só um melhor-esforço. Arquivos com mais de 7 dias são apagados ao iniciar.
  *  - os ALARMES (BEL) que o host mandou — mostra se o sistema avisa erro com bipe.
  *
  * O arquivo (JSON) é entregue pelo usuário; nada é enviado sozinho.
@@ -39,6 +42,11 @@ class ScreenRecorder {
 
     @Volatile var active = false
         private set
+    @Volatile var paused = false
+        private set
+
+    /** Foto da tela da sessão que está em primeiro plano (registrada pela MainActivity). */
+    @Volatile var provider: (() -> Snapshot)? = null
 
     private val events = JSONArray()
     private var startedAtWall = 0L
@@ -66,9 +74,14 @@ class ScreenRecorder {
         synchronized(this) {
             if (active) return
             active = true
+            paused = false
             outFile = null
             sinceAutosave = 0
             dirOut = dir
+            runCatching {
+                val limite = System.currentTimeMillis() - 7L * 24 * 3600 * 1000
+                dir.listFiles { f -> f.name.startsWith("gravacao-") && f.lastModified() < limite }?.forEach { it.delete() }
+            }
             startedAtWall = System.currentTimeMillis()
             startedAtMono = SystemClock.elapsedRealtime()
             lastFingerprint = ""
@@ -83,6 +96,7 @@ class ScreenRecorder {
         synchronized(this) {
             if (!active) return null
             active = false
+            paused = false
             pendingCapture?.let { handler.removeCallbacks(it) }
             flushText()
         }
@@ -99,15 +113,15 @@ class ScreenRecorder {
 
     /** Chamado a cada dado recebido do host: agenda a captura quando a tela "assentar". */
     fun onScreenData(capture: () -> Snapshot) {
-        if (!active) return
+        if (!active || paused) return
         pendingCapture?.let { handler.removeCallbacks(it) }
-        val r = Runnable { synchronized(this) { if (active) addScreen(capture()) } }
+        val r = Runnable { synchronized(this) { if (active && !paused) addScreen(capture()) } }
         pendingCapture = r
         handler.postDelayed(r, 400)
     }
 
     fun onKey(bytes: ByteArray) {
-        if (!active) return
+        if (!active || paused) return
         synchronized(this) {
             val name = specialKeyName(bytes)
             if (name == null) {
@@ -121,13 +135,57 @@ class ScreenRecorder {
     }
 
     fun onBell() {
-        if (!active) return
+        if (!active || paused) return
         synchronized(this) { flushText(); add(JSONObject().put("tipo", "alarme_host")) }
+    }
+
+    fun pause() {
+        synchronized(this) {
+            if (!active || paused) return
+            pendingCapture?.let { handler.removeCallbacks(it) }
+            flushText()
+            add(JSONObject().put("tipo", "pausa"))
+            paused = true
+            autosave()
+        }
+    }
+
+    fun resume() {
+        synchronized(this) {
+            if (!active || !paused) return
+            paused = false
+            lastFingerprint = ""            // a mesma tela volta a ser capturada após a pausa
+            add(JSONObject().put("tipo", "retomada"))
+        }
+    }
+
+    /** Captura a tela atual agora (ao iniciar/retomar e ao voltar para a sessão). */
+    fun captureNow() {
+        val p = provider ?: return
+        synchronized(this) { if (active && !paused) addScreen(p()) }
     }
 
     // ---- internos ----
 
-    private fun addScreen(s: Snapshot) {
+    /** Mantém o rótulo ("Senha:") e troca o que vem depois por '*' (melhor-esforço, protege host que ecoa a senha). */
+    private fun mascarar(linha: String): String {
+        val m = SENSIVEL.find(linha) ?: return linha
+        val dois = linha.indexOf(':', m.range.first)
+        val corte = if (dois >= 0) dois + 1 else m.range.last + 1
+        return linha.substring(0, corte) + linha.substring(corte).map { if (it == ' ') it else '*' }.joinToString("")
+    }
+
+    private fun protegido(s: Snapshot): Snapshot {
+        val rows = s.rows.map(::mascarar)
+        val styled = s.styled.map { o ->
+            val r = o.optInt("linha", -1)
+            if (r in rows.indices && rows[r] != s.rows[r]) JSONObject(o.toString()).put("texto", "*".repeat(o.optInt("tamanho", 0))) else o
+        }
+        return Snapshot(rows, s.cursorRow, s.cursorCol, s.fields, styled)
+    }
+
+    private fun addScreen(raw: Snapshot) {
+        val s = protegido(raw)
         val fp = s.fingerprint()
         if (fp == lastFingerprint) return
         lastFingerprint = fp
@@ -182,7 +240,11 @@ class ScreenRecorder {
     }
 
     companion object {
+        /** Um gravador único no app: as telas de Configurações e a sessão falam com o mesmo. */
+        val instance = ScreenRecorder()
+
         private const val MAX_EVENTS = 4000
+        private val SENSIVEL = Regex("""(?i)(senha|password|passwd|pwd|\bpin\b)""")
 
         /** Nome da tecla especial, ou null se for texto comum. */
         fun specialKeyName(b: ByteArray): String? {

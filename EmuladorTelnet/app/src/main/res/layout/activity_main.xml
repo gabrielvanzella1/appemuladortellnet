@@ -67,11 +67,16 @@
             android:id="@+id/tv_rec_badge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="● REC"
-            android:textColor="#FF3B30"
+            android:text="○ REC"
+            android:textColor="#B0B0B8"
             android:textStyle="bold"
             android:textSize="12sp"
-            android:layout_marginEnd="8dp"
+            android:padding="8dp"
+            android:layout_marginEnd="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Gravar telas"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:visibility="gone" />
 
         <!-- Mostrar/ocultar a barra de teclas personalizadas -->

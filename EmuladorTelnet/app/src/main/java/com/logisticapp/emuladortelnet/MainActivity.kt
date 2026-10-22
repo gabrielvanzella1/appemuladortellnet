@@ -194,10 +194,18 @@ class MainActivity : AppCompatActivity() {
         // Re-aplica configurações que podem ter sido alteradas em telas de configuração
         applyViewModelSettings()
         viewModel.refreshDisplay()
+        // Gravador de telas: registra a sessão em primeiro plano e pega a tela atual
+        viewModel.recorder.let { r ->
+            r.host = currentHost
+            r.port = currentPort
+            r.provider = { viewModel.snapshotScreen() }
+            if (r.active && !r.paused) r.captureNow()
+        }
+        atualizarSeloGravacao()
     }
 
     override fun onDestroy() {
-        if (viewModel.recorder.active && isFinishing) finalizarGravacao(compartilhar = false)
+        if (isFinishing) viewModel.recorder.provider = null   // solta a referência desta sessão
         super.onDestroy()
         screenOffReceiver?.let { runCatching { unregisterReceiver(it) } }
         cursorBlinkHandler.removeCallbacks(cursorBlinkRunnable)
@@ -258,6 +266,7 @@ class MainActivity : AppCompatActivity() {
         // Botao de mostrar/ocultar teclado (ao lado de Desconectar)
         binding.keyboardToggle.setOnClickListener { toggleKeyboard() }
         binding.keysToggle.setOnClickListener { toggleKeysBar() }
+        binding.tvRecBadge.setOnClickListener { startActivity(Intent(this, GravacaoActivity::class.java)) }
         binding.calculatorButton.setOnClickListener { abrirCalculadora() }
 
         // Toque simples: abre teclado e rola ao fim; duplo toque: ação configurada
@@ -285,6 +294,7 @@ class MainActivity : AppCompatActivity() {
                     binding.disconnectButton.isEnabled = false
                     binding.keyboardToggle.visibility = android.view.View.GONE
                     binding.keysToggle.visibility = android.view.View.GONE
+                    atualizarSeloGravacao()
                     binding.calculatorButton.visibility = android.view.View.GONE
                     cursorBlinkHandler.removeCallbacks(cursorBlinkRunnable)
                     // "Sempre" mantém a barra visível mesmo desconectado
@@ -318,6 +328,7 @@ class MainActivity : AppCompatActivity() {
                     binding.disconnectButton.isEnabled = true
                     binding.keyboardToggle.visibility = android.view.View.VISIBLE
                     binding.keysToggle.visibility = android.view.View.VISIBLE
+                    atualizarSeloGravacao()
                     binding.calculatorButton.visibility = android.view.View.VISIBLE
                     binding.keysToggle.alpha = if (toolbarHidden) 0.5f else 1f
                     if (settings.showToolbar != "Nunca") {
@@ -391,78 +402,23 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
-        atualizarItemGravacao(menu)
         return true
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        atualizarItemGravacao(menu)
-        return super.onPrepareOptionsMenu(menu)
-    }
-
-    // ------------------------------------------------------------------
-    // Gravador de telas: grava as telas do host para montar a futura "tela gráfica".
-    // Não grava o que é digitado (só nomes de teclas e quantidade de caracteres).
-    // ------------------------------------------------------------------
-    private fun atualizarItemGravacao(menu: Menu?) {
-        menu?.findItem(R.id.menu_gravar_telas)?.title =
-            if (viewModel.recorder.active) "Parar gravação (${viewModel.recorder.screens} telas)" else "Gravar telas"
-    }
-
+    /**
+     * Indicador do gravador de telas no topo (só aparece enquanto grava ou pausado).
+     * O controle fica em Configurações > Gravação de telas; tocar aqui abre essa tela.
+     */
     private fun atualizarSeloGravacao() {
-        binding.tvRecBadge.visibility = if (viewModel.recorder.active) View.VISIBLE else View.GONE
-    }
-
-    private fun alternarGravacao() {
         val rec = viewModel.recorder
-        if (!rec.active) {
-            rec.host = currentHost
-            rec.port = currentPort
-            rec.appVersion = BuildConfig.VERSION_NAME
-            rec.deviceModel = "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}"
-            rec.start(java.io.File(getExternalFilesDir(null) ?: filesDir, "gravacoes"))
-            atualizarSeloGravacao()
-            android.widget.Toast.makeText(
-                this,
-                "Gravando as telas. Faça o trabalho normal e depois toque em Parar gravação.",
-                android.widget.Toast.LENGTH_LONG
-            ).show()
-        } else {
-            finalizarGravacao(compartilhar = true)
-        }
-        invalidateOptionsMenu()
-    }
-
-    /** Para a gravação, salva o arquivo e (se pedido) abre o "Compartilhar" do Android. */
-    private fun finalizarGravacao(compartilhar: Boolean) {
-        val telas = viewModel.recorder.screens
-        val dir = java.io.File(getExternalFilesDir(null) ?: filesDir, "gravacoes")
-        val arquivo = runCatching { viewModel.recorder.stop(dir) }.getOrNull()
-        atualizarSeloGravacao()
-        if (arquivo == null) {
-            android.widget.Toast.makeText(this, "Nada foi gravado.", android.widget.Toast.LENGTH_LONG).show()
-            return
-        }
-        android.widget.Toast.makeText(
-            this, "Gravação salva: $telas telas (${arquivo.name})", android.widget.Toast.LENGTH_LONG
-        ).show()
-        if (!compartilhar) return
-        runCatching {
-            val uri = androidx.core.content.FileProvider.getUriForFile(this, "$packageName.fileprovider", arquivo)
-            val send = Intent(Intent.ACTION_SEND).apply {
-                type = "application/json"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                putExtra(Intent.EXTRA_SUBJECT, "Gravação de telas ScanTE")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            startActivity(Intent.createChooser(send, "Enviar gravação").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        }.onFailure { Timber.w(it, "Falha ao abrir o compartilhamento da gravação") }
+        binding.tvRecBadge.text = if (rec.paused) "⏸ REC" else "● REC"
+        binding.tvRecBadge.setTextColor(Color.parseColor(if (rec.paused) "#FFB300" else "#FF3B30"))
+        binding.tvRecBadge.visibility = if (rec.active) View.VISIBLE else View.GONE
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_calculadora -> { abrirCalculadora(); true }
-            R.id.menu_gravar_telas -> { alternarGravacao(); true }
             R.id.menu_logout      -> { sair(); true }
             else -> super.onOptionsItemSelected(item)
         }

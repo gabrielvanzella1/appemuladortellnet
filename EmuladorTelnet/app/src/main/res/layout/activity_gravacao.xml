@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="Gravação de telas"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/ic_arrow_back" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:id="@+id/txt_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:lineSpacingExtra="3dp"
+                android:padding="16dp"
+                android:background="#F3F4F6" />
+
+            <Button
+                android:id="@+id/btn_iniciar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Iniciar gravação" />
+
+            <Button
+                android:id="@+id/btn_pausar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Pausar" />
+
+            <Button
+                android:id="@+id/btn_parar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Parar e enviar" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:textSize="13sp"
+                android:textColor="#555555"
+                android:lineSpacingExtra="3dp"
+                android:text="Como usar: toque em Iniciar, volte para a sessão e trabalhe normalmente, passando por todos os fluxos (inclusive errando de propósito). Use Pausar para intervalos. Ao terminar, volte aqui e toque em Parar e enviar.\n\nPrivacidade: o que você digita NÃO é gravado (só o nome das teclas e a quantidade de caracteres), mas o que o host mostra na tela é. Use um usuário de teste e confira o arquivo antes de enviar.\n\nO arquivo é salvo sozinho durante a gravação e uma cópia vai para a pasta Downloads." />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

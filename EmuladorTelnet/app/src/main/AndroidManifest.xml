@@ -73,6 +73,11 @@
             android:name=".ConfigMenuActivity"
             android:exported="false" />
 
+        <!-- Configuracoes > Gravacao de telas -->
+        <activity
+            android:name=".GravacaoActivity"
+            android:exported="false" />
+
         <!-- Configuracoes > Tela > Opcoes de tela -->
         <activity
             android:name=".ScreenOptionsActivity"
