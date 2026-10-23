@@ -443,8 +443,14 @@ class TelnetViewModel(private val repository: TelnetRepository) : ViewModel() {
             if (printable) addTerminalOutput(String(out, Charsets.ISO_8859_1))
         }
 
+        txQueue.trySend(out)
+    }
+
+    // Fila única: o host recebe os bytes na mesma ordem em que foram pedidos. Uma coroutine
+    // por envio deixava o Enter do leitor passar na frente do código (host: "sem permissão").
+    private val txQueue = kotlinx.coroutines.channels.Channel<ByteArray>(kotlinx.coroutines.channels.Channel.UNLIMITED).also { q ->
         viewModelScope.launch(Dispatchers.IO) {
-            telnetClient.sendRawBytes(out)
+            for (bytes in q) telnetClient.sendRawBytes(bytes)
         }
     }
 
