@@ -6,13 +6,11 @@ import com.logisticapp.emuladortelnet.database.TelnetRepository
 import com.logisticapp.emuladortelnet.ui.TelnetViewModel
 import com.logisticapp.emuladortelnet.ui.TelnetViewModelFactory
 
-/**
- * Mantém até MAX sessões Telnet simultâneas vivas independente do ciclo de vida das Activities.
- * O ViewModel é criado aqui (não via ViewModelProvider) para que sobreviva ao finish() da Activity.
- */
+/** Mantém sessões Telnet independentes enquanto o usuário troca entre as Activities. */
 object SessionStore {
 
-    const val MAX = 2
+    /** Limite prático por coletor para conexões simultâneas. */
+    const val MAX = 8
 
     data class ActiveSession(
         val slotId: Int,
@@ -25,18 +23,13 @@ object SessionStore {
 
     private val slots = arrayOfNulls<ActiveSession>(MAX)
 
-    /**
-     * Uma sessão só conta como "viva" enquanto conectada ou tentando conectar.
-     * ERROR/DISCONNECTED são sessões mortas — não devem bloquear um reconectar de verdade
-     * (ex: caiu no modo avião e o usuário tenta conectar de novo no mesmo host).
-     */
-    private fun isAlive(s: ActiveSession): Boolean =
-        s.viewModel.connectionState.value.let { it == ConnectionState.CONNECTED || it == ConnectionState.CONNECTING }
+    /** Somente sessões conectadas ou conectando ocupam uma vaga. */
+    private fun isAlive(session: ActiveSession): Boolean =
+        session.viewModel.connectionState.value.let {
+            it == ConnectionState.CONNECTED || it == ConnectionState.CONNECTING
+        }
 
-    /**
-     * Abre ou retoma uma sessão.
-     * Retorna (slotId, viewModel) se há vaga, ou null se as duas vagas estão ocupadas.
-     */
+    /** Abre uma sessão ou retoma a sessão ativa existente para este host. */
     fun openOrResume(
         context: Context,
         hostId: Int,
@@ -44,39 +37,47 @@ object SessionStore {
         host: String,
         port: Int
     ): Pair<Int, TelnetViewModel>? {
-        // Sessão já ativa (conectada/conectando) para este host? Retoma o slot existente.
         val existingIdx = slots.indexOfFirst { it?.hostId == hostId }
         if (existingIdx >= 0) {
-            val s = slots[existingIdx]!!
-            if (isAlive(s)) return Pair(s.slotId, s.viewModel)
-            // Slot travado em erro/desconectado: libera e cria uma sessão nova de verdade.
-            close(s.slotId)
+            val session = slots[existingIdx]!!
+            if (isAlive(session)) return Pair(session.slotId, session.viewModel)
+            close(session.slotId)
         }
-        // Procura slot livre
-        val free = slots.indexOfFirst { it == null }
-        if (free < 0) return null   // todas as vagas ocupadas
+
+        val free = slots.indices.firstOrNull { index ->
+            val session = slots[index]
+            session == null || !isAlive(session)
+        } ?: return null
+        if (slots[free] != null) close(free)
 
         val repo = TelnetRepository.getInstance(context)
-        val vm   = TelnetViewModelFactory(repo).create(TelnetViewModel::class.java)
-        slots[free] = ActiveSession(free, hostId, hostName, host, port, vm)
-        return Pair(free, vm)
+        val viewModel = TelnetViewModelFactory(repo).create(TelnetViewModel::class.java)
+        slots[free] = ActiveSession(free, hostId, hostName, host, port, viewModel)
+        return Pair(free, viewModel)
     }
 
-    /** Desconecta e libera o slot. */
+    /** Desconecta e libera uma vaga. */
     fun close(slotId: Int) {
-        slots[slotId]?.viewModel?.disconnect()
-        slots[slotId] = null
+        slots.getOrNull(slotId)?.viewModel?.disconnect()
+        if (slotId in slots.indices) slots[slotId] = null
     }
 
     fun get(slotId: Int): ActiveSession? = slots.getOrNull(slotId)
 
     fun getAll(): List<ActiveSession> = slots.filterNotNull()
 
-    fun isActive(hostId: Int): Boolean = slots.any { it?.hostId == hostId && isAlive(it) }
+    fun activeSessions(): List<ActiveSession> = slots.filterNotNull().filter(::isAlive)
 
-    fun activeCount(): Int = slots.count { it != null }
+    fun isActive(hostId: Int): Boolean =
+        slots.any { session -> session?.let { it.hostId == hostId && isAlive(it) } == true }
 
-    /** Retorna a outra sessão ativa (se houver), útil para o botão ⇄. */
-    fun otherSession(slotId: Int): ActiveSession? =
-        slots.firstOrNull { it != null && it.slotId != slotId }
+    fun activeCount(): Int = activeSessions().size
+
+    /** Retorna a próxima sessão ativa em ordem circular, voltando à primeira no fim. */
+    fun nextActiveSession(slotId: Int): ActiveSession? {
+        val active = activeSessions()
+        if (active.size < 2) return null
+        val current = active.indexOfFirst { it.slotId == slotId }
+        return active[if (current < 0) 0 else (current + 1) % active.size]
+    }
 }

@@ -1,7 +1,6 @@
 # Gravador de telas (ScanTE 1.1.3) — para continuar de casa
 
-Ramo: `feature/gravador-telas` (parte do `main` em `50f4aee`, versão **1.1.3 / versionCode 6**).
-**Não inclui** a tela gráfica de demonstração (`feature/reformatacao-tela-poc`): são frentes separadas.
+Implementação criada na branch `feature/gravador-telas`, a partir de `50f4aee` (versão **1.1.3 / versionCode 6**). Em 22/10/2026, essa branch foi integrada localmente à `feature/reformatacao-tela-poc` para preparar a demonstração. As duas funcionalidades continuam sendo frentes conceitualmente separadas: o gravador captura sessões reais; a PoC de reformatação é um formulário fixo para um servidor simulado.
 
 ## O que é
 Função do app (**Configurações → Gravação de telas**: Iniciar / Pausar / Retomar / Parar e enviar; selo ● REC no topo da sessão) que grava a conversa com o host Telnet num

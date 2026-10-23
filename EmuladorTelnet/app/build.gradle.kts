@@ -23,8 +23,8 @@ android {
         applicationId = "com.logisticapp.emuladortelnet"
         minSdk = 24
         targetSdk = 34
-        versionCode = 6
-        versionName = "1.1.3"
+        versionCode = 7
+        versionName = "1.1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -59,6 +59,7 @@ android {
             dimension = "env"
             buildConfigField("String", "BASE_URL", "\"https://scante.com.br/scante-admin/public\"")
             buildConfigField("String", "API_SECRET", "\"eab28be7c8536e7f5979e5a46b5ec65ba34fdf891d23c5f772e65a4d07057faf\"")
+            buildConfigField("boolean", "ENABLE_REFORMAT_DEMO", "false")
             resValue("string", "app_name", "ScanTE")
         }
         create("sandbox") {
@@ -67,7 +68,17 @@ android {
             versionNameSuffix = "-sandbox"
             buildConfigField("String", "BASE_URL", "\"https://sandbox.scante.com.br/scante-admin/public\"")
             buildConfigField("String", "API_SECRET", "\"c9ce24d6a1e9a583036278736526a82d144e9955b04c9ea490f215f230f592cf\"")
+            buildConfigField("boolean", "ENABLE_REFORMAT_DEMO", "true")
             resValue("string", "app_name", "ScanTE Sandbox")
+        }
+        create("recorder") {
+            dimension = "env"
+            applicationIdSuffix = ".recorder"
+            versionNameSuffix = "-gravador"
+            buildConfigField("String", "BASE_URL", "\"https://scante.com.br/scante-admin/public\"")
+            buildConfigField("String", "API_SECRET", "\"eab28be7c8536e7f5979e5a46b5ec65ba34fdf891d23c5f772e65a4d07057faf\"")
+            buildConfigField("boolean", "ENABLE_REFORMAT_DEMO", "false")
+            resValue("string", "app_name", "ScanTE Gravador")
         }
     }
 

@@ -50,16 +50,20 @@
             android:maxLines="1"
             android:ellipsize="end" />
 
-        <!-- Badge de sessão: mostra "⇄ Sessão 1" quando há 2 sessões ativas -->
+        <!-- Botão circular de troca de host, com posição atual/total. -->
         <TextView
             android:id="@+id/tv_session_badge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="⇄"
+            android:text="⇄ 1/2"
             android:textColor="@color/secondary"
-            android:textSize="26sp"
-            android:layout_marginEnd="16dp"
-            android:padding="4dp"
+            android:textSize="16sp"
+            android:layout_marginEnd="8dp"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Trocar host conectado"
             android:visibility="gone" />
 
         <!-- Selo do gravador de telas -->

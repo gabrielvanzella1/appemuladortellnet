@@ -54,10 +54,8 @@ class MainActivity : AppCompatActivity() {
     // Gerenciador de leitura de código de barras
     private lateinit var barcodeManager: BarcodeScannerManager
 
-    // PoC de reformatação de tela (menu "Modo reformatado") — reconhece só a tela de
-    // demonstração "RECEBIMENTO DE MERCADORIA" (scripts/demo_telnet_server.py), não é
-    // um motor genérico. Ver docs/homologacao/centauro/.
-    private var reformatPocEnabled = false
+    // Na Sandbox, reconhece automaticamente a tela de demonstração quando os dados do
+    // host chegam. O template é específico da PoC e não fica habilitado na Production.
     private var reformatOverlayShown = false
     private var reformatActiveTemplate: ReformatTemplate? = null
     private var reformatFields: List<android.widget.EditText> = emptyList()
@@ -226,8 +224,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateSessionBadge() {
-        if (slotId >= 0 && SessionStore.activeCount() > 1) {
-            binding.tvSessionBadge.text = "⇄"
+        val sessions = SessionStore.activeSessions()
+        val position = sessions.indexOfFirst { it.slotId == slotId }
+        if (slotId >= 0 && sessions.size > 1 && position >= 0) {
+            binding.tvSessionBadge.text = "⇄ ${position + 1}/${sessions.size}"
+            binding.tvSessionBadge.contentDescription =
+                "Trocar host, sessão ${position + 1} de ${sessions.size}"
             binding.tvSessionBadge.visibility = View.VISIBLE
         } else {
             binding.tvSessionBadge.visibility = View.GONE
@@ -264,13 +266,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.tvSessionBadge.setOnClickListener {
-            val other = SessionStore.otherSession(slotId)
-            if (other != null) {
+            val next = SessionStore.nextActiveSession(slotId)
+            if (next != null) {
                 startActivity(Intent(this, MainActivity::class.java).apply {
-                    putExtra(EXTRA_SLOT_ID, other.slotId)
+                    putExtra(EXTRA_SLOT_ID, next.slotId)
                 })
+                finish()
             }
-            finish()
         }
 
         // Digitacao vai direto ao servidor (via TerminalView), como num emulador real
@@ -299,6 +301,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun observeViewModel() {
         viewModel.connectionState.observe(this) { state ->
+            updateSessionBadge()
             when (state) {
                 ConnectionState.DISCONNECTED -> {
                     barcodeManager.unregister()
@@ -416,7 +419,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
-        menu?.findItem(R.id.menu_reformat_poc)?.isChecked = reformatPocEnabled
         return true
     }
 
@@ -435,12 +437,6 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.menu_calculadora   -> { abrirCalculadora(); true }
             R.id.menu_logout        -> { sair(); true }
-            R.id.menu_reformat_poc  -> {
-                reformatPocEnabled = !reformatPocEnabled
-                item.isChecked = reformatPocEnabled
-                updateReformatOverlay()
-                true
-            }
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -781,7 +777,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ------------------------------------------------------------------
-    // PoC de reformatação de tela (menu "Modo reformatado"). Cada tela reconhecível é um
+    // PoC de reformatação automática de tela na Sandbox. Cada tela reconhecível é um
     // ReformatTemplate (texto-chave + campos) — o PADRÃO fica pronto pra receber as telas
     // reais da Centauro (ainda não temos acesso ao host deles, ver docs/homologacao/centauro/
     // pendencias.md P-01/P-04): tela nova = nova entrada em reformatTemplates, não uma
@@ -819,7 +815,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateReformatOverlay() {
         val row0 = viewModel.rowText(0)
-        val match = if (reformatPocEnabled) reformatTemplates.firstOrNull { row0.contains(it.keyText) } else null
+        val match = if (BuildConfig.ENABLE_REFORMAT_DEMO)
+            reformatTemplates.firstOrNull { row0.contains(it.keyText) }
+        else null
         val recognized = match != null
         if (recognized == reformatOverlayShown && match === reformatActiveTemplate) return
         reformatOverlayShown = recognized

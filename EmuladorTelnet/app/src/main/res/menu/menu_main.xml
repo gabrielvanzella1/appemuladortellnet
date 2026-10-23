@@ -12,10 +12,4 @@
         android:title="Sessões (manter conexão)"
         app:showAsAction="never" />
 
-    <item
-        android:id="@+id/menu_reformat_poc"
-        android:title="Modo reformatado (PoC)"
-        android:checkable="true"
-        app:showAsAction="never" />
-
 </menu>

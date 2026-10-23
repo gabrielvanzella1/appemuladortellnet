@@ -173,7 +173,7 @@ class HostConfigActivity : AppCompatActivity() {
             val result = SessionStore.openOrResume(this, saved.id, saved.name, saved.host, saved.port)
             if (result == null) {
                 setConnectingUi(false)
-                Toast.makeText(this, "Máximo de 2 sessões ativas. Desconecte uma para abrir outra.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Limite de ${SessionStore.MAX} conexões simultâneas atingido. Desconecte uma para abrir outra.", Toast.LENGTH_LONG).show()
                 return@saveHost
             }
             val (slotId, vm) = result

@@ -323,7 +323,7 @@ class HostsActivity : AppCompatActivity() {
         val jaAtiva = SessionStore.isActive(host.id)
         val result = SessionStore.openOrResume(this, host.id, host.name, host.host, host.port)
         if (result == null) {
-            toast("Máximo de 2 sessões ativas. Desconecte uma para abrir outra.")
+            toast("Limite de ${SessionStore.MAX} conexões simultâneas atingido. Desconecte uma para abrir outra.")
             return
         }
         val (slotId, vm) = result

@@ -1,65 +1,36 @@
 # Em andamento
 
-Estado atual do trabalho — pra retomar de qualquer computador sem precisar perguntar
-"onde eu parei". Atualizar isso sempre que parar no meio de algo ou terminar uma etapa,
-não só no fim do dia.
+## Estado em 22/10/2026 — preparação para demonstração à Centauro
 
----
+- Branch local: `feature/reformatacao-tela-poc`.
+- Commit atual: merge local `453547d`, que integra `old-origin/feature/gravador-telas`.
+- A branch de trabalho trouxe o gravador de telas, a tela de controle e a exportação das gravações.
+- A branch local também contém a PoC de reformatação visual para uma tela de demonstração.
+- A build `assembleSandboxDebug` compilou com sucesso em 22/10/2026 e foi instalada/aberta no Honeywell EDA52. A conexão ao servidor simulado funcionou pelo túnel ADB e a interface gráfica apareceu automaticamente.
+- A build `assembleRecorderDebug` compilou em 22/10/2026, foi instalada em paralelo no EDA52 (`com.logisticapp.emuladortelnet.recorder`) e abriu a tela de licença sem crash. Não foi ativada para preservar a licença da instalação Production; a tela do gravador ainda precisa ser conferida após ativação autorizada.
+- Builds 1.1.4 do Gravador e da Sandbox foram compiladas em 22/10 com o limite multi-host; ainda não foram instaladas no EDA para validação dessa mudança.
+- Pasta para levar os APKs: `C:\Users\Usuario\Desktop\centauro23-10` — normal 1.1.2 (20/10), Gravador 1.1.4 e Sandbox demonstrativa 1.1.4.
+- O EDA52 mostra os pacotes `com.logisticapp.emuladortelnet`, `.recorder` e `.sandbox` instalados. A instalação Production e a licença existentes foram preservadas.
+- O APK Production Release ainda não foi gerado: `EmuladorTelnet/keystore.properties` e a chave oficial não estão nesta máquina; a autenticação GitHub CLI para o repositório privado está inválida.
+- A branch local está à frente de `old-origin/feature/reformatacao-tela-poc`; o merge ainda não foi enviado ao remoto.
 
-## Agora: protótipo de reformatação de tela pra apresentação da Centauro (sexta, 24/10/2026)
+## Separação importante para a apresentação
 
-**Branch:** `feature/reformatacao-tela-poc` (separada da `main` de propósito — é só pra
-demonstrar, nunca vai pro build oficial que a Centauro recebe).
+- O emulador Telnet permite até 8 conexões simultâneas; o botão `⇄` no terminal percorre os hosts ativos e mostra a posição atual/total.
 
-**Último commit:** `4c1850c` — "PoC de reformatação de tela pra Centauro + histórico e
-memória do projeto". Local, ainda não deu `git push`.
+1. **PoC de reformatação:** conectar ao servidor simulado `scripts/demo_telnet_server.py`; ao receber `RECEBIMENTO DE MERCADORIA`, a Sandbox abre o formulário automaticamente. A tela é fictícia e não representa o ERP da Centauro.
+2. **Gravador de telas:** só gravar o SHARK real com autorização, host/porta fornecidos pelo TI e usuário de teste. Conferir a gravação antes de compartilhar; telas ecoadas pelo host podem conter dados.
 
-### Feito
-- [x] Servidor telnet de demonstração (`scripts/demo_telnet_server.py`) — simula uma
-      tela "RECEBIMENTO DE MERCADORIA" em VT100 puro (cursor, vídeo reverso, BEL).
-      **Não é o sistema real da Centauro.**
-- [x] Overlay nativo no app (`MainActivity.kt`) que reconhece essa tela de demo e troca
-      o grid cru por formulário Android (campos + botão), em `ReformatTemplate` — tela
-      nova = entrada nova na lista `reformatTemplates`, não reescrita de código.
-- [x] Branding: logo (`drawable-nodpi/centauro_logo.png`, recorte do site oficial) +
-      vermelho aproximado (`rgb(227,0,0)`, amostra de pixel do site, não é hex de
-      manual de marca).
-- [x] Layout responsivo (overlay ocupa a tela toda, não só a largura do grid de 80
-      colunas).
-- [x] Testado de ponta a ponta no Honeywell EDA52 físico (digitar nos 3 campos, avançar
-      com Enter, confirmar com F1 → "RECEBIDO COM SUCESSO"; campo faltando → BEL).
-- [x] `docs/HISTORICO-DO-PROJETO.md` — cronologia completa do projeto.
-- [x] Memória de projeto via Serena (`.serena/memories/`) — sobrevive entre máquinas
-      porque está commitada.
+Roteiro completo: [`docs/homologacao/centauro/roteiro-demo-poc.md`](homologacao/centauro/roteiro-demo-poc.md).
 
-### Não feito / próximo passo
-- [ ] **Desligar o painel de debug de ativação** em `LicenseActivity.kt`
-      (`if (BuildConfig.DEBUG)` → voltar pra `if (false && BuildConfig.DEBUG)`) antes
-      de qualquer build que saia dessa branch. Está ligado agora só pra eu conseguir
-      testar sem ativar por e-mail.
-- [ ] Decidir se cadastramos uma segunda tela de demonstração (prova de que o padrão
-      `ReformatTemplate` realmente generaliza, não só uma tela isolada).
-- [ ] Confirmar com a Centauro: telnet/VT220 ou 5250 de verdade (P-04) — decide se a
-      abordagem atual funciona sem mudança nenhuma. Ver `docs/homologacao/centauro/pendencias.md`.
-- [ ] Testar o fix de NEL (01/10) no aparelho real — nunca foi confirmado lá.
-- [ ] Confirmar a visita com o coletor Urovo (relatada, não tem registro) — checar aba
-      Dispositivos do painel.
-- [ ] `git push` quando quiser sincronizar com o outro computador.
+## Build e segurança
 
-### Como retomar (comandos)
-```powershell
-cd EmuladorTelnet
-.\gradlew.bat assembleSandboxDebug
-adb install -r app\build\outputs\apk\sandbox\debug\app-sandbox-debug.apk
-```
-No app: Sessões → "Demo PoC" (se a sessão ainda existir) → conectar. Depois, no
-dispositivo: tecla Menu (ou `adb shell input keyevent 82`) → "Modo reformatado (PoC)".
-Servidor de demonstração: `python scripts/demo_telnet_server.py 2323` (na máquina que
-estiver na mesma rede Wi-Fi do coletor).
+- A Sandbox Debug tem painel de desbloqueio de teste e assinatura de debug (SHA-256 `47fb9332…`). Use-a só para a demonstração controlada; não a distribua como release oficial.
+- O Gravador Debug (`app-recorder-debug.apk`) também tem assinatura de debug e pacote `.recorder`, para coexistir com Production durante homologação. A licença dele fica em dados separados; não foi ativado neste teste.
+- APK Sandbox gerado em `EmuladorTelnet/app/build/outputs/apk/sandbox/debug/app-sandbox-debug.apk` (regerado após habilitar detecção automática). Build, instalação, conexão e exibição automática foram conferidas no EDA52.
+- Para atualizar Production sem desinstalar nem perder a licença existente, recuperar a keystore oficial do repositório privado, criar `EmuladorTelnet/keystore.properties`, gerar `assembleProductionRelease` e conferir o certificado SHA-256 oficial `c8eef2b7…` antes de instalar.
+- Não usar a PoC para operar o sistema real da Centauro: o template é fixo e só reconhece o texto exato da tela demonstrativa.
 
----
+## Próximo passo
 
-## Histórico de "em andamento" anteriores
-
-(Quando essa seção ficar grande, mover os itens concluídos antigos pra
-`docs/HISTORICO-DO-PROJETO.md` e deixar só o que está ativo aqui.)
+Reautenticar GitHub CLI para obter a keystore privada; depois gerar e conferir o Production Release para atualização do app existente. Percorrer também o roteiro de demonstração Sandbox no EDA52. Para gravar fluxo real, confirmar previamente acesso, licença, usuário de teste e endpoint com o TI da Centauro.
