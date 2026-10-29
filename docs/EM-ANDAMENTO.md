@@ -1,5 +1,7 @@
 # Em andamento
 
+> Para ajustes em campo na Centauro (29–30/10/2026): leia primeiro [GUIA-AJUSTES-CAMPO.md](GUIA-AJUSTES-CAMPO.md).
+
 ## Estado em 22/10/2026 — preparação para demonstração à Centauro
 
 - Branch local: `feature/reformatacao-tela-poc`.
